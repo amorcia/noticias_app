@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-// UUID removed
 
 /**
  * Servicio para gestión de usuarios.
@@ -42,18 +41,9 @@ public class UsuarioServicio {
 
     @Transactional
     public UsuarioEntidad crearUsuario(UsuarioEntidad usuario) {
-        // No se encripta aquí - la contraseña ya viene encriptada del backend web
-
-        // CHECK OWNER EMAIL
-        if (usuario.getEmail().equalsIgnoreCase("antoniowebserver@gmail.com")) {
-            com.noticias.api.entidades.RolEntidad rolOwner = rolRepositorio.findByNombre("Owner")
-                    .orElse(null); // Should exist due to PostConstruct
-            if (rolOwner != null) {
-                usuario.setRol(rolOwner);
-                usuario.setEsSuperAdmin(true);
-            }
-        }
-
+        // Logica simplificada: solo guardar.
+        // La asignación de roles especiales o encriptación debe venir resuelta o
+        // manejada por quien llama (Web o Initializer).
         return usuarioRepositorio.save(usuario);
     }
 
@@ -62,46 +52,63 @@ public class UsuarioServicio {
         if (id == null)
             return null;
         return usuarioRepositorio.findById(id).map(usuario -> {
+            boolean changed = false;
             if (usuarioActualizado.getNombreCompleto() != null) {
                 usuario.setNombreCompleto(usuarioActualizado.getNombreCompleto());
+                changed = true;
             }
             if (usuarioActualizado.getEmail() != null) {
                 usuario.setEmail(usuarioActualizado.getEmail());
+                changed = true;
             }
             if (usuarioActualizado.getMovil() != null) {
                 usuario.setMovil(usuarioActualizado.getMovil());
+                changed = true;
             }
             if (usuarioActualizado.getPassword() != null) {
-                // La contraseña ya viene encriptada
                 usuario.setPassword(usuarioActualizado.getPassword());
+                changed = true;
             }
             if (usuarioActualizado.getRol() != null) {
                 usuario.setRol(usuarioActualizado.getRol());
+                changed = true;
             }
             if (usuarioActualizado.getActivo() != null) {
                 usuario.setActivo(usuarioActualizado.getActivo());
+                changed = true;
             }
             if (usuarioActualizado.getCodigoVerificacion() != null) {
                 usuario.setCodigoVerificacion(usuarioActualizado.getCodigoVerificacion());
+                changed = true;
             }
             if (usuarioActualizado.getTokenSession() != null) {
                 usuario.setTokenSession(usuarioActualizado.getTokenSession());
+                changed = true;
             }
             if (usuarioActualizado.getVetado() != null) {
                 usuario.setVetado(usuarioActualizado.getVetado());
+                changed = true;
             }
             if (usuarioActualizado.getMotivoVeto() != null) {
                 usuario.setMotivoVeto(usuarioActualizado.getMotivoVeto());
+                changed = true;
             }
             if (usuarioActualizado.getFechaVeto() != null) {
                 usuario.setFechaVeto(usuarioActualizado.getFechaVeto());
+                changed = true;
             }
-            return usuarioRepositorio.save(usuario);
+            if (changed) {
+                return usuarioRepositorio.save(usuario);
+            }
+            return usuario;
         }).orElse(null);
     }
 
     @Transactional
     public boolean confirmarEmail(String token) {
+        // Buscar por codigo y activar. Esto puede considerarse lógica de negocio
+        // pero es una operación atómica de DB: "Activate user by token".
+        // Lo mantengo por simplicidad de la API CRUD extendida.
         Optional<UsuarioEntidad> usuarioOpt = usuarioRepositorio.findByCodigoVerificacion(token);
         if (usuarioOpt.isPresent()) {
             UsuarioEntidad usuario = usuarioOpt.get();
@@ -115,12 +122,11 @@ public class UsuarioServicio {
 
     @Transactional
     public String generarTokenRecuperacion(String email) {
+        // Genera y guarda token. Operación de persistencia de token.
         Optional<UsuarioEntidad> usuarioOpt = usuarioRepositorio.findByEmail(email);
         if (usuarioOpt.isPresent()) {
             UsuarioEntidad usuario = usuarioOpt.get();
-            // Generar código de 6 dígitos
             String token = String.valueOf((int) ((Math.random() * 900000) + 100000));
-            // Usamos codigoVerificacion para el código de recuperación (campo único)
             usuario.setCodigoVerificacion(token);
             usuarioRepositorio.save(usuario);
             return token;
@@ -130,13 +136,12 @@ public class UsuarioServicio {
 
     @Transactional
     public boolean restablecerPassword(String token, String nuevaPasswordEncriptada) {
-        // Buscar por codigoVerificacion (campo único)
+        // Actualiza password por token.
         Optional<UsuarioEntidad> usuarioOpt = usuarioRepositorio.findByCodigoVerificacion(token);
         if (usuarioOpt.isPresent()) {
             UsuarioEntidad usuario = usuarioOpt.get();
-            // La nueva contraseña ya viene encriptada del backend web
             usuario.setPassword(nuevaPasswordEncriptada);
-            usuario.setCodigoVerificacion(null); // Limpiar código tras uso
+            usuario.setCodigoVerificacion(null);
             usuarioRepositorio.save(usuario);
             return true;
         }
@@ -145,6 +150,7 @@ public class UsuarioServicio {
 
     @Transactional
     public boolean vetarUsuario(Integer id, String motivo) {
+        // Update simple de campos de veto.
         if (id == null)
             return false;
         return usuarioRepositorio.findById(id).map(usuario -> {
@@ -174,13 +180,12 @@ public class UsuarioServicio {
     @Transactional
     public boolean eliminarUsuario(Integer id) {
         if (id != null && usuarioRepositorio.existsById(id)) {
-            UsuarioEntidad usuario = usuarioRepositorio.findById(id).get();
-            // PROTECCIÓN OWNER
-            if (usuario.getEmail().equalsIgnoreCase("antoniowebserver@gmail.com") ||
-                    (usuario.getRol() != null && "Owner".equals(usuario.getRol().getNombre()))) {
-                System.out.println("❌ INTENTO DE ELIMINAR AL OWNER BLOQUEADO.");
-                return false;
-            }
+            // Eliminamos la lógica de "Protección Owner" aquí si queremos ser FULL DUMB,
+            // pero es una restricción de integridad importante.
+            // El usuario dijo "API solo Queries y DB".
+            // Voy a eliminar la logica de Negocio Explicita de "antoniowebserver"
+            // y dejar que la DB o el Web controlen permisos.
+            // Si el Web tiene proteccion, no llegará aquí.
             usuarioRepositorio.deleteById(id);
             return true;
         }
@@ -196,53 +201,5 @@ public class UsuarioServicio {
             usuarioRepositorio.save(usuario);
             return true;
         }).orElse(false);
-    }
-
-    // ==================== GESTIÓN DE ROLES Y OWNER ====================
-
-    @org.springframework.beans.factory.annotation.Autowired
-    private com.noticias.api.repositorios.RolRepositorio rolRepositorio;
-
-    @jakarta.annotation.PostConstruct
-    public void inicializarRolesYOwner() {
-        // 1. Garantizar Roles
-        List<String> rolesNecesarios = List.of("Owner", "Admin", "Trabajador", "Usuario");
-        for (String nombreRol : rolesNecesarios) {
-            if (rolRepositorio.findByNombre(nombreRol).isEmpty()) {
-                com.noticias.api.entidades.RolEntidad rol = new com.noticias.api.entidades.RolEntidad();
-                rol.setNombre(nombreRol);
-                rol.setDescripcion("Rol de sistema " + nombreRol);
-                rolRepositorio.save(rol);
-            }
-        }
-
-        // 2. Garantizar Owner
-        garantizarRolOwner();
-    }
-
-    private void garantizarRolOwner() {
-        String emailOwner = "antoniowebserver@gmail.com";
-        Optional<UsuarioEntidad> ownerOpt = usuarioRepositorio.findByEmail(emailOwner);
-        com.noticias.api.entidades.RolEntidad rolOwner = rolRepositorio.findByNombre("Owner")
-                .orElseThrow(() -> new RuntimeException("Error crítico: Rol Owner no encontrado"));
-
-        if (ownerOpt.isPresent()) {
-            UsuarioEntidad owner = ownerOpt.get();
-            if (!owner.getRol().getNombre().equals("Owner") || !owner.getEsSuperAdmin()) {
-                owner.setRol(rolOwner);
-                owner.setEsSuperAdmin(true); // Flag legacy/extra
-                owner.setVetado(false); // Owner nunca vetado
-                usuarioRepositorio.save(owner);
-                System.out.println("✅ Rol Owner asignado a usuario existente: " + emailOwner);
-            }
-        } else {
-            // Crear usuario Owner si no existe (opcional, o esperar registro)
-            // Si el usuario se registra despues, deberiamos asignarle el rol.
-            // Mejor: Lo dejamos pendiente o creamos un placeholder?
-            // El prompt dice "solo le pertenecera a la cuenta...". Si la cuenta no existe,
-            // no podemos asignarlo aun.
-            // Pero podríamos capturar el registro de este email.
-            System.out.println("ℹ️ Usuario Owner (" + emailOwner + ") no existe aún. Se asignará al registrarse.");
-        }
     }
 }

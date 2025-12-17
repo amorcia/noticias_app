@@ -21,6 +21,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.core.io.ByteArrayResource;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Map;
 
 @Service
@@ -55,7 +56,7 @@ public class ModeracionServicio {
 
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
                     NSFW_SERVICE_URL,
-                    HttpMethod.POST,
+                    Objects.requireNonNull(HttpMethod.POST),
                     requestEntity,
                     new ParameterizedTypeReference<Map<String, Object>>() {
                     });
