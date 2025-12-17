@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{vistas/Inicio :: layout(~{::section})}">
+
+<body>
+    <section class="container" style="max-width: 1280px; margin: 3rem auto; padding: 0 1.5rem;">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <span class="badge badge-primary" style="font-size: 1rem; padding: 0.5rem 1rem;">Categoría</span>
+            <h1 style="font-size: 3rem; font-weight: 800; margin-top: 1rem;" th:text="${categoria.nombre}">Nombre
+                Categoría</h1>
+            <p style="color: var(--secondary); font-size: 1.2rem; max-width: 600px; margin: 1rem auto;"
+                th:text="${categoria.descripcion}">Descripción de la categoría...</p>
+        </div>
+
+        <div class="news-grid">
+            <div th:each="noticia : ${noticias}" class="news-card">
+                <div class="card-image">
+                    <img th:src="${noticia.imagenUrl != null ? noticia.imagenUrl : 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80'}"
+                        alt="Noticia">
+                </div>
+                <div class="card-content">
+                    <div class="card-meta">
+                        <span th:text="${noticia.categoriaNombre}">Categoría</span>
+                        <span th:text="${#temporals.format(noticia.fechaPublicacion, 'dd MMM yyyy')}">Fecha</span>
+                    </div>
+                    <h3 class="card-title">
+                        <a th:href="@{'/noticia/' + ${noticia.id}}" th:text="${noticia.titulo}">Título de la noticia</a>
+                    </h3>
+                    <p class="card-excerpt" th:text="${noticia.subtitulo}">Resumen de la noticia...</p>
+                    <a th:href="@{'/noticia/' + ${noticia.id}}" class="btn btn-ghost" style="padding-left: 0;">Leer
+                        completa <i data-lucide="arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${noticias == null or noticias.empty}"
+            style="text-align: center; padding: 4rem; color: var(--text-muted);">
+            <i data-lucide="inbox" style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <p>No hay noticias disponibles en esta categoría por el momento.</p>
+        </div>
+    </section>
+</body>
+
+</html>

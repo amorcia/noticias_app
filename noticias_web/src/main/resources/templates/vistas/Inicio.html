@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(content)">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noticias App - Inicio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="main-header">
+            <nav class="nav-container">
+                <a th:href="@{/}" class="logo">
+                    <i data-lucide="newspaper"></i>
+                    NoticiasApp
+                </a>
+
+                <div class="nav-links">
+                    <a th:href="@{/}" class="nav-link">Inicio</a>
+
+                    <!-- Categorías Dropdown -->
+                    <div class="dropdown">
+                        <a href="#" class="nav-link">
+                            Categorías <i data-lucide="chevron-down" style="width:14px; display:inline;"></i>
+                        </a>
+                        <div class="dropdown-menu">
+                            <div th:each="cat : ${categorias}">
+                                <!-- Parent Category -->
+                                <a th:href="@{'/categoria/' + ${cat.nombre}}" class="dropdown-item"
+                                    style="font-weight: 600;" th:text="${cat.nombre}">Categoría</a>
+                                <!-- Subcategories -->
+                                <a th:each="sub : ${cat.subcategorias}" th:href="@{'/categoria/' + ${sub.nombre}}"
+                                    class="dropdown-item"
+                                    style="padding-left: 1.5rem; font-size: 0.9em; color: var(--text-muted);"
+                                    th:text="${sub.nombre}">
+                                    Subcategoría
+                                </a>
+                            </div>
+
+                            <div th:if="${categorias == null or categorias.empty}" class="dropdown-item"
+                                style="color: var(--text-muted);">
+                                No hay categorías
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vuestras Noticias Dropdown -->
+                    <div class="dropdown">
+                        <a href="#" class="nav-link">
+                            Vuestras Noticias <i data-lucide="chevron-down" style="width:14px; display:inline;"></i>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a th:href="@{/vuestras-noticias}" class="dropdown-item"
+                                style="font-weight: 800; color: var(--primary);">Ver Todo</a>
+                            <div class="dropdown-divider"></div>
+
+                            <div th:each="cat : ${categorias}">
+                                <!-- Parent Category (Foro) -->
+                                <a th:href="@{'/foro/' + ${cat.nombre}}" class="dropdown-item" style="font-weight: 600;"
+                                    th:text="${cat.nombre}">Categoría</a>
+                                <!-- Subcategories (Foro) -->
+                                <a th:each="sub : ${cat.subcategorias}" th:href="@{'/foro/' + ${sub.nombre}}"
+                                    class="dropdown-item"
+                                    style="padding-left: 1.5rem; font-size: 0.9em; color: var(--text-muted);"
+                                    th:text="${sub.nombre}">
+                                    Subcategoría
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auth Section -->
+                <div class="auth-section">
+                    <!-- Usuario NO Logueado -->
+                    <th:block th:if="${session.token == null}">
+                        <a th:href="@{/auth/login}" class="btn btn-ghost">Iniciar Sesión</a>
+                        <a th:href="@{/auth/registro}" class="btn btn-primary">Registrarse</a>
+                    </th:block>
+
+                    <!-- Usuario Logueado -->
+                    <th:block th:if="${session.token != null}">
+                        <div class="user-dropdown">
+                            <!-- User Button: Only Avatar, Circular -->
+                            <button class="user-dropdown-btn" style="border: none; padding: 0;">
+                                <img th:src="'https://ui-avatars.com/api/?name=' + ${session.usuario.nombre} + '&background=0D6EFD&color=fff'"
+                                    alt="Avatar" class="user-avatar" style="width: 40px; height: 40px;">
+                            </button>
+                            <div class="dropdown-menu">
+                                <a th:href="@{/perfil}" class="dropdown-item">
+                                    <i data-lucide="user"></i> Mi Perfil
+                                </a>
+
+                                <!-- Panel Admin -->
+                                <a th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rol, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rol, 'OWNER')}"
+                                    th:href="@{/admin/panel}" class="dropdown-item"
+                                    style="color: var(--danger); font-weight: 600;">
+                                    <i data-lucide="shield"></i> Panel Admin
+                                </a>
+
+                                <div class="dropdown-divider"></div>
+
+                                <a th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'TRABAJADOR') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rol, 'TRABAJADOR') or #strings.equalsIgnoreCase(session.usuario.rol, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rol, 'OWNER')}"
+                                    th:href="@{/trabajador/subir-noticia}" class="dropdown-item"
+                                    style="color: var(--primary); font-weight: 600;">
+                                    <i data-lucide="plus-circle"></i> Subir Noticia
+                                </a>
+
+                                <div class="dropdown-divider"
+                                    th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'TRABAJADOR') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rol, 'TRABAJADOR') or #strings.equalsIgnoreCase(session.usuario.rol, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rol, 'OWNER')}">
+                                </div>
+
+                                <form th:action="@{/auth/logout}" method="post" style="margin: 0;">
+                                    <button type="submit" class="dropdown-item" style="width: 100%; text-align: left;">
+                                        <i data-lucide="log-out"></i> Cerrar Sesión
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content (Condicional) -->
+        <main class="container" style="padding: 2rem 1rem;">
+
+            <!-- CASO 1: Si 'content' existe (Login/Registro/Otras vistas que usan el layout) -->
+            <th:block th:if="${content}">
+                <div th:replace="${content}"></div>
+            </th:block>
+
+            <!-- CASO 2: Si 'content' NO existe (Es la Home misma) -->
+            <th:block th:unless="${content}">
+
+                <!-- Top 5 Noticias Destacadas -->
+                <section class="top-5-section">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                        <i data-lucide="trending-up" style="color: var(--primary); width: 32px; height: 32px;"></i>
+                        <h1 style="font-size: 2rem; font-weight: 800; margin: 0;">Top 5 Noticias Destacadas</h1>
+                    </div>
+
+                    <div class="top-5-grid" th:if="${noticiasPopulares != null and !noticiasPopulares.empty}">
+                        <article class="top-5-card" th:each="noticia, iterStat : ${noticiasPopulares}"
+                            th:if="${iterStat.index < 5}">
+                            <div class="top-5-badge" th:text="'#' + ${iterStat.count}">#1</div>
+                            <div class="card-image" style="height: 200px;">
+                                <img th:src="${noticia.imagenUrl != null ? noticia.imagenUrl : 'https://source.unsplash.com/random/800x600?news'}"
+                                    alt="Noticia" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <div class="card-content" style="padding: 1.5rem;">
+                                <span class="badge badge-accent" th:text="${noticia.categoriaNombre}">Categoría</span>
+                                <h3 style="margin: 0.5rem 0 1rem; font-size: 1.25rem;">
+                                    <a th:href="@{'/noticia/' + ${noticia.id}}" th:text="${noticia.titulo}"
+                                        style="text-decoration: none; color: inherit;">Título</a>
+                                </h3>
+                                <div
+                                    style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.9rem;">
+                                    <span th:text="${noticia.autorNombre}">Autor</span>
+                                    <div>
+                                        <i data-lucide="thumbs-up" style="width: 14px; display: inline;"></i>
+                                        <span th:text="${noticia.likes}">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div th:if="${noticiasPopulares == null or noticiasPopulares.empty}" class="alert alert-info">
+                        No hay noticias populares aún. ¡Sé el primero en participar!
+                    </div>
+                </section>
+
+            </th:block>
+
+        </main>
+
+        <!-- Footer Simplificado -->
+        <footer class="main-footer"
+            style="background: var(--card-bg); border-top: 1px solid var(--border); margin-top: auto;">
+            <div class="footer-container"
+                style="padding: 3rem 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="footer-section">
+                    <h3>Sobre NoticiasApp</h3>
+                    <p style="color: var(--text-muted);">
+                        Somos tu plataforma confiable para noticias de actualidad, deportes, tecnología y más.
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h3>Contacto</h3>
+                    <p style="color: var(--text-muted);">📧 antoniowebserver@gmail.com</p>
+                    <p style="color: var(--text-muted);">📍 Sevilla, España</p>
+                </div>
+            </div>
+            <div class="footer-bottom"
+                style="text-align: center; padding: 1.5rem; border-top: 1px solid var(--border);">
+                <p>&copy; 2025 NoticiasApp. Todos los derechos reservados.</p>
+            </div>
+        </footer>
+    </div>
+    <script>
+        lucide.createIcons();
+
+        // User Dropdown Interaction
+        const userBtn = document.querySelector('.user-dropdown-btn');
+        if (userBtn) {
+            userBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userBtn.parentElement.classList.toggle('active');
+            });
+
+            document.addEventListener('click', () => {
+                userBtn.parentElement.classList.remove('active');
+            });
+        }
+
+        // Navigation Dropdowns
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            const link = dropdown.querySelector('.nav-link');
+            if (link) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Cerrar otros
+                    document.querySelectorAll('.dropdown').forEach(d => {
+                        if (d !== dropdown) d.classList.remove('active');
+                    });
+                    dropdown.classList.toggle('active');
+                });
+            }
+        });
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+        });
+    </script>
+</body>
+
+</html>

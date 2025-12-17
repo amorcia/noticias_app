@@ -1,0 +1,58 @@
+services:
+  noticias-db:
+    image: postgres:17
+    container_name: noticias-db
+    environment:
+      POSTGRES_DB: noticias_db
+      POSTGRES_USER: admin-noticias
+      POSTGRES_PASSWORD: noticias006
+    ports:
+      - "5433:5432"
+    volumes:
+      - noticias_db_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - noticias-network
+
+  noticias-api:
+    build: ./noticias_api
+    container_name: noticias-api
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://noticias-db:5432/noticias_db
+      SPRING_DATASOURCE_USERNAME: admin-noticias
+      SPRING_DATASOURCE_PASSWORD: noticias006
+    depends_on:
+      - noticias-db
+    networks:
+      - noticias-network
+
+  noticias-web:
+    build: ./noticias_web
+    container_name: noticias-web
+    ports:
+      - "8080:8080"
+    environment:
+      - API_DATOS_URL=http://noticias-api:8081
+      - API_NOTICIAS_URL=http://noticias-api:8081
+    depends_on:
+      - noticias-api
+    networks:
+      - noticias-network
+
+  nsfw-service:
+    image: eugencepoi/nsfw_api:latest
+    container_name: nsfw-service
+    environment:
+      - PORT=5000
+    networks:
+      - noticias-network
+
+volumes:
+  noticias_db_data:
+
+
+networks:
+  noticias-network:
+    driver: bridge

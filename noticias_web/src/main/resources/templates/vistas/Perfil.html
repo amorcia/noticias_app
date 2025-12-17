@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{vistas/Inicio :: layout(~{::content})}">
+
+<head>
+    <title>Mi Perfil - Noticias App</title>
+</head>
+
+<body>
+    <div th:fragment="content">
+        <div class="container" style="max-width: 800px; margin: 3rem auto;">
+
+            <!-- Perfil Header -->
+            <div
+                style="background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; display: flex; align-items: center; gap: 2rem;">
+                <div style="position: relative;">
+                    <img th:src="'https://ui-avatars.com/api/?name=' + ${usuario.nombreCompleto} + '&background=0D6EFD&color=fff&size=128'"
+                        alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%;">
+                    <button
+                        style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                        <i data-lucide="camera" style="width: 16px;"></i>
+                    </button>
+                </div>
+                <div>
+                    <h1 style="margin: 0; font-size: 1.8rem; font-weight: 700;" th:text="${usuario.nombreCompleto}">
+                        Usuario</h1>
+                    <p style="margin: 0.5rem 0 0; color: var(--text-muted);" th:text="${usuario.email}">
+                        email@ejemplo.com</p>
+                    <span class="badge badge-primary" style="margin-top: 0.5rem; display: inline-block;"
+                        th:text="${usuario.rolNombre}">ROL</span>
+                </div>
+            </div>
+
+            <!-- Menú Burbuja (Bubble Menu) -->
+            <h2 style="font-size: 1.25rem; margin-bottom: 1rem; font-weight: 600;">Ajustes de Perfil</h2>
+
+            <!-- Contenedor con scroll horizontal oculto -->
+            <div class="bubble-menu-container"
+                style="display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; scrollbar-width: none; -ms-overflow-style: none;">
+                <style>
+                    .bubble-menu-container::-webkit-scrollbar {
+                        display: none;
+                    }
+
+                    .bubble-card {
+                        flex: 0 0 160px;
+                        background: white;
+                        border-radius: 1rem;
+                        padding: 1.5rem;
+                        text-align: center;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        border: 1px solid var(--border);
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 0.8rem;
+                        text-decoration: none;
+                        color: var(--text);
+                    }
+
+                    .bubble-card:hover {
+                        transform: translateY(-4px);
+                        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                        border-color: var(--primary);
+                    }
+
+                    .bubble-icon {
+                        width: 48px;
+                        height: 48px;
+                        background: var(--bg-body);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: var(--primary);
+                        margin-bottom: 0.5rem;
+                    }
+                </style>
+
+                <!-- Mis Datos -->
+                <a href="#datos" class="bubble-card">
+                    <div class="bubble-icon">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <span style="font-weight: 600;">Mis Datos</span>
+                </a>
+
+                <!-- Notificaciones (con badge) -->
+                <a href="#notificaciones" class="bubble-card" style="position: relative;">
+                    <div class="bubble-icon">
+                        <i data-lucide="bell"></i>
+                    </div>
+                    <span style="font-weight: 600;">Notificaciones</span>
+                    <span th:if="${notificacionesSinLeer > 0}" th:text="${notificacionesSinLeer}"
+                        style="position: absolute; top: 10px; right: 10px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.7rem; font-weight: bold;">
+                    </span>
+                </a>
+
+                <!-- Idioma -->
+                <a href="#idioma" class="bubble-card">
+                    <div class="bubble-icon">
+                        <i data-lucide="languages"></i>
+                    </div>
+                    <span style="font-weight: 600;">Idioma</span>
+                </a>
+
+                <!-- Ayuda -->
+                <a href="#ayuda" class="bubble-card">
+                    <div class="bubble-icon">
+                        <i data-lucide="help-circle"></i>
+                    </div>
+                    <span style="font-weight: 600;">Ayuda</span>
+                </a>
+            </div>
+
+            <!-- Secciones de contenido -->
+            <div id="datos"
+                style="background: white; border-radius: 1rem; padding: 2rem; margin-top: 2rem; border: 1px solid var(--border);">
+                <h3 style="margin-top: 0;">Mis Datos Personales</h3>
+                <form>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Nombre Completo</label>
+                        <input type="text" class="form-control" th:value="${usuario.nombreCompleto}" readonly
+                            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" th:value="${usuario.email}" readonly
+                            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem;">
+                    </div>
+                    <button type="button" class="btn btn-primary" style="opacity: 0.5; cursor: not-allowed;">Guardar
+                        Cambios</button>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Edición deshabilitada
+                        temporalmente.</p>
+                </form>
+            </div>
+
+            <!-- Mis Noticias -->
+            <div id="mis-noticias" style="margin-top: 3rem;">
+                <h2 style="font-size: 1.5rem; margin-bottom: 1rem; font-weight: 600;">Mis Noticias Publicadas</h2>
+
+                <div th:if="${misNoticias == null or misNoticias.empty}"
+                    style="text-align: center; padding: 3rem; background: white; border-radius: 1rem; border: 1px solid var(--border);">
+                    <i data-lucide="file-x"
+                        style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                    <p style="color: var(--text-muted); font-size: 1.1rem;">Todavía estamos esperando a que suba su
+                        primera noticia.</p>
+                    <a th:href="@{/trabajador/subir-noticia}" class="btn btn-primary"
+                        style="margin-top: 1rem; display: inline-block;">Subir Noticia Ahora</a>
+                </div>
+
+                <div th:if="${misNoticias != null and !misNoticias.empty}" class="grid-noticias">
+                    <!-- Aquí iría el loop de noticias similar a Inicio o Categoría -->
+                    <div th:each="noticia : ${misNoticias}" class="noticia-card"
+                        style="margin-bottom: 1rem; background: white; border-radius: 1rem; overflow: hidden; border: 1px solid var(--border); display: flex;">
+                        <img th:src="${noticia.imagenUrl}" alt="Imagen"
+                            style="width: 150px; height: 150px; object-fit: cover;">
+                        <div style="padding: 1rem; flex: 1;">
+                            <h3 style="margin: 0 0 0.5rem;" th:text="${noticia.titulo}">Título</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 1rem;"
+                                th:text="${noticia.subtitulo}">Subtítulo</p>
+                            <a th:href="@{'/noticia/' + ${noticia.id}}"
+                                style="color: var(--primary); font-weight: 600; text-decoration: none;">Leer más</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="idioma"
+                style="background: white; border-radius: 1rem; padding: 2rem; margin-top: 2rem; border: 1px solid var(--border);">
+                <h3 style="margin-top: 0;">Idioma y Región</h3>
+                <p style="color: var(--text-muted);">Selecciona tu idioma preferido para la interfaz.</p>
+                <select style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem;">
+                    <option selected>Español (España)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Noticias App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="main-header">
+            <nav class="nav-container">
+                <a th:href="@{/}" class="logo">
+                    <i data-lucide="newspaper"></i>
+                    NoticiasApp
+                </a>
+            </nav>
+        </header>
+
+        <main class="container" style="max-width: 600px; margin: 5rem auto; text-align: center;">
+            <div style="margin-bottom: 2rem; color: var(--danger);">
+                <i data-lucide="alert-triangle" style="width: 64px; height: 64px;"></i>
+            </div>
+            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;">Algo salió mal</h1>
+            <p style="color: var(--secondary); font-size: 1.2rem; margin-bottom: 2rem;">
+                Ocurrió un error inesperado al procesar tu solicitud.
+            </p>
+
+            <div th:if="${error}" class="alert alert-danger" style="text-align: left; margin-bottom: 2rem;">
+                <strong>Detalle del error:</strong> <span th:text="${error}">Error message</span>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a th:href="@{/}" class="btn btn-primary">Volver al Inicio</a>
+                <a href="javascript:history.back()" class="btn btn-ghost">Intentar de nuevo</a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,440 @@
+package com.noticias.web.servicios;
+
+import com.noticias.web.dtos.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Cliente para comunicarse con la API de datos (noticias_api).
+ * Proporciona métodos para todas las operaciones CRUD de las entidades.
+ */
+@Service
+@SuppressWarnings({ "null", "unchecked" })
+public class ApiNoticiasCliente {
+
+    @Value("${api.noticias.url}")
+    private String apiUrl;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    // ==================== USUARIOS ====================
+
+    public List<UsuarioDTO> listarUsuarios() {
+        String url = apiUrl + "/usuarios";
+        ResponseEntity<List<UsuarioDTO>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<UsuarioDTO>>() {
+                });
+        return response.getBody();
+    }
+
+    public UsuarioDTO buscarUsuarioPorEmail(String email) {
+        String url = apiUrl + "/usuarios/email/" + email;
+        try {
+            System.out.println("🔍 Buscando usuario por email: " + url);
+            return restTemplate.getForObject(url, UsuarioDTO.class);
+        } catch (Exception e) {
+            System.out.println("❌ Error buscando usuario por email: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public UsuarioDTO buscarUsuarioPorId(Integer id) {
+        String url = apiUrl + "/usuarios/" + id;
+        try {
+            return restTemplate.getForObject(url, UsuarioDTO.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public UsuarioDTO crearUsuario(UsuarioDTO usuario) {
+        String url = apiUrl + "/usuarios";
+        return restTemplate.postForObject(url, usuario, UsuarioDTO.class);
+    }
+
+    public UsuarioDTO actualizarUsuario(Integer id, UsuarioDTO usuario) {
+        String url = apiUrl + "/usuarios/" + id;
+        HttpEntity<UsuarioDTO> request = new HttpEntity<>(usuario);
+        ResponseEntity<UsuarioDTO> response = restTemplate.exchange(url, HttpMethod.PUT, request, UsuarioDTO.class);
+        return response.getBody();
+    }
+
+    public boolean vetarUsuario(Integer id, String motivo) {
+        String url = apiUrl + "/usuarios/" + id + "/vetar";
+        Map<String, String> payload = Map.of("motivo", motivo);
+        try {
+            restTemplate.postForObject(url, payload, Map.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean desvetarUsuario(Integer id) {
+        String url = apiUrl + "/usuarios/" + id + "/desvetar";
+        try {
+            restTemplate.postForObject(url, null, Map.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean cerrarSesion(Integer id) {
+        String url = apiUrl + "/usuarios/" + id + "/logout";
+        try {
+            restTemplate.postForObject(url, null, Void.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ==================== CATEGORÍAS ====================
+
+    public List<CategoriaDTO> listarCategorias() {
+        String url = apiUrl + "/categorias";
+        System.out.println("🔍 Llamando a API de categorías: " + url);
+        try {
+            ResponseEntity<List<CategoriaDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<CategoriaDTO>>() {
+                    });
+            List<CategoriaDTO> categorias = response.getBody();
+            System.out.println("✅ Respuesta de categorías recibida: "
+                    + (categorias != null ? categorias.size() + " categorías" : "null"));
+            if (categorias != null && !categorias.isEmpty()) {
+                System.out.println("📋 Primera categoría: " + categorias.get(0).getNombre());
+            }
+            return categorias;
+        } catch (Exception e) {
+            System.out.println("❌ Error al obtener categorías: " + e.getClass().getName() + " - " + e.getMessage());
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    public List<CategoriaDTO> listarCategoriasRaiz() {
+        String url = apiUrl + "/categorias/raiz";
+        ResponseEntity<List<CategoriaDTO>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<CategoriaDTO>>() {
+                });
+        return response.getBody();
+    }
+
+    public List<CategoriaDTO> listarSubcategorias(Integer categoriaId) {
+        String url = apiUrl + "/categorias/" + categoriaId + "/subcategorias";
+        ResponseEntity<List<CategoriaDTO>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<CategoriaDTO>>() {
+                });
+        return response.getBody();
+    }
+
+    public CategoriaDTO buscarCategoriaPorId(Integer id) {
+        String url = apiUrl + "/categorias/" + id;
+        try {
+            return restTemplate.getForObject(url, CategoriaDTO.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public CategoriaDTO buscarCategoriaPorNombre(String nombre) {
+        String url = apiUrl + "/categorias/nombre/" + nombre;
+        try {
+            return restTemplate.getForObject(url, CategoriaDTO.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // ==================== NOTICIAS ====================
+
+    public List<NoticiaDTO> listarTodasLasNoticias() {
+        String url = apiUrl + "/noticias";
+        ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                });
+        return response.getBody();
+    }
+
+    public List<NoticiaDTO> listarNoticias() {
+        return listarTodasLasNoticias();
+    }
+
+    public List<NoticiaDTO> listarNoticiasDestacadas() {
+        String url = apiUrl + "/noticias/destacadas";
+        ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                });
+        return response.getBody();
+    }
+
+    public List<NoticiaDTO> listarNoticiasPopulares() {
+        String url = apiUrl + "/noticias/populares";
+        ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                });
+        return response.getBody();
+    }
+
+    public List<NoticiaDTO> listarNoticiasPorCategoria(Integer categoriaId) {
+        String url = apiUrl + "/noticias/categoria/" + categoriaId;
+        ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                });
+        return response.getBody();
+    }
+
+    public List<NoticiaDTO> listarNoticiasPorCategoriaNombre(String nombre) {
+        String url = apiUrl + "/noticias/categoria/nombre/" + nombre;
+        try {
+            ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                    });
+            return response.getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    public List<NoticiaDTO> listarNoticiasForoPorCategoriaNombre(String nombre) {
+        String url = apiUrl + "/noticias/categoria/nombre/" + nombre + "/foro";
+        try {
+            ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                    });
+            return response.getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    public List<NoticiaDTO> listarNoticiasPorAutor(Integer autorId) {
+        String url = apiUrl + "/noticias/autor/" + autorId;
+        try {
+            ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                    });
+            return response.getBody();
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    public NoticiaDTO buscarNoticiaPorId(Integer id) {
+        String url = apiUrl + "/noticias/" + id;
+        try {
+            return restTemplate.getForObject(url, NoticiaDTO.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public NoticiaDTO crearNoticia(NoticiaDTO noticia) {
+        String url = apiUrl + "/noticias";
+        return restTemplate.postForObject(url, noticia, NoticiaDTO.class);
+    }
+
+    public NoticiaDTO actualizarNoticia(Integer id, NoticiaDTO noticia) {
+        String url = apiUrl + "/noticias/" + id;
+        HttpEntity<NoticiaDTO> request = new HttpEntity<>(noticia);
+        ResponseEntity<NoticiaDTO> response = restTemplate.exchange(url, HttpMethod.PUT, request, NoticiaDTO.class);
+        return response.getBody();
+    }
+
+    public boolean eliminarNoticia(Integer id) {
+        String url = apiUrl + "/noticias/" + id;
+        try {
+            restTemplate.delete(url);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ==================== COMENTARIOS ====================
+
+    public List<ComentarioDTO> listarComentariosPorNoticia(Integer noticiaId) {
+        String url = apiUrl + "/comentarios/noticia/" + noticiaId;
+        ResponseEntity<List<ComentarioDTO>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<ComentarioDTO>>() {
+                });
+        return response.getBody();
+    }
+
+    public ComentarioDTO crearComentario(ComentarioDTO comentario) {
+        String url = apiUrl + "/comentarios";
+        return restTemplate.postForObject(url, comentario, ComentarioDTO.class);
+    }
+
+    public boolean eliminarComentario(Integer id) {
+        String url = apiUrl + "/comentarios/" + id;
+        try {
+            restTemplate.delete(url);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ==================== AUTENTICACIÓN ====================
+
+    public boolean confirmarEmail(String token) {
+        String url = apiUrl + "/usuarios/confirmar-email";
+        Map<String, String> payload = Map.of("token", token);
+        try {
+            restTemplate.postForObject(url, payload, Map.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String generarTokenRecuperacion(String email) {
+        String url = apiUrl + "/usuarios/recuperar-password";
+        Map<String, String> payload = Map.of("email", email);
+        try {
+            Map<String, String> response = restTemplate.postForObject(url, payload, Map.class);
+            return response != null ? response.get("token") : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public boolean restablecerPassword(String token, String nuevaPasswordEncriptada) {
+        String url = apiUrl + "/usuarios/restablecer-password";
+        Map<String, String> payload = Map.of("token", token, "nuevaPassword", nuevaPasswordEncriptada);
+        try {
+            restTemplate.postForObject(url, payload, Map.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ==================== PUBLICACIÓN USUARIO ====================
+
+    public NoticiaDTO publicarNoticiaUsuario(String titulo, String subtitulo, String contenido,
+            Integer categoriaId, Integer autorId,
+            org.springframework.web.multipart.MultipartFile file) {
+        String url = apiUrl + "/noticias/publicar";
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            org.springframework.util.MultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
+            body.add("titulo", titulo);
+            body.add("subtitulo", subtitulo);
+            body.add("contenido", contenido);
+            body.add("categoriaId", categoriaId);
+            body.add("autorId", autorId);
+            body.add("file", new org.springframework.core.io.ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            });
+
+            HttpEntity<org.springframework.util.MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body,
+                    headers);
+
+            ResponseEntity<NoticiaDTO> response = restTemplate.postForEntity(url, requestEntity, NoticiaDTO.class);
+            return response.getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("Error al publicar noticia: " + e.getMessage());
+        }
+    }
+
+    // ==================== ADMIN & INTERACCIONES ====================
+
+    public List<Map<String, Object>> listarSanciones() {
+        String url = apiUrl + "/admin/sanciones";
+        ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Map<String, Object>>>() {
+                });
+        return response.getBody();
+    }
+
+    public void resolverSancion(Integer id, String resolucion, String accion, Integer adminId) {
+        String url = apiUrl + "/admin/sanciones/" + id + "/resolver?resolucion=" + resolucion + "&accion=" + accion
+                + "&adminId=" + adminId;
+        restTemplate.postForObject(url, null, Map.class);
+    }
+
+    public List<UsuarioDTO> listarVetados() {
+        String url = apiUrl + "/admin/vetados";
+        ResponseEntity<List<UsuarioDTO>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null, new ParameterizedTypeReference<List<UsuarioDTO>>() {
+                });
+        return response.getBody();
+    }
+
+    public Map<String, Object> getAdminStats() {
+        String url = apiUrl + "/admin/stats";
+        try {
+            return restTemplate.getForObject(url, Map.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Map.of("totalUsuarios", 0, "usuariosVetados", 0, "porcentajeVetados", 0);
+        }
+    }
+    // ==================== NOTICIAS MULTIPART ====================
+
+    public String publicarNoticia(String titulo, String subtitulo, String contenido, Integer categoriaId,
+            Integer autorId, org.springframework.web.multipart.MultipartFile file) {
+        String url = apiUrl + "/noticias/publicar";
+
+        try {
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.MULTIPART_FORM_DATA);
+
+            org.springframework.util.MultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
+            body.add("titulo", titulo);
+            body.add("subtitulo", subtitulo);
+            body.add("contenido", contenido);
+            body.add("categoriaId", categoriaId);
+            body.add("autorId", autorId);
+
+            if (file != null && !file.isEmpty()) {
+                body.add("file", new org.springframework.core.io.ByteArrayResource(file.getBytes()) {
+                    @Override
+                    public String getFilename() {
+                        return file.getOriginalFilename();
+                    }
+                });
+            }
+
+            org.springframework.http.HttpEntity<org.springframework.util.MultiValueMap<String, Object>> requestEntity = new org.springframework.http.HttpEntity<>(
+                    body, headers);
+
+            restTemplate.postForEntity(url, requestEntity, String.class);
+            return null; // Éxito
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            return e.getResponseBodyAsString(); // Error del servidor
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error interno al conectar con el servidor.";
+        }
+    }
+}

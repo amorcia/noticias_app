@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{vistas/Inicio :: layout(~{::section})}">
+
+<head>
+    <title>Subir Noticia - NoticiasApp</title>
+</head>
+
+<body>
+    <section class="container" style="max-width: 800px; margin: 3rem auto;">
+        <div
+            style="background: var(--card-bg); padding: 2rem; border-radius: var(--radius); border: 1px solid var(--border);">
+            <div style="margin-bottom: 2rem;">
+                <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Publicar Nueva Noticia</h1>
+                <p style="color: var(--text-muted);">Completa el formulario para subir tu noticia. Todo el contenido
+                    será revisado por IA.</p>
+            </div>
+
+            <div th:if="${error}" class="alert alert-danger" style="margin-bottom: 1.5rem;">
+                <!-- Try to use icon if lucide available in layout, else generic -->
+                <span th:text="${error}">Error al publicar</span>
+            </div>
+
+            <form th:action="@{/trabajador/publicar}" method="post" enctype="multipart/form-data">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="titulo" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Título</label>
+                    <input type="text" id="titulo" name="titulo" required class="form-control"
+                        placeholder="Escribe un título llamativo"
+                        style="width: 100%; padding: 0.8rem; border-radius: var(--radius); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text);">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="subtitulo" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Subtítulo /
+                        Resumen</label>
+                    <input type="text" id="subtitulo" name="subtitulo" required class="form-control"
+                        placeholder="Un breve resumen de la noticia.."
+                        style="width: 100%; padding: 0.8rem; border-radius: var(--radius); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text);">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="categoriaId"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Categoría</label>
+                    <select id="categoriaId" name="categoriaId" required class="form-control"
+                        style="width: 100%; padding: 0.8rem; border-radius: var(--radius); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text);">
+                        <option value="" disabled selected>Selecciona una categoría</option>
+                        <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}">Deportes
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Imagen o
+                        Multimedia</label>
+                    <div style="border: 2px dashed var(--border); padding: 2rem; text-align: center; border-radius: var(--radius); cursor: pointer;"
+                        onclick="document.getElementById('file').click()">
+                        <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Haz clic para seleccionar un archivo
+                        </p>
+                        <input type="file" id="file" name="file" accept="image/*,video/*" required
+                            style="display: none;"
+                            onchange="this.nextElementSibling.textContent = this.files[0].name.slice(-20)">
+                        <p class="file-name" style="margin-top: 0.5rem; font-weight: 600; color: var(--primary);"></p>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label for="contenido" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Descripción
+                        / Contenido</label>
+                    <textarea id="contenido" name="contenido" rows="10" required maxlength="5000"
+                        placeholder="Escribe el cuerpo de la noticia aquí..."
+                        style="width: 100%; padding: 0.8rem; border-radius: var(--radius); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text); resize: vertical;"></textarea>
+                    <small style="color: var(--text-muted); float: right;">Max 5000 caracteres</small>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                    <a th:href="@{/}" class="btn btn-ghost"
+                        style="padding: 0.8rem; text-decoration: none; color: var(--text);">Cancelar</a>
+                    <button type="submit" class="btn btn-primary"
+                        style="padding: 0.8rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: var(--radius); cursor: pointer;">Publicar
+                        Noticia</button>
+                </div>
+            </form>
+        </div>
+    </section>
+</body>
+
+</html>

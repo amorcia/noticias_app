@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página no encontrada - Noticias App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+
+    <div class="text-center max-w-lg px-6">
+        <!-- Icono de Alerta / Error 404 -->
+        <div class="flex justify-center mb-6">
+            <div class="p-4 bg-red-50 rounded-full">
+                <i data-lucide="file-question" class="w-16 h-16 text-red-500"></i>
+            </div>
+        </div>
+
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Página no encontrada</h1>
+        <p class="text-gray-600 mb-8">
+            Lo sentimos, no pudimos encontrar la página que buscas. Puede que haya sido eliminada o que la URL sea
+            incorrecta.
+        </p>
+
+        <div class="space-y-4">
+            <a href="/"
+                class="inline-flex items-center justify-center w-full px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-sm">
+                Intentar de nuevo
+            </a>
+
+            <!-- Botón intentar de nuevo (simplemente recarga o vuelve atrás, pero userId pidió explícitamente "Intentar de nuevo te rediriga exitosamente a Inicio")
+                 Así que el principal es Inicio. Pondré un secundario sutil. -->
+        </div>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

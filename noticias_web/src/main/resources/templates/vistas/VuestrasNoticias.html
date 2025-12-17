@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{vistas/Inicio :: layout(~{::div.content-wrapper})}">
+
+<head>
+    <title>Vuestras Noticias</title>
+</head>
+
+<body>
+    <div class="content-wrapper">
+        <div style="max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem;">
+            <!-- Header Section -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div>
+                    <h1 class="section-title">Vuestras Noticias</h1>
+                    <p style="color: var(--text-muted); margin-top: 0.5rem;">
+                        Noticias compartidas por la comunidad
+                    </p>
+                </div>
+
+                <!-- Botón Publicar (solo si está autenticado) -->
+                <div th:if="${isLoggedIn}">
+                    <a th:href="@{/vuestras-noticias/publicar}" class="btn btn-primary">
+                        <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                        Publicar Noticia
+                    </a>
+                </div>
+                <div th:unless="${isLoggedIn}">
+                    <a th:href="@{/auth/login}" class="btn btn-primary">
+                        <i data-lucide="log-in" style="width: 18px; height: 18px;"></i>
+                        Inicia sesión para publicar
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mensaje de error -->
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+            <!-- Grid de Noticias -->
+            <div th:if="${noticias != null and !noticias.empty}" class="news-grid">
+                <div th:each="noticia : ${noticias}" class="news-card">
+                    <div class="card-image" th:if="${noticia.imagenUrl}">
+                        <img th:src="${noticia.imagenUrl}" th:alt="${noticia.titulo}">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-meta">
+                            <span th:if="${noticia.categoriaNombre}" class="badge badge-primary"
+                                th:text="${noticia.categoriaNombre}">Categoría</span>
+                            <span th:text="${#temporals.format(noticia.fechaPublicacion, 'dd/MM/yyyy')}">Fecha</span>
+                        </div>
+                        <h3 class="card-title">
+                            <a th:href="@{'/noticia/' + ${noticia.id}}" th:text="${noticia.titulo}">Título</a>
+                        </h3>
+                        <p class="card-excerpt" th:text="${noticia.subtitulo}">Subtítulo</p>
+
+                        <!-- Interacciones (Likes/Dislikes) -->
+                        <div
+                            style="display: flex; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                            <button th:if="${isLoggedIn}" th:onclick="'votar(\'LIKE\', ' + ${noticia.id} + ')'"
+                                class="btn btn-ghost" style="padding: 0.5rem; font-size: 0.9rem;">
+                                <i data-lucide="thumbs-up" style="width: 16px; height: 16px;"></i>
+                                <span th:text="${noticia.likes != null ? noticia.likes : 0}">0</span>
+                            </button>
+                            <span th:unless="${isLoggedIn}" style="color: var(--text-muted); font-size: 0.9rem;">
+                                <i data-lucide="thumbs-up" style="width: 16px; height: 16px; display: inline;"></i>
+                                <span th:text="${noticia.likes != null ? noticia.likes : 0}">0</span>
+                            </span>
+
+                            <button th:if="${isLoggedIn}" th:onclick="'votar(\'DISLIKE\', ' + ${noticia.id} + ')'"
+                                class="btn btn-ghost" style="padding: 0.5rem; font-size: 0.9rem;">
+                                <i data-lucide="thumbs-down" style="width: 16px; height: 16px;"></i>
+                                <span th:text="${noticia.dislikes != null ? noticia.dislikes : 0}">0</span>
+                            </button>
+                            <span th:unless="${isLoggedIn}" style="color: var(--text-muted); font-size: 0.9rem;">
+                                <i data-lucide="thumbs-down" style="width: 16px; height: 16px; display: inline;"></i>
+                                <span th:text="${noticia.dislikes != null ? noticia.dislikes : 0}">0</span>
+                            </span>
+
+                            <span style="color: var(--text-muted); font-size: 0.9rem; margin-left: auto;">
+                                <i data-lucide="message-circle" style="width: 16px; height: 16px; display: inline;"></i>
+                                <span
+                                    th:text="${noticia.comentariosCount != null ? noticia.comentariosCount : 0}">0</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensaje si no hay noticias -->
+            <div th:if="${noticias == null or noticias.empty}"
+                style="text-align: center; padding: 4rem 2rem; color: var(--text-muted);">
+                <i data-lucide="newspaper" style="width: 64px; height: 64px; margin: 0 auto 1rem; opacity: 0.3;"></i>
+                <h3 style="margin-bottom: 0.5rem;">No hay noticias de usuarios aún</h3>
+                <p>Sé el primero en compartir una noticia con la comunidad</p>
+                <a th:if="${isLoggedIn}" th:href="@{/vuestras-noticias/publicar}" class="btn btn-primary"
+                    style="margin-top: 1rem;">
+                    Publicar Primera Noticia
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
