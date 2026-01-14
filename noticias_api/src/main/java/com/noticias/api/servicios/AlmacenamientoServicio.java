@@ -13,7 +13,7 @@ import java.util.UUID;
 @Service
 public class AlmacenamientoServicio {
 
-    private final Path rootLocation = Paths.get("uploads");
+    private final Path rootLocation = Paths.get("/uploads");
 
     public AlmacenamientoServicio() {
         try {

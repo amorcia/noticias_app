@@ -25,6 +25,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: noticias006
     depends_on:
       - noticias-db
+    volumes:
+      - uploads_data:/uploads
     networks:
       - noticias-network
 
@@ -38,6 +40,8 @@ services:
       - API_NOTICIAS_URL=http://noticias-api:8081
     depends_on:
       - noticias-api
+    volumes:
+      - uploads_data:/uploads
     networks:
       - noticias-network
 
@@ -51,6 +55,7 @@ services:
 
 volumes:
   noticias_db_data:
+  uploads_data:
 
 
 networks:

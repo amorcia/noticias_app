@@ -6,6 +6,7 @@
     --accent: #f59e0b;
     --danger: #ef4444;
     --success: #22c55e;
+    --bg: #f8fafc;
     --background: #f8fafc;
     --surface: #ffffff;
     --text-main: #0f172a;
@@ -18,10 +19,11 @@
 }
 
 /* Dark Mode Variables */
-body.dark-mode {
+[data-theme="dark"] {
     --primary: #3b82f6;
     --primary-dark: #2563eb;
     --secondary: #94a3b8;
+    --bg: #0f172a;
     --background: #0f172a;
     --surface: #1e293b;
     --text-main: #f1f5f9;
@@ -71,7 +73,7 @@ img {
 
 /* Header & Navbar */
 .main-header {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--surface);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
     position: sticky;
@@ -79,10 +81,6 @@ img {
     z-index: 50;
     padding: 1rem 0;
     transition: background-color 0.3s;
-}
-
-body.dark-mode .main-header {
-    background: rgba(30, 41, 59, 0.9);
 }
 
 .nav-container {
@@ -529,4 +527,158 @@ body.dark-mode .btn-ghost:hover {
         display: none;
         /* Mobile menu to be implemented if needed */
     }
+}
+
+/* Premium News Card (El Pais Style) */
+.news-card-premium {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    height: 100%;
+}
+
+.news-card-premium:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.news-card-premium .card-image {
+    height: 280px;
+    /* Taller images */
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.news-card-premium .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s ease;
+}
+
+.news-card-premium:hover .card-image img {
+    transform: scale(1.03);
+}
+
+.premium-content {
+    padding: 1.5rem 2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.premium-title {
+    font-size: 1.6rem;
+    /* Larger title */
+    font-weight: 800;
+    /* Extra bold */
+    margin-bottom: 0.75rem;
+    line-height: 1.25;
+    font-family: 'Outfit', sans-serif;
+}
+
+.premium-excerpt {
+    font-size: 1.05rem;
+    color: var(--secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    flex: 1;
+}
+
+/* Interaction Bar */
+.interaction-bar {
+    display: flex;
+    gap: 1.5rem;
+    padding-top: 1rem;
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+    align-items: center;
+}
+
+.interaction-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: none;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+}
+
+.interaction-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-main);
+}
+
+/* Specific Interaction Colors on active/hover */
+.interaction-item.like.active,
+.interaction-item.like:hover {
+    color: #2563eb;
+}
+
+/* Blue */
+.interaction-item.dislike.active,
+.interaction-item.dislike:hover {
+    color: #ef4444;
+}
+
+/* Red */
+.interaction-item.comment:hover {
+    color: #f59e0b;
+}
+
+/* Amber */
+.interaction-item.report:hover {
+    color: #64748b;
+}
+
+/* Slate */
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background: var(--surface);
+    padding: 2rem;
+    border-radius: 1.5rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    transform: translateY(20px);
+    transition: transform 0.3s;
+}
+
+.modal-overlay.open .modal-content {
+    transform: translateY(0);
 }

@@ -240,8 +240,11 @@
                         <button class="nav-btn" onclick="showTab('sanciones', this)">
                             <i data-lucide="gavel"></i> Sanciones
                         </button>
-                        <button class="nav-btn" onclick="showTab('usuarios', this)">
-                            <i data-lucide="users"></i> Usr. Vetados
+                        <button class="nav-btn" onclick="showTab('vetados', this)">
+                            <i data-lucide="user-x"></i> Usr. Vetados
+                        </button>
+                        <button class="nav-btn" onclick="showTab('borradas', this)">
+                            <i data-lucide="trash"></i> Noticias Borradas
                         </button>
                         <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.5rem 0;">
                         <button class="nav-btn" onclick="window.location.href='/noticias/'">
@@ -382,6 +385,47 @@
                                     <tr th:if="${vetados.empty}">
                                         <td colspan="4" style="text-align: center; color: var(--text-muted);">No hay
                                             usuarios vetados actualmente.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Tab: Noticias Borradas -->
+                    <div id="borradas" class="tab-content" style="display: none;">
+                        <h2 style="margin-bottom: 2rem;">Historial de Noticias Borradas</h2>
+                        <div class="table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Noticia</th>
+                                        <th>Autor Original</th>
+                                        <th>Eliminado Por</th>
+                                        <th>Motivo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="borrada : ${noticiasEliminadas}">
+                                        <td
+                                            th:text="${#temporals.format(borrada.fechaEliminacion, 'dd/MM/yyyy HH:mm')}">
+                                            Fecha</td>
+                                        <td>
+                                            <div style="font-weight: 600;" th:text="${borrada.titulo}">Título</div>
+                                            <div style="font-size: 0.8em; color: var(--text-muted);"
+                                                th:text="${borrada.categoriaNombre}">Categoría</div>
+                                        </td>
+                                        <td th:text="${borrada.autorNombre}">Autor</td>
+                                        <td>
+                                            <div style="font-weight: 600;" th:text="${borrada.eliminadoPor}">Admin</div>
+                                            <div class="badge badge-accent" style="font-size: 0.7em;"
+                                                th:text="${borrada.rolEliminador}">ROL</div>
+                                        </td>
+                                        <td th:text="${borrada.motivo}">Motivo...</td>
+                                    </tr>
+                                    <tr th:if="${noticiasEliminadas == null or noticiasEliminadas.empty}">
+                                        <td colspan="5" style="text-align: center; padding: 2rem;">No hay noticias
+                                            borradas por
+                                            administración.</td>
                                     </tr>
                                 </tbody>
                             </table>

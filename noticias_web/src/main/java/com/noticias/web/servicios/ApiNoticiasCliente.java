@@ -200,6 +200,28 @@ public class ApiNoticiasCliente {
         return response.getBody();
     }
 
+    public List<NoticiaDTO> listarNoticiasPorCategoriaFiltrado(Integer categoriaId, String filtro, Integer mes,
+            Integer anio) {
+        String url = apiUrl + "/noticias/categoria/" + categoriaId + "/filtrar?";
+        if (filtro != null)
+            url += "filtro=" + filtro + "&";
+        if (mes != null)
+            url += "mes=" + mes + "&";
+        if (anio != null)
+            url += "anio=" + anio;
+
+        try {
+            ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                    });
+            return response.getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
     public List<NoticiaDTO> listarNoticiasPorCategoriaNombre(String nombre) {
         String url = apiUrl + "/noticias/categoria/nombre/" + nombre;
         try {
@@ -262,8 +284,32 @@ public class ApiNoticiasCliente {
         return response.getBody();
     }
 
-    public boolean eliminarNoticia(Integer id) {
-        String url = apiUrl + "/noticias/" + id;
+    public void votarNoticia(Integer id, boolean like) {
+        String url = apiUrl + "/noticias/" + id + "/votar?like=" + like;
+        restTemplate.postForObject(url, null, Void.class);
+    }
+
+    public List<NoticiaEliminadaDTO> listarNoticiasEliminadas() {
+        String url = apiUrl + "/noticias/eliminadas/admin";
+        try {
+            ResponseEntity<List<NoticiaEliminadaDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<NoticiaEliminadaDTO>>() {
+                    });
+            return response.getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    public boolean eliminarNoticia(Integer id, String motivo, Integer eliminadorId) {
+        String url = apiUrl + "/noticias/" + id + "?";
+        if (motivo != null)
+            url += "motivo=" + motivo + "&";
+        if (eliminadorId != null)
+            url += "eliminadorId=" + eliminadorId;
+
         try {
             restTemplate.delete(url);
             return true;

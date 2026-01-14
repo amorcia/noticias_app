@@ -4,7 +4,6 @@ DROP TABLE IF EXISTS etiquetas CASCADE;
 DROP TABLE IF EXISTS comentarios CASCADE;
 DROP TABLE IF EXISTS noticias CASCADE;
 DROP TABLE IF EXISTS categorias CASCADE;
-DROP TABLE IF EXISTS usuarios CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 
 -- Tabla de Roles
@@ -13,25 +12,7 @@ CREATE TABLE roles (
     nombre VARCHAR(50) UNIQUE NOT NULL
 );
 
--- Tabla de Usuarios
-CREATE TABLE usuarios (
-    id SERIAL PRIMARY KEY,
-    nombre_completo VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    movil VARCHAR(20),
-    password VARCHAR(255) NOT NULL,
-    rol_id INTEGER REFERENCES roles(id),
-    activo BOOLEAN DEFAULT TRUE,
-    token_confirmacion VARCHAR(255),
-    token_recuperacion VARCHAR(255),
-    fecha_token TIMESTAMP,
-    -- Campos para el sistema de Veto/Ban
-    vetado BOOLEAN DEFAULT FALSE,
-    motivo_veto TEXT,
-    fecha_veto TIMESTAMP,
-    vetado_hasta TIMESTAMP,
-    es_super_admin BOOLEAN DEFAULT FALSE
-);
+
 
 -- Tabla de Categorías (con soporte para subcategorías)
 CREATE TABLE categorias (
@@ -84,38 +65,28 @@ CREATE TABLE noticia_etiquetas (
 
 -- INSERTS INICIALES
 
--- 1. Roles
-INSERT INTO roles (nombre) VALUES ('ADMIN'), ('USER');
-
--- 2. Usuarios (Admin por defecto)
--- Password: 'password' encriptada con BCrypt
-INSERT INTO usuarios (nombre_completo, email, password, rol_id, activo) 
-VALUES ('Administrador Principal', 'admin@noticias.com', '$2a$10$X/hX.6.1.1.1.1.1.1.1.1', 1, true);
-
--- Super Admin (antoniowebserver@gmail.com) - Password: 'admin123'
-INSERT INTO usuarios (nombre_completo, email, password, rol_id, activo, es_super_admin) 
-VALUES ('Antonio Super Admin', 'antoniowebserver@gmail.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, true, true);
+-- 1. Roles (IDs específicos: 1=OWNER, 2=ADMIN, 3=TRABAJADOR, 4=USER)
+INSERT INTO roles (id, nombre) VALUES 
+(1, 'OWNER'),
+(2, 'ADMIN'),
+(3, 'TRABAJADOR'),
+(4, 'USER');
 
 -- 3. Categorías y Subcategorías
 INSERT INTO categorias (nombre, descripcion, color, parent_id) VALUES 
 ('Tecnología', 'Novedades del mundo tech', '#3B82F6', NULL),
 ('Deportes', 'Todo sobre deportes', '#EF4444', NULL),
-('Política', 'Actualidad política', '#F59E0B', NULL),
+('Politica', 'Actualidad política', '#F59E0B', NULL),
 ('Cultura', 'Arte, cine y música', '#8B5CF6', NULL);
 
 -- Subcategorías de Tecnología
 INSERT INTO categorias (nombre, descripcion, color, parent_id) VALUES 
-('Móviles', 'Smartphones y tablets', '#60A5FA', 1),
+('Moviles', 'Smartphones y tablets', '#60A5FA', 1),
 ('IA', 'Inteligencia Artificial', '#60A5FA', 1),
 ('Hardware', 'Componentes y PC', '#60A5FA', 1);
 
 -- Subcategorías de Deportes
 INSERT INTO categorias (nombre, descripcion, color, parent_id) VALUES 
-('Fútbol', 'Liga y Champions', '#F87171', 2),
+('Futbol', 'Liga y Champions', '#F87171', 2),
 ('Baloncesto', 'NBA y ACB', '#F87171', 2);
 
--- 4. Noticias de Ejemplo
-INSERT INTO noticias (titulo, subtitulo, contenido, autor_id, categoria_id, destacada, imagen_url) VALUES 
-('Lanzamiento del nuevo SuperPhone', 'Revolucionará el mercado', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', 1, 5, true, 'https://source.unsplash.com/random/800x600?tech'),
-('La IA domina el mundo', 'Nuevos avances en GPT-5', 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', 1, 6, true, 'https://source.unsplash.com/random/800x600?ai'),
-('Final de la Champions', 'Un partido histórico', 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.', 1, 8, false, 'https://source.unsplash.com/random/800x600?soccer');

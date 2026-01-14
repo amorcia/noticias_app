@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Verificación 2FA - NoticiasApp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+
+<body
+    style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--background);">
+    <div class="card" style="width: 100%; max-width: 400px; padding: 2rem;">
+        <h2 style="text-align: center; margin-bottom: 1rem;">Verificación de Seguridad</h2>
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">
+            Introduce el código de tu aplicación de autenticación.
+        </p>
+
+        <form th:action="@{/auth/2fa/verify}" method="post">
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label class="form-label" style="display: block; text-align: center; margin-bottom: 0.75rem;">Código
+                    2FA</label>
+                <div style="display: flex; justify-content: center;">
+                    <input type="text" name="code" class="form-control" placeholder="123456" required autocomplete="off"
+                        autofocus maxlength="6" pattern="\d{6}"
+                        style="width: 100%; max-width: 250px; text-align: center; font-size: 1.25rem; letter-spacing: 0.2rem; padding: 0.75rem;">
+                </div>
+            </div>
+
+            <div th:if="${error}" class="alert alert-danger" style="margin-bottom: 1rem;">
+                <span th:text="${error}">Error</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Verificar</button>
+        </form>
+    </div>
+</body>
+
+</html>

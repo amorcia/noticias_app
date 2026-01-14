@@ -15,6 +15,16 @@ public class UsuarioDTO {
     private String tokenSession;
     private Boolean vetado;
     private String motivoVeto;
+    private String secretKey2FA;
+
+    public String getSecretKey2FA() {
+        return secretKey2FA;
+    }
+
+    public void setSecretKey2FA(String secretKey2FA) {
+        this.secretKey2FA = secretKey2FA;
+    }
+
     private LocalDateTime fechaVeto;
     private LocalDateTime vetadoHasta;
     private String imagenUrl;

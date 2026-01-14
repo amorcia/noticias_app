@@ -40,10 +40,12 @@ public class AdminControlador {
         try {
             List<Map<String, Object>> sanciones = apiCliente.listarSanciones();
             List<UsuarioDTO> vetados = apiCliente.listarVetados();
+            List<com.noticias.web.dtos.NoticiaEliminadaDTO> noticiasEliminadas = apiCliente.listarNoticiasEliminadas();
             Map<String, Object> stats = apiCliente.getAdminStats();
 
             model.addAttribute("sanciones", sanciones);
             model.addAttribute("vetados", vetados);
+            model.addAttribute("noticiasEliminadas", noticiasEliminadas);
             model.addAttribute("stats", stats);
         } catch (Exception e) {
             e.printStackTrace();

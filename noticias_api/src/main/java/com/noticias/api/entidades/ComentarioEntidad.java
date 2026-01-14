@@ -3,35 +3,29 @@ package com.noticias.api.entidades;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-/**
- * Entidad Comentario.
- */
 @Entity
 @Table(name = "comentarios")
 public class ComentarioEntidad {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String contenido;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private UsuarioEntidad autor;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id")
-    private UsuarioEntidad usuario;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "noticia_id")
+    @JoinColumn(name = "noticia_id", nullable = false)
     private NoticiaEntidad noticia;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String contenido;
+
     private LocalDateTime fecha;
 
     public ComentarioEntidad() {
     }
 
-    // Getters y setters
     public Integer getId() {
         return id;
     }
@@ -40,20 +34,12 @@ public class ComentarioEntidad {
         this.id = id;
     }
 
-    public String getContenido() {
-        return contenido;
+    public UsuarioEntidad getAutor() {
+        return autor;
     }
 
-    public void setContenido(String contenido) {
-        this.contenido = contenido;
-    }
-
-    public UsuarioEntidad getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(UsuarioEntidad usuario) {
-        this.usuario = usuario;
+    public void setAutor(UsuarioEntidad autor) {
+        this.autor = autor;
     }
 
     public NoticiaEntidad getNoticia() {
@@ -62,6 +48,14 @@ public class ComentarioEntidad {
 
     public void setNoticia(NoticiaEntidad noticia) {
         this.noticia = noticia;
+    }
+
+    public String getContenido() {
+        return contenido;
+    }
+
+    public void setContenido(String contenido) {
+        this.contenido = contenido;
     }
 
     public LocalDateTime getFecha() {

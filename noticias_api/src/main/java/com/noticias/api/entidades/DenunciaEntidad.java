@@ -6,34 +6,32 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "denuncias")
 public class DenunciaEntidad {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "autor_id", nullable = false)
-    private UsuarioEntidad autor;
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private UsuarioEntidad denunciante;
 
-    @Column(nullable = false)
-    private String tipo; // "NOTICIA", "COMENTARIO"
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "noticia_id", nullable = true)
+    private NoticiaEntidad noticia;
 
-    @Column(name = "id_objeto", nullable = false)
-    private Integer idObjeto;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comentario_id", nullable = true)
+    private ComentarioEntidad comentario;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String motivo;
-
-    @Column(nullable = false)
-    private String estado; // "PENDIENTE", "RESUELTO", "DESCARTADA"
-
-    @Column(nullable = false)
+    private String motivo; // Enum logic handled as String for flexibility: "SPAM", "ODIO", "OTRO"
+    private String descripcion; // Optional description
     private LocalDateTime fecha;
+
+    @Column(columnDefinition = "VARCHAR(20) DEFAULT 'PENDIENTE'")
+    private String estado = "PENDIENTE";
 
     public DenunciaEntidad() {
     }
 
-    // Getters y Setters
     public Integer getId() {
         return id;
     }
@@ -42,28 +40,28 @@ public class DenunciaEntidad {
         this.id = id;
     }
 
-    public UsuarioEntidad getAutor() {
-        return autor;
+    public UsuarioEntidad getDenunciante() {
+        return denunciante;
     }
 
-    public void setAutor(UsuarioEntidad autor) {
-        this.autor = autor;
+    public void setDenunciante(UsuarioEntidad denunciante) {
+        this.denunciante = denunciante;
     }
 
-    public String getTipo() {
-        return tipo;
+    public NoticiaEntidad getNoticia() {
+        return noticia;
     }
 
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
+    public void setNoticia(NoticiaEntidad noticia) {
+        this.noticia = noticia;
     }
 
-    public Integer getIdObjeto() {
-        return idObjeto;
+    public ComentarioEntidad getComentario() {
+        return comentario;
     }
 
-    public void setIdObjeto(Integer idObjeto) {
-        this.idObjeto = idObjeto;
+    public void setComentario(ComentarioEntidad comentario) {
+        this.comentario = comentario;
     }
 
     public String getMotivo() {
@@ -74,12 +72,12 @@ public class DenunciaEntidad {
         this.motivo = motivo;
     }
 
-    public String getEstado() {
-        return estado;
+    public String getDescripcion() {
+        return descripcion;
     }
 
-    public void setEstado(String estado) {
-        this.estado = estado;
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
     }
 
     public LocalDateTime getFecha() {
@@ -88,5 +86,13 @@ public class DenunciaEntidad {
 
     public void setFecha(LocalDateTime fecha) {
         this.fecha = fecha;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 }

@@ -1,109 +1,328 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{vistas/Inicio :: layout(~{::section})}">
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${noticia.titulo} + ' | NoticiasApp'">Detalle Noticia</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
 
 <body>
-    <section class="container" style="max-width: 900px; margin: 3rem auto; padding: 0 1.5rem;">
-        <!-- Cabecera Noticia -->
-        <div style="margin-bottom: 2rem;">
-            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
-                <span class="badge badge-primary" th:text="${noticia.categoriaNombre}">Categoría</span>
-                <span style="color: var(--text-muted); font-size: 0.9rem;"
-                    th:text="${#temporals.format(noticia.fechaPublicacion, 'dd MMMM yyyy')}">Fecha</span>
-            </div>
-            <h1 style="font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 1rem;"
-                th:text="${noticia.titulo}">Título de la Noticia</h1>
-            <p style="font-size: 1.2rem; color: var(--secondary); line-height: 1.6;" th:text="${noticia.subtitulo}">
-                Subtítulo...</p>
-        </div>
 
-        <!-- Imagen Principal -->
-        <div style="border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; box-shadow: var(--shadow-lg);">
-            <img th:src="${noticia.imagenUrl != null ? noticia.imagenUrl : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80'}"
-                alt="Imagen Noticia" style="width: 100%; max-height: 500px; object-fit: cover;">
-        </div>
+    <!-- Header -->
+    <header class="main-header">
+        <nav class="nav-container">
+            <a th:href="@{/}" class="logo">
+                <i data-lucide="newspaper"></i>
+                NoticiasApp
+            </a>
 
-        <!-- Contenido -->
-        <div style="font-size: 1.1rem; line-height: 1.8; color: var(--text-main); margin-bottom: 4rem;">
-            <p th:text="${noticia.contenido}">Contenido de la noticia...</p>
-        </div>
+            <div class="nav-links">
+                <a th:href="@{/}" class="nav-link">Inicio</a>
 
-        <!-- Autor -->
-        <div
-            style="padding: 2rem; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 3rem;">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <div
-                    style="width: 50px; height: 50px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                    <span th:text="${#strings.substring(noticia.autorNombre, 0, 1)}">A</span>
-                </div>
-                <div>
-                    <div style="font-weight: 700;">Escrito por <span th:text="${noticia.autorNombre}">Autor</span></div>
-                    <div style="color: var(--text-muted); font-size: 0.9rem;">Periodista en NoticiasApp</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Interacciones -->
-        <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center; margin-bottom: 3rem;">
-            <button class="btn btn-ghost" th:onclick="'votar(\'LIKE\', ' + ${noticia.id} + ')'">
-                👍 <span th:text="${noticia.likes}">0</span>
-            </button>
-            <button class="btn btn-ghost" th:onclick="'votar(\'DISLIKE\', ' + ${noticia.id} + ')'">
-                👎 <span th:text="${noticia.dislikes}">0</span>
-            </button>
-            <button class="btn btn-ghost" style="color: var(--danger);"
-                th:onclick="'denunciar(\'NOTICIA\', ' + ${noticia.id} + ')'">
-                🚩 Denunciar
-            </button>
-        </div>
-
-        <!-- Sección Comentarios -->
-        <div id="comentarios">
-            <h3 class="section-title">Comentarios</h3>
-
-            <!-- Formulario Comentario -->
-            <div th:if="${session.token != null}">
-                <div th:if="${usuarioActual != null and usuarioActual.vetadoHasta != null and usuarioActual.vetadoHasta.isAfter(#temporals.createNow())}"
-                    class="alert alert-danger" style="margin-bottom: 2rem;">
-                    <p><strong>Cuenta suspendida temporalmente.</strong> No puedes comentar hasta <span
-                            th:text="${#temporals.format(usuarioActual.vetadoHasta, 'dd MMM yyyy HH:mm')}">fecha</span>.
-                    </p>
-                </div>
-                <form
-                    th:unless="${usuarioActual != null and usuarioActual.vetadoHasta != null and usuarioActual.vetadoHasta.isAfter(#temporals.createNow())}"
-                    th:action="@{/comentario/crear}" method="post"
-                    style="background: var(--surface); padding: 1.5rem; border-radius: var(--radius); box-shadow: var(--shadow-sm); margin-bottom: 2rem;">
-                    <input type="hidden" name="noticiaId" th:value="${noticia.id}">
-                    <div class="form-group">
-                        <label class="form-label">Deja tu opinión</label>
-                        <textarea name="contenido" class="form-input" rows="3"
-                            placeholder="Escribe tu comentario aquí..." required></textarea>
+                <div class="dropdown">
+                    <a href="#" class="nav-link">
+                        Categorías <i data-lucide="chevron-down" style="width:14px; display:inline;"></i>
+                    </a>
+                    <div class="dropdown-menu">
+                        <div th:each="cat : ${categorias}">
+                            <a th:href="@{'/categoria/' + ${cat.nombre}}" class="dropdown-item"
+                                style="font-weight: 600;" th:text="${cat.nombre}">Categoría</a>
+                            <a th:each="sub : ${cat.subcategorias}" th:href="@{'/categoria/' + ${sub.nombre}}"
+                                class="dropdown-item"
+                                style="padding-left: 1.5rem; font-size: 0.9em; color: var(--text-muted);"
+                                th:text="${sub.nombre}">
+                                Subcategoría
+                            </a>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Publicar Comentario</button>
+                </div>
+            </div>
+
+            <div class="auth-section">
+                <th:block th:if="${session.usuario != null}">
+                    <div class="user-dropdown">
+                        <button class="user-dropdown-btn">
+                            <span th:text="${session.usuario.nombre}">Usuario</span>
+                            <i data-lucide="chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a th:href="@{/perfil}" class="dropdown-item">Perfil</a>
+                            <a th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN')}"
+                                th:href="@{/admin/panel}" class="dropdown-item">Panel Admin</a>
+                            <a th:href="@{/auth/logout}" class="dropdown-item">Cerrar Sesión</a>
+                        </div>
+                    </div>
+                </th:block>
+                <th:block th:if="${session.usuario == null}">
+                    <a th:href="@{/auth/login}" class="btn">Login</a>
+                </th:block>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container" style="padding: 3rem 1rem; max-width: 900px; margin: 0 auto;">
+
+        <!-- Premium Article Layout -->
+        <article class="news-card-premium" style="border: none; box-shadow: none; background: transparent;">
+
+            <!-- Category & Date -->
+            <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center;">
+                <span class="badge badge-primary" th:text="${noticia.categoria.nombre}">Categoría</span>
+                <span style="color: var(--text-muted); font-size: 0.9rem;"
+                    th:text="${#temporals.format(noticia.fechaPublicacion, 'dd MMMM yyyy, HH:mm')}">Fecha</span>
+            </div>
+
+            <!-- Title -->
+            <h1 style="font-size: 3rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; color: var(--text-main);"
+                th:text="${noticia.titulo}">Título de la Noticia</h1>
+
+            <!-- Subtitle -->
+            <h2 style="font-size: 1.5rem; font-weight: 400; color: var(--secondary); margin-bottom: 2rem; line-height: 1.4;"
+                th:text="${noticia.subtitulo}">Subtítulo...</h2>
+
+            <!-- Author & Actions -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div
+                        style="width: 48px; height: 48px; background: var(--border); border-radius: 50%; overflow: hidden;">
+                        <img th:src="@{/images/default-avatar.png}" style="width:100%; height:100%; object-fit:cover;"
+                            onerror="this.src='https://ui-avatars.com/api/?name=Author&background=random'">
+                    </div>
+                    <div>
+                        <div style="font-weight: 700;" th:text="${noticia.autorNombre}">Autor</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Redactor</div>
+                    </div>
+                </div>
+
+                <!-- Interaction Bar -->
+                <div class="interaction-bar" style="border: none; padding: 0;">
+                    <button id="btnLike" class="interaction-item like" th:onclick="'toggleLike(' + ${noticia.id} + ')'">
+                        <i data-lucide="thumbs-up" style="width: 20px;"></i>
+                        <span id="likes-count" th:text="${noticia.likes != null ? noticia.likes : 0}">0</span>
+                    </button>
+                    <button id="btnDislike" class="interaction-item dislike"
+                        th:onclick="'toggleDislike(' + ${noticia.id} + ')'">
+                        <i data-lucide="thumbs-down" style="width: 20px;"></i>
+                        <span id="dislikes-count" th:text="${noticia.dislikes != null ? noticia.dislikes : 0}">0</span>
+                    </button>
+                    <a href="#comentarios" class="interaction-item comment">
+                        <i data-lucide="message-square" style="width: 20px;"></i>
+                        <span th:text="${noticia.comentarios != null ? noticia.comentarios : 0}">0</span>
+                    </a>
+                    <button class="interaction-item report" th:onclick="'openReportModal(' + ${noticia.id} + ')'">
+                        <i data-lucide="flag" style="width: 20px;"></i>
+                    </button>
+
+                    <!-- Delete (Admin/Owner) -->
+                    <a th:if="${session.usuario != null and (session.usuario.id == noticia.autorId or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN'))}"
+                        th:href="@{'/trabajador/eliminar/' + ${noticia.id}}" class="interaction-item"
+                        style="color: var(--danger); margin-left: auto;"
+                        onclick="return confirm('¿Estás seguro de eliminar esta noticia?');">
+                        <i data-lucide="trash-2" style="width: 20px;"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Main Image -->
+            <div
+                style="margin-bottom: 3rem; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-lg);">
+                <!-- Fix image URL to use /uploads/ -->
+                <img th:src="${noticia.imagenUrl != null ? '/uploads/' + noticia.imagenUrl.substring(noticia.imagenUrl.lastIndexOf('/') + 1) : 'https://source.unsplash.com/random/1200x800?news'}"
+                    style="width: 100%; height: auto; display: block;"
+                    onerror="this.src='https://source.unsplash.com/random/1200x800?news'" alt="Imagen Noticia">
+            </div>
+
+            <!-- Content -->
+            <div style="font-size: 1.2rem; line-height: 1.8; color: var(--text-main); margin-bottom: 4rem; white-space: pre-wrap;"
+                th:text="${noticia.contenido}">
+                Contenido...
+            </div>
+
+        </article>
+
+        <!-- Comentarios Section -->
+        <section id="comentarios" style="margin-top: 4rem; max-width: 800px; margin: 0 auto;">
+            <h3 style="font-size: 2rem; font-weight: 800; margin-bottom: 2rem;">Comentarios</h3>
+
+            <!-- Comment Form -->
+            <div th:if="${session.usuario != null}" style="margin-bottom: 3rem;">
+                <form id="commentForm">
+                    <input type="hidden" id="commentNoticiaId" th:value="${noticia.id}">
+                    <textarea id="commentContent" class="form-input" rows="4" placeholder="Escribe tu opinión..."
+                        required
+                        style="width: 100%; padding: 1rem; font-size: 1rem; resize: vertical; margin-bottom: 1rem; border-color: var(--border); background: var(--surface); color: var(--text-main);"></textarea>
+                    <button type="button" onclick="postComment()" class="btn btn-primary">Publicar Comentario</button>
                 </form>
             </div>
-            <div th:unless="${session.token != null}" class="alert alert-danger" style="margin-bottom: 2rem;">
-                Debes <a th:href="@{/auth/login}" style="text-decoration: underline; font-weight: bold;">iniciar
-                    sesión</a> para comentar.
+            <div th:unless="${session.usuario != null}" class="alert alert-info" style="text-align: center;">
+                <a href="/auth/login">Inicia sesión</a> para participar en la conversación.
             </div>
 
-            <!-- Lista Comentarios -->
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                <div th:each="comentario : ${comentarios}"
-                    style="background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border);">
+            <!-- Comments List -->
+            <div id="commentsList">
+                <!-- Fallback if listing from backend directly (Eager load) -->
+                <div th:each="comentario : ${noticia.comentariosList}"
+                    style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border);">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="font-weight: 700;" th:text="${comentario.usuarioNombre}">Usuario</span>
-                        <span style="color: var(--text-muted); font-size: 0.85rem;"
-                            th:text="${#temporals.format(comentario.fecha, 'dd MMM HH:mm')}">Fecha</span>
+                        <strong th:text="${comentario.autor.nombre}">Usuario</strong>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);"
+                            th:text="${#temporals.format(comentario.fecha, 'dd MMM yyyy')}">Fecha</span>
                     </div>
-                    <p style="color: var(--secondary);" th:text="${comentario.contenido}">Contenido del comentario</p>
-                </div>
-                <div th:if="${comentarios == null or comentarios.empty}"
-                    style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                    No hay comentarios aún. ¡Sé el primero en opinar!
+                    <p style="font-size: 1.05rem;" th:text="${comentario.contenido}">Contenido</p>
                 </div>
             </div>
+
+        </section>
+
+    </main>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">Denunciar Noticia</h3>
+            <form id="reportForm">
+                <input type="hidden" id="reportNoticiaId" name="noticiaId">
+                <div class="form-group">
+                    <label class="form-label">Motivo</label>
+                    <select id="reportReason" class="form-control" onchange="checkReason()" required
+                        style="width:100%; padding: 0.75rem; border-radius: 0.5rem; border:1px solid var(--border);">
+                        <option value="">Selecciona un motivo</option>
+                        <option value="SPAM">Spam o publicidad</option>
+                        <option value="ODIO">Discurso de odio</option>
+                        <option value="FALSO">Información falsa</option>
+                        <option value="OTRO">Otro...</option>
+                    </select>
+                </div>
+                <div class="form-group" id="customReasonGroup" style="display: none;">
+                    <label class="form-label">Especificar Motivo</label>
+                    <input type="text" id="customReason" class="form-input" placeholder="Escribe el título">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción (Opcional)</label>
+                    <textarea id="reportDescription" class="form-input" rows="3"></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeReportModal()">Cancelar</button>
+                    <button type="button" onclick="submitReport()" class="btn btn-primary" style="flex: 1;">Enviar
+                        Reporte</button>
+                </div>
+            </form>
         </div>
-    </section>
+    </div>
+
+    <script th:inline="javascript">
+        lucide.createIcons();
+        const API_URL = 'http://localhost:8081'; // Adjust if using Docker internal DNS vs Browser localhost
+        // For Browser, it must be localhost usually.
+
+        const NOTICIA_ID = /*[[${noticia.id}]]*/ 0;
+        const USUARIO_ID = /*[[${session.usuario != null ? session.usuario.id : 0}]]*/ 0;
+
+        // Load Comments via AJAX (if not eager loaded)
+        async function loadComments() {
+            try {
+                const response = await fetch(`${API_URL}/interacciones/comentarios/noticia/${NOTICIA_ID}`);
+                if (response.ok) {
+                    const comments = await response.json();
+                    const list = document.getElementById('commentsList');
+                    list.innerHTML = '';
+                    comments.forEach(c => {
+                        const div = document.createElement('div');
+                        div.style = "margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border);";
+                        div.innerHTML = `
+                             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <strong>${c.autor.nombre}</strong>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">${new Date(c.fecha).toLocaleDateString()}</span>
+                            </div>
+                            <p style="font-size: 1.05rem;">${c.contenido}</p>
+                        `;
+                        list.appendChild(div);
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        loadComments(); // Init load
+
+        async function postComment() {
+            if (!USUARIO_ID) return location.href = '/auth/login';
+            const content = document.getElementById('commentContent').value;
+            if (!content) return;
+
+            try {
+                const res = await fetch(`${API_URL}/interacciones/comentarios`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ noticiaId: NOTICIA_ID, usuarioId: USUARIO_ID, contenido: content })
+                });
+                if (res.ok) {
+                    document.getElementById('commentContent').value = '';
+                    loadComments();
+                } else {
+                    alert('Error al publicar comentario');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function toggleLike(id) {
+            if (!USUARIO_ID) return location.href = '/auth/login';
+            try {
+                const res = await fetch(`/noticia/${id}/votar?tipo=LIKE`, { method: 'POST' });
+                if (res.ok) {
+                    // Quick UI update or reload. Reload is safer for synced counts.
+                    location.reload();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function toggleDislike(id) {
+            if (!USUARIO_ID) return location.href = '/auth/login';
+            try {
+                const res = await fetch(`/noticia/${id}/votar?tipo=DISLIKE`, { method: 'POST' });
+                if (res.ok) {
+                    location.reload();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Modal Reports
+        const reportModal = document.getElementById('reportModal');
+        function openReportModal(id) {
+            document.getElementById('reportNoticiaId').value = id;
+            reportModal.classList.add('open');
+        }
+        function closeReportModal() {
+            reportModal.classList.remove('open');
+        }
+        function checkReason() {
+            const r = document.getElementById('reportReason').value;
+            document.getElementById('customReasonGroup').style.display = (r === 'OTRO' ? 'block' : 'none');
+        }
+        async function submitReport() {
+            if (!USUARIO_ID) return location.href = '/auth/login';
+            const noticiaId = document.getElementById('reportNoticiaId').value;
+            let motivo = document.getElementById('reportReason').value;
+            if (motivo === 'OTRO') motivo = document.getElementById('customReason').value;
+            const descripcion = document.getElementById('reportDescription').value;
+
+            try {
+                const res = await fetch(`${API_URL}/interacciones/denuncias`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ noticiaId: noticiaId, usuarioId: USUARIO_ID, motivo: motivo, descripcion: descripcion })
+                });
+                if (res.ok) {
+                    closeReportModal();
+                    alert('Reporte enviado.');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+    </script>
 </body>
 
 </html>

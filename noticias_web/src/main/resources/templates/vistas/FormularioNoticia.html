@@ -42,8 +42,44 @@
                     <select id="categoriaId" name="categoriaId" required class="form-control"
                         style="width: 100%; padding: 0.8rem; border-radius: var(--radius); border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text);">
                         <option value="" disabled selected>Selecciona una categoría</option>
-                        <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}">Deportes
-                        </option>
+
+                        <!-- Check if user is OWNER, ADMIN, or TRABAJADOR (by role name) -->
+                        <th:block
+                            th:if="${session.usuario != null and (#strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'TRABAJADOR'))}">
+                            <!-- Official Categories Section -->
+                            <optgroup label="📰 Categorías Oficiales">
+                                <th:block th:each="padre : ${categorias}">
+                                    <!-- Only show subcategories, not parent categories -->
+                                    <option th:if="${not #lists.isEmpty(padre.subcategorias)}"
+                                        th:each="sub : ${padre.subcategorias}" th:value="${sub.id}"
+                                        th:text="${sub.nombre}">
+                                        Subcategoría
+                                    </option>
+                                    <!-- If category has no children, show it directly -->
+                                    <option th:if="${#lists.isEmpty(padre.subcategorias)}" th:value="${padre.id}"
+                                        th:text="${padre.nombre}">
+                                        Categoría
+                                    </option>
+                                </th:block>
+                            </optgroup>
+                        </th:block>
+
+                        <!-- Forum Categories Section (available to all users) -->
+                        <optgroup label="💬 Vuestras Noticias (Foro)">
+                            <th:block th:each="padre : ${categorias}">
+                                <!-- Only show subcategories, not parent categories -->
+                                <option th:if="${not #lists.isEmpty(padre.subcategorias)}"
+                                    th:each="sub : ${padre.subcategorias}" th:value="${sub.id}"
+                                    th:text="${sub.nombre + ' (Foro)'}">
+                                    Subcategoría Foro
+                                </option>
+                                <!-- If category has no children, show it directly -->
+                                <option th:if="${#lists.isEmpty(padre.subcategorias)}" th:value="${padre.id}"
+                                    th:text="${padre.nombre + ' (Foro)'}">
+                                    Categoría Foro
+                                </option>
+                            </th:block>
+                        </optgroup>
                     </select>
                 </div>
 
@@ -55,11 +91,39 @@
                         <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Haz clic para seleccionar un archivo
                         </p>
                         <input type="file" id="file" name="file" accept="image/*,video/*" required
-                            style="display: none;"
-                            onchange="this.nextElementSibling.textContent = this.files[0].name.slice(-20)">
-                        <p class="file-name" style="margin-top: 0.5rem; font-weight: 600; color: var(--primary);"></p>
+                            style="display: none;" onchange="previewImage(this)">
+                        <div id="image-preview-container" style="margin-top: 1rem; display: none;">
+                            <img id="image-preview" src="#" alt="Vista previa"
+                                style="max-width: 100%; max-height: 300px; border-radius: var(--radius); box-shadow: var(--shadow-sm);">
+                        </div>
+                        <p id="file-name" class="file-name"
+                            style="margin-top: 0.5rem; font-weight: 600; color: var(--primary);"></p>
                     </div>
                 </div>
+
+                <script>
+                    function previewImage(input) {
+                        const previewContainer = document.getElementById('image-preview-container');
+                        const previewImage = document.getElementById('image-preview');
+                        const fileName = document.getElementById('file-name');
+
+                        if (input.files && input.files[0]) {
+                            const file = input.files[0];
+                            fileName.textContent = file.name;
+
+                            if (file.type.startsWith('image/')) {
+                                const reader = new FileReader();
+                                reader.onload = function (e) {
+                                    previewImage.src = e.target.result;
+                                    previewContainer.style.display = 'block';
+                                }
+                                reader.readAsDataURL(file);
+                            } else {
+                                previewContainer.style.display = 'none';
+                            }
+                        }
+                    }
+                </script>
 
                 <div class="form-group" style="margin-bottom: 2rem;">
                     <label for="contenido" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Descripción

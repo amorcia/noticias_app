@@ -53,10 +53,18 @@ public class UsuarioEntidad {
     @Column(name = "vetado_hasta")
     private LocalDateTime vetadoHasta;
 
-    @Column(name = "es_super_admin", nullable = false, columnDefinition = "boolean default false")
-    private Boolean esSuperAdmin = false;
+    @Column(name = "secret_key_2fa")
+    private String secretKey2FA;
 
     public UsuarioEntidad() {
+    }
+
+    public String getSecretKey2FA() {
+        return secretKey2FA;
+    }
+
+    public void setSecretKey2FA(String secretKey2FA) {
+        this.secretKey2FA = secretKey2FA;
     }
 
     // Getters y setters
@@ -164,11 +172,4 @@ public class UsuarioEntidad {
         this.vetadoHasta = vetadoHasta;
     }
 
-    public Boolean getEsSuperAdmin() {
-        return esSuperAdmin;
-    }
-
-    public void setEsSuperAdmin(Boolean esSuperAdmin) {
-        this.esSuperAdmin = esSuperAdmin;
-    }
 }

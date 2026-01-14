@@ -16,119 +16,7 @@
 <body>
     <div class="app-container">
         <!-- Header -->
-        <header class="main-header">
-            <nav class="nav-container">
-                <a th:href="@{/}" class="logo">
-                    <i data-lucide="newspaper"></i>
-                    NoticiasApp
-                </a>
-
-                <div class="nav-links">
-                    <a th:href="@{/}" class="nav-link">Inicio</a>
-
-                    <!-- Categorías Dropdown -->
-                    <div class="dropdown">
-                        <a href="#" class="nav-link">
-                            Categorías <i data-lucide="chevron-down" style="width:14px; display:inline;"></i>
-                        </a>
-                        <div class="dropdown-menu">
-                            <div th:each="cat : ${categorias}">
-                                <!-- Parent Category -->
-                                <a th:href="@{'/categoria/' + ${cat.nombre}}" class="dropdown-item"
-                                    style="font-weight: 600;" th:text="${cat.nombre}">Categoría</a>
-                                <!-- Subcategories -->
-                                <a th:each="sub : ${cat.subcategorias}" th:href="@{'/categoria/' + ${sub.nombre}}"
-                                    class="dropdown-item"
-                                    style="padding-left: 1.5rem; font-size: 0.9em; color: var(--text-muted);"
-                                    th:text="${sub.nombre}">
-                                    Subcategoría
-                                </a>
-                            </div>
-
-                            <div th:if="${categorias == null or categorias.empty}" class="dropdown-item"
-                                style="color: var(--text-muted);">
-                                No hay categorías
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Vuestras Noticias Dropdown -->
-                    <div class="dropdown">
-                        <a href="#" class="nav-link">
-                            Vuestras Noticias <i data-lucide="chevron-down" style="width:14px; display:inline;"></i>
-                        </a>
-                        <div class="dropdown-menu">
-                            <a th:href="@{/vuestras-noticias}" class="dropdown-item"
-                                style="font-weight: 800; color: var(--primary);">Ver Todo</a>
-                            <div class="dropdown-divider"></div>
-
-                            <div th:each="cat : ${categorias}">
-                                <!-- Parent Category (Foro) -->
-                                <a th:href="@{'/foro/' + ${cat.nombre}}" class="dropdown-item" style="font-weight: 600;"
-                                    th:text="${cat.nombre}">Categoría</a>
-                                <!-- Subcategories (Foro) -->
-                                <a th:each="sub : ${cat.subcategorias}" th:href="@{'/foro/' + ${sub.nombre}}"
-                                    class="dropdown-item"
-                                    style="padding-left: 1.5rem; font-size: 0.9em; color: var(--text-muted);"
-                                    th:text="${sub.nombre}">
-                                    Subcategoría
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Auth Section -->
-                <div class="auth-section">
-                    <!-- Usuario NO Logueado -->
-                    <th:block th:if="${session.token == null}">
-                        <a th:href="@{/auth/login}" class="btn btn-ghost">Iniciar Sesión</a>
-                        <a th:href="@{/auth/registro}" class="btn btn-primary">Registrarse</a>
-                    </th:block>
-
-                    <!-- Usuario Logueado -->
-                    <th:block th:if="${session.token != null}">
-                        <div class="user-dropdown">
-                            <!-- User Button: Only Avatar, Circular -->
-                            <button class="user-dropdown-btn" style="border: none; padding: 0;">
-                                <img th:src="'https://ui-avatars.com/api/?name=' + ${session.usuario.nombre} + '&background=0D6EFD&color=fff'"
-                                    alt="Avatar" class="user-avatar" style="width: 40px; height: 40px;">
-                            </button>
-                            <div class="dropdown-menu">
-                                <a th:href="@{/perfil}" class="dropdown-item">
-                                    <i data-lucide="user"></i> Mi Perfil
-                                </a>
-
-                                <!-- Panel Admin -->
-                                <a th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rol, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rol, 'OWNER')}"
-                                    th:href="@{/admin/panel}" class="dropdown-item"
-                                    style="color: var(--danger); font-weight: 600;">
-                                    <i data-lucide="shield"></i> Panel Admin
-                                </a>
-
-                                <div class="dropdown-divider"></div>
-
-                                <a th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'TRABAJADOR') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rol, 'TRABAJADOR') or #strings.equalsIgnoreCase(session.usuario.rol, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rol, 'OWNER')}"
-                                    th:href="@{/trabajador/subir-noticia}" class="dropdown-item"
-                                    style="color: var(--primary); font-weight: 600;">
-                                    <i data-lucide="plus-circle"></i> Subir Noticia
-                                </a>
-
-                                <div class="dropdown-divider"
-                                    th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'TRABAJADOR') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rol, 'TRABAJADOR') or #strings.equalsIgnoreCase(session.usuario.rol, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rol, 'OWNER')}">
-                                </div>
-
-                                <form th:action="@{/auth/logout}" method="post" style="margin: 0;">
-                                    <button type="submit" class="dropdown-item" style="width: 100%; text-align: left;">
-                                        <i data-lucide="log-out"></i> Cerrar Sesión
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </th:block>
-                </div>
-            </nav>
-        </header>
+        <header th:replace="~{vistas/Fragmentos :: header}"></header>
 
         <!-- Main Content (Condicional) -->
         <main class="container" style="padding: 2rem 1rem;">
@@ -209,38 +97,18 @@
     <script>
         lucide.createIcons();
 
-        // User Dropdown Interaction
-        const userBtn = document.querySelector('.user-dropdown-btn');
-        if (userBtn) {
-            userBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                userBtn.parentElement.classList.toggle('active');
-            });
-
-            document.addEventListener('click', () => {
-                userBtn.parentElement.classList.remove('active');
-            });
+        function votar(tipo, id) {
+            fetch(`/noticia/${id}/votar?tipo=${tipo}`, { method: 'POST' })
+                .then(r => window.location.reload())
+                .catch(e => console.error(e));
         }
 
-        // Navigation Dropdowns
-        document.querySelectorAll('.dropdown').forEach(dropdown => {
-            const link = dropdown.querySelector('.nav-link');
-            if (link) {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // Cerrar otros
-                    document.querySelectorAll('.dropdown').forEach(d => {
-                        if (d !== dropdown) d.classList.remove('active');
-                    });
-                    dropdown.classList.toggle('active');
-                });
+        function denunciar(tipo, id) {
+            if (confirm('¿Denunciar este contenido?')) {
+                // Placeholder Logic: Implementar endpoint real si es necesario
+                alert('Gracias por tu reporte. Los administradores revisarán el contenido.');
             }
-        });
-
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
-        });
+        }
     </script>
 </body>
 

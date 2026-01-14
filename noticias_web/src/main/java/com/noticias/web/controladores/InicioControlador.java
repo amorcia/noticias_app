@@ -30,10 +30,34 @@ public class InicioControlador {
     }
 
     @GetMapping("/categoria/{nombre}")
-    public String categoria(@PathVariable String nombre, Model model) {
+    public String categoria(@PathVariable String nombre,
+            @RequestParam(required = false) String filtro,
+            @RequestParam(required = false) Integer mes,
+            @RequestParam(required = false) Integer anio,
+            Model model) {
+
+        // Buscar categoria por nombre para obtener ID
+        CategoriaDTO cat = apiCliente.buscarCategoriaPorNombre(nombre);
+        if (cat == null) {
+            return "redirect:/";
+        }
+
         model.addAttribute("categoriaNombre", nombre);
+        model.addAttribute("categoria", cat); // Pass full object if needed
         model.addAttribute("esForo", false);
-        model.addAttribute("noticias", apiCliente.listarNoticiasPorCategoriaNombre(nombre));
+
+        // Pass params back to view
+        model.addAttribute("filtroActual", filtro);
+        model.addAttribute("mesActual", mes);
+
+        if (filtro != null || mes != null) {
+            Integer year = (anio != null) ? anio : java.time.Year.now().getValue();
+            model.addAttribute("noticias",
+                    apiCliente.listarNoticiasPorCategoriaFiltrado(cat.getId(), filtro, mes, year));
+        } else {
+            model.addAttribute("noticias", apiCliente.listarNoticiasPorCategoria(cat.getId()));
+        }
+
         return "vistas/Categoria";
     }
 
@@ -73,7 +97,20 @@ public class InicioControlador {
             return "redirect:/";
         }
         model.addAttribute("noticia", noticia);
-        return "vistas/Noticia";
+        return "vistas/DetalleNoticia";
+    }
+
+    @PostMapping("/noticia/{id}/votar")
+    @ResponseBody
+    public String votarNoticia(@PathVariable Integer id, @RequestParam String tipo) {
+        boolean like = "LIKE".equalsIgnoreCase(tipo);
+        apiCliente.votarNoticia(id, like);
+        return "OK";
+    }
+
+    @GetMapping("/ajustes")
+    public String ajustes() {
+        return "vistas/Ajustes";
     }
 
     @GetMapping("/perfil")

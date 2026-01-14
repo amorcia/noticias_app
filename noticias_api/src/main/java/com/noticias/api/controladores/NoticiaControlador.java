@@ -54,6 +54,15 @@ public class NoticiaControlador {
         return ResponseEntity.ok(noticiaServicio.listarPorCategoria(categoriaId));
     }
 
+    @GetMapping("/categoria/{categoriaId}/filtrar")
+    public ResponseEntity<List<NoticiaEntidad>> listarPorCategoriaFiltrado(
+            @PathVariable Integer categoriaId,
+            @RequestParam(required = false) String filtro,
+            @RequestParam(required = false) Integer mes,
+            @RequestParam(required = false) Integer anio) {
+        return ResponseEntity.ok(noticiaServicio.listarPorCategoriaFiltrado(categoriaId, filtro, mes, anio));
+    }
+
     @GetMapping("/categoria/nombre/{nombre}")
     public ResponseEntity<List<NoticiaEntidad>> listarPorCategoriaNombre(@PathVariable String nombre) {
         return ResponseEntity.ok(noticiaServicio.listarPorCategoriaNombre(nombre));
@@ -147,11 +156,37 @@ public class NoticiaControlador {
         return ResponseEntity.notFound().build();
     }
 
+    @PostMapping("/{id}/votar")
+    public ResponseEntity<Void> votar(@PathVariable Integer id, @RequestParam Boolean like) {
+        if (noticiaServicio.votar(id, like)) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
-        if (noticiaServicio.eliminarNoticia(id)) {
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id,
+            @RequestParam(required = false) String motivo,
+            @RequestParam(required = false) Integer eliminadorId) {
+
+        com.noticias.api.entidades.UsuarioEntidad eliminador = null;
+        if (eliminadorId != null) {
+            eliminador = usuarioRepositorio.findById(eliminadorId).orElse(null);
+        }
+
+        if (noticiaServicio.eliminarNoticia(id, motivo, eliminador)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/eliminadas/admin")
+    public ResponseEntity<List<com.noticias.api.entidades.NoticiaEliminadaEntidad>> listarEliminadasAdmin() {
+        return ResponseEntity.ok(noticiaServicio.listarNoticiasEliminadasPorAdmin());
+    }
+
+    @GetMapping("/check-titulo")
+    public ResponseEntity<Boolean> verificarTitulo(@RequestParam String titulo) {
+        return ResponseEntity.ok(noticiaServicio.existePorTitulo(titulo));
     }
 }

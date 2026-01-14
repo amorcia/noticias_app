@@ -2,7 +2,7 @@ package com.noticias.web.servicios;
 
 import com.noticias.web.dtos.*;
 // JwtUtil removed
-import com.noticias.web.utilidades.PasswordUtil;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -15,17 +15,20 @@ import java.util.UUID;
 public class AuthServicio {
 
     private final ApiNoticiasCliente apiCliente;
-    private final PasswordUtil passwordUtil;
+    private final BCryptPasswordEncoder passwordEncoder;
     private final EmailServicio emailServicio;
 
     // DURACION_HORAS_TOKEN removed (unused)
 
     public AuthServicio(ApiNoticiasCliente apiCliente,
-            PasswordUtil passwordUtil,
             EmailServicio emailServicio) {
         this.apiCliente = apiCliente;
-        this.passwordUtil = passwordUtil;
+        this.passwordEncoder = new BCryptPasswordEncoder();
         this.emailServicio = emailServicio;
+    }
+
+    public UsuarioDTO buscarUsuarioPorEmail(String email) {
+        return apiCliente.buscarUsuarioPorEmail(email);
     }
 
     public LoginRespuestaDTO autenticar(String email, String password) {
@@ -43,7 +46,7 @@ public class AuthServicio {
             throw new RuntimeException("Usuario vetado: " + usuario.getMotivoVeto());
         }
 
-        boolean coincide = passwordUtil.matches(password, usuario.getPassword());
+        boolean coincide = passwordEncoder.matches(password, usuario.getPassword());
         if (!coincide) {
             throw new RuntimeException("Credenciales inválidas");
         }
@@ -92,7 +95,7 @@ public class AuthServicio {
         nuevoUsuario.setNombreCompleto(nombreCompleto);
         nuevoUsuario.setEmail(email);
         nuevoUsuario.setMovil(movil);
-        nuevoUsuario.setPassword(passwordUtil.hash(password)); // Encriptar aquí
+        nuevoUsuario.setPassword(passwordEncoder.encode(password)); // Encriptar aquí
         nuevoUsuario.setRolId(2); // USER por defecto (ID 2)
         nuevoUsuario.setActivo(false); // Requiere confirmación
         nuevoUsuario.setCodigoVerificacion(UUID.randomUUID().toString());
@@ -141,7 +144,7 @@ public class AuthServicio {
         // El metodo de API 'restablecerPassword' busca por token.
         // Pero hemos renombrado en API a findByCodigoRecuperacion.
         // Asi que apiCliente.restablecerPassword debe invocar al endpoint correcto.
-        String passwordEncriptada = passwordUtil.hash(nuevaPassword);
+        String passwordEncriptada = passwordEncoder.encode(nuevaPassword);
         return apiCliente.restablecerPassword(token, passwordEncriptada);
     }
 
@@ -180,7 +183,7 @@ public class AuthServicio {
             throw new RuntimeException("Usuario no encontrado");
         }
 
-        String hashed = passwordUtil.hash(nuevaPassword);
+        String hashed = passwordEncoder.encode(nuevaPassword);
         usuario.setPassword(hashed);
         apiCliente.actualizarUsuario(usuario.getId(), usuario);
     }
@@ -214,7 +217,6 @@ public class AuthServicio {
     }
 
     private String crearEmailRecuperacion(String token) {
-        // String url removed as it was unused
         return "<!DOCTYPE html>" +
                 "<html>" +
                 "<head><meta charset='UTF-8'></head>" +
@@ -242,5 +244,11 @@ public class AuthServicio {
                 "</div>" +
                 "</body>" +
                 "</html>";
+    }
+
+    public void activar2FA(Integer id, String secret) {
+        UsuarioDTO user = new UsuarioDTO();
+        user.setSecretKey2FA(secret);
+        apiCliente.actualizarUsuario(id, user);
     }
 }

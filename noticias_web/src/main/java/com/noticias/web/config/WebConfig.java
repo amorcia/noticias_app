@@ -12,5 +12,8 @@ public class WebConfig implements WebMvcConfigurer {
         // Map /css/** to the static/css directory
         registry.addResourceHandler("/css/**")
                 .addResourceLocations("classpath:/static/css/");
+        // Map /uploads/** to the shared volume
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:/uploads/");
     }
 }

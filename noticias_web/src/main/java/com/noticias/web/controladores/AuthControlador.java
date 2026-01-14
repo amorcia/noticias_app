@@ -40,25 +40,36 @@ public class AuthControlador {
             Model model) {
         try {
             LoginRespuestaDTO res = authServicio.autenticar(email, password);
+            // Fetch full user to get secretKey2FA and avoid Type Mismatch
+            UsuarioDTO usuario = authServicio.buscarUsuarioPorEmail(email);
+            // Update token in the fetched DTO just in case, though autenticar updates it in
+            // DB
+            usuario.setTokenSession(res.getToken());
 
-            // Convertir UsuarioRespuestaDTO a UsuarioDTO para la sesión
-            UsuarioDTO usuarioSession = new UsuarioDTO();
-            usuarioSession.setId(res.getUsuario().getId());
-            usuarioSession.setNombreCompleto(res.getUsuario().getNombre());
-            usuarioSession.setEmail(res.getUsuario().getEmail());
-            usuarioSession.setRolNombre(res.getUsuario().getRol());
-            usuarioSession.setActivo(res.getUsuario().getActivo());
-            usuarioSession.setTokenSession(res.getToken());
+            // 2FA Check for ADMIN, OWNER, or TRABAJADOR
+            boolean isPrivileged = "ADMIN".equalsIgnoreCase(usuario.getRolNombre())
+                    || "OWNER".equalsIgnoreCase(usuario.getRolNombre())
+                    || "TRABAJADOR".equalsIgnoreCase(usuario.getRolNombre());
 
-            session.setAttribute("token", res.getToken());
-            session.setAttribute("usuario", usuarioSession);
+            if (isPrivileged) {
+                // Store temp session for 2FA verification
+                session.setAttribute("temp_2fa_user", usuario);
+                session.setAttribute("temp_2fa_token", res.getToken());
 
-            // Smart Redirect
+                if (usuario.getSecretKey2FA() == null || usuario.getSecretKey2FA().isEmpty()) {
+                    return "redirect:/auth/2fa/setup"; // First time setup
+                } else {
+                    return "redirect:/auth/2fa/verify"; // Normal verification
+                }
+            }
+
+            // Normal Login Flow (Non-Privileged)
+            completeLogin(session, usuario, res.getToken());
+
             if (redirect != null && !redirect.isEmpty()) {
                 return "redirect:" + redirect;
             }
-
-            return "redirect:/";
+            return "redirect:/"; // Default redirect
         } catch (Exception ex) {
             model.addAttribute("error", ex.getMessage());
             if (redirect != null) {
@@ -66,6 +77,14 @@ public class AuthControlador {
             }
             return "vistas/Login";
         }
+    }
+
+    private void completeLogin(HttpSession session, UsuarioDTO usuario, String token) {
+        session.setAttribute("token", token);
+        session.setAttribute("usuario", usuario);
+        // Clean temp 2fa
+        session.removeAttribute("temp_2fa_user");
+        session.removeAttribute("temp_2fa_token");
     }
 
     @GetMapping("/registro")
@@ -194,17 +213,101 @@ public class AuthControlador {
         }
     }
 
+    @GetMapping("/2fa/setup")
+    public String setup2faPage(HttpSession session, Model model) {
+        UsuarioDTO user = (UsuarioDTO) session.getAttribute("temp_2fa_user");
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+
+        com.warrenstrange.googleauth.GoogleAuthenticator gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
+        final com.warrenstrange.googleauth.GoogleAuthenticatorKey key = gAuth.createCredentials();
+        String secret = key.getKey();
+
+        session.setAttribute("temp_2fa_secret", secret);
+
+        // Generate QR URL (Using simple chart api or custom)
+        // Format: otpauth://totp/NoticiasApp:userEmail?secret=SECRET&issuer=NoticiasApp
+        String otpAuthUrl = "otpauth://totp/NoticiasApp:" + user.getEmail() + "?secret=" + secret
+                + "&issuer=NoticiasApp";
+        // QR Generator is separate, but we can use quickchart.io for simplicity
+        // client-side or generate here
+        // Or using Google Chart API (Deprecated but works) or a library.
+        // For simplicity, let's use a public QR API.
+        String qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="
+                + java.net.URLEncoder.encode(otpAuthUrl, java.nio.charset.StandardCharsets.UTF_8);
+
+        model.addAttribute("qrUrl", qrUrl);
+        return "vistas/2fa-setup";
+    }
+
+    @PostMapping("/2fa/setup")
+    public String setup2faPost(@RequestParam("code") int code, HttpSession session, Model model) {
+        UsuarioDTO user = (UsuarioDTO) session.getAttribute("temp_2fa_user");
+        String secret = (String) session.getAttribute("temp_2fa_secret");
+        String token = (String) session.getAttribute("temp_2fa_token");
+
+        if (user == null || secret == null) {
+            return "redirect:/auth/login";
+        }
+
+        com.warrenstrange.googleauth.GoogleAuthenticator gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
+        if (gAuth.authorize(secret, code)) {
+            // Save secret to DB
+            UsuarioDTO updateDto = new UsuarioDTO();
+            updateDto.setSecretKey2FA(secret);
+            // We need to call API to update user. apiCliente exposed via AuthServicio?
+            // AuthServicio needs a new method 'activar2FA'
+            authServicio.activar2FA(user.getId(), secret);
+
+            // Login user
+            completeLogin(session, user, token);
+            return "redirect:/";
+        } else {
+            model.addAttribute("error", "Código incorrecto");
+            // Re-render setup page with NEW secret? Or same? Better same.
+            // We need to re-generate QR url though.
+            String otpAuthUrl = "otpauth://totp/NoticiasApp:" + user.getEmail() + "?secret=" + secret
+                    + "&issuer=NoticiasApp";
+            String qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="
+                    + java.net.URLEncoder.encode(otpAuthUrl, java.nio.charset.StandardCharsets.UTF_8);
+            model.addAttribute("qrUrl", qrUrl);
+            return "vistas/2fa-setup";
+        }
+    }
+
+    @GetMapping("/2fa/verify")
+    public String verify2faPage(HttpSession session) {
+        if (session.getAttribute("temp_2fa_user") == null) {
+            return "redirect:/auth/login";
+        }
+        return "vistas/2fa-verify";
+    }
+
+    @PostMapping("/2fa/verify")
+    public String verify2faPost(@RequestParam("code") int code, HttpSession session, Model model) {
+        UsuarioDTO user = (UsuarioDTO) session.getAttribute("temp_2fa_user");
+        String token = (String) session.getAttribute("temp_2fa_token");
+
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+
+        com.warrenstrange.googleauth.GoogleAuthenticator gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
+        if (gAuth.authorize(user.getSecretKey2FA(), code)) {
+            completeLogin(session, user, token);
+            return "redirect:/";
+        } else {
+            model.addAttribute("error", "Código incorrecto");
+            return "vistas/2fa-verify";
+        }
+    }
+
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
         if (usuario != null) {
             try {
-                // Invalidar token en DB
-                // Necesitamos authServicio para esto, pero estamos en Controlador.
-                // Deberia haber un metodo en servicio.
-                // Como no puedo inyectar servicio aqui facil sin cambiar constructor (ya esta
-                // inyectado),
-                // llamare a un nuevo metodo en authServicio.
                 authServicio.cerrarSesion(usuario.getId());
             } catch (Exception e) {
                 e.printStackTrace();

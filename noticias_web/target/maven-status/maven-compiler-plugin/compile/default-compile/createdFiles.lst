@@ -1,8 +1,8 @@
 com\noticias\web\controladores\GlobalExceptionHandler.class
 com\noticias\web\servicios\AuthServicio.class
 com\noticias\web\seguridad\ForceResetFilter.class
+com\noticias\web\servicios\ApiNoticiasCliente$18.class
 com\noticias\web\servicios\ApiNoticiasCliente$2.class
-com\noticias\web\utilidades\GenerarHash.class
 com\noticias\web\servicios\ApiNoticiasCliente$15.class
 com\noticias\web\controladores\GlobalDataAdvice.class
 com\noticias\web\servicios\ApiNoticiasCliente$12.class
@@ -11,12 +11,10 @@ com\noticias\web\config\WebConfig.class
 com\noticias\web\controladores\ErrorControlador.class
 com\noticias\web\NoticiasWebApplication.class
 com\noticias\web\servicios\ApiNoticiasCliente$1.class
-com\noticias\web\utilidades\PasswordUtil.class
 com\noticias\web\servicios\ApiNoticiasCliente.class
 com\noticias\web\controladores\AuthControlador.class
 com\noticias\web\dtos\UsuarioActualizarDTO.class
 com\noticias\web\servicios\ApiNoticiasCliente$5.class
-com\proyecto\backend\NoticiasWebApplication.class
 com\noticias\web\servicios\ApiNoticiasCliente$8.class
 com\noticias\web\seguridad\SeguridadConfig.class
 com\noticias\web\servicios\SesionServicio.class
@@ -29,10 +27,12 @@ com\noticias\web\dtos\NoticiaDTO.class
 com\noticias\web\seguridad\CustomAuthenticationSuccessHandler.class
 com\noticias\web\servicios\ApiNoticiasCliente$10.class
 com\noticias\web\servicios\UsuarioServicio.class
+com\noticias\web\servicios\ApiNoticiasCliente$17.class
 com\noticias\web\dtos\UsuarioRespuestaDTO.class
 com\noticias\web\dtos\UsuarioApiDTO.class
 com\noticias\web\controladores\TrabajadorControlador.class
 com\noticias\web\servicios\ApiNoticiasCliente$4.class
+com\noticias\web\dtos\NoticiaEliminadaDTO.class
 com\noticias\web\dtos\CategoriaDTO.class
 com\noticias\web\servicios\ApiNoticiasCliente$14.class
 com\noticias\web\controladores\AdminControlador.class
@@ -46,5 +46,4 @@ com\noticias\web\servicios\EmailServicio.class
 com\noticias\web\seguridad\CorsConfig.class
 com\noticias\web\servicios\ApiNoticiasCliente$3.class
 com\noticias\web\servicios\ApiNoticiasCliente$11.class
-com\noticias\web\controladores\GlobalControllerAdvice.class
 com\noticias\web\seguridad\JwtUtil.class

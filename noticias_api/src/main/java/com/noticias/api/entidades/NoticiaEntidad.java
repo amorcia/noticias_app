@@ -26,11 +26,11 @@ public class NoticiaEntidad {
     @Column(name = "imagen_url", length = 255)
     private String imagenUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "autor_id")
     private UsuarioEntidad autor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "categoria_id")
     private CategoriaEntidad categoria;
 

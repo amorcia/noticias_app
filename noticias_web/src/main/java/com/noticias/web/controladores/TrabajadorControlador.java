@@ -35,8 +35,9 @@ public class TrabajadorControlador {
             return "redirect:/";
         }
 
-        // Cargar categorías para el dropdown
-        model.addAttribute("categorias", apiCliente.listarCategorias());
+        // Cargar categorías handled by GlobalAdvice ("categorias")
+
+        // model.addAttribute("categorias", ...); // Suministrado por GlobalAdvice
         model.addAttribute("noticia", new NoticiaDTO());
 
         return "vistas/FormularioNoticia";
@@ -75,5 +76,49 @@ public class TrabajadorControlador {
 
         redirectAttributes.addFlashAttribute("mensaje", "Noticia publicada correctamente");
         return "redirect:/";
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/noticias/{id}/borrar")
+    public String borrarNoticia(@org.springframework.web.bind.annotation.PathVariable Integer id,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String motivo,
+            HttpSession session,
+            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+
+        if (!sesionServicio.validarSesion(session)) {
+            return "redirect:/auth/login";
+        }
+
+        var usuario = sesionServicio.obtenerUsuarioLogueado(session);
+        var noticia = apiCliente.buscarNoticiaPorId(id);
+
+        if (noticia == null) {
+            redirectAttributes.addFlashAttribute("error", "Noticia no encontrada");
+            return "redirect:/";
+        }
+
+        // Permisos: Dueño de la noticia, Admin o Owner del sitio
+        boolean esAutor = noticia.getAutorId() != null && noticia.getAutorId().equals(usuario.getId());
+        boolean esAdmin = "ADMIN".equalsIgnoreCase(usuario.getRol()) || "OWNER".equalsIgnoreCase(usuario.getRol());
+
+        if (!esAutor && !esAdmin) {
+            redirectAttributes.addFlashAttribute("error", "No tienes permiso para borrar esta noticia");
+            return "redirect:/noticias/" + id;
+        }
+
+        // Determinar motivo
+        String motivoFinal = motivo;
+        if (esAutor && (motivo == null || motivo.isBlank())) {
+            motivoFinal = "Eliminado por el propietario";
+        }
+
+        boolean exito = apiCliente.eliminarNoticia(id, motivoFinal, usuario.getId());
+
+        if (exito) {
+            redirectAttributes.addFlashAttribute("mensaje", "Noticia eliminada correctamente");
+            return "redirect:/";
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Error al eliminar la noticia");
+            return "redirect:/noticias/" + id;
+        }
     }
 }

@@ -1,54 +1,56 @@
 package com.noticias.api.servicios;
 
 import com.noticias.api.entidades.ComentarioEntidad;
+import com.noticias.api.entidades.NoticiaEntidad;
+import com.noticias.api.entidades.UsuarioEntidad;
 import com.noticias.api.repositorios.ComentarioRepositorio;
+import com.noticias.api.repositorios.NoticiaRepositorio;
+import com.noticias.api.repositorios.UsuarioRepositorio;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
-/**
- * Servicio para gestión de comentarios.
- */
 @Service
 public class ComentarioServicio {
 
-    private final ComentarioRepositorio comentarioRepositorio;
+    @Autowired
+    private ComentarioRepositorio comentarioRepositorio;
+    @Autowired
+    private NoticiaRepositorio noticiaRepositorio;
+    @Autowired
+    private UsuarioRepositorio usuarioRepositorio;
 
-    public ComentarioServicio(ComentarioRepositorio comentarioRepositorio) {
-        this.comentarioRepositorio = comentarioRepositorio;
-    }
+    public ComentarioEntidad crearComentario(Integer noticiaId, Integer usuarioId, String contenido) {
+        NoticiaEntidad noticia = noticiaRepositorio.findById(noticiaId)
+                .orElseThrow(() -> new RuntimeException("Noticia no encontrada"));
+        UsuarioEntidad usuario = usuarioRepositorio.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-    public List<ComentarioEntidad> listarPorNoticia(Integer noticiaId) {
-        return comentarioRepositorio.findByNoticiaId(noticiaId);
-    }
+        ComentarioEntidad comentario = new ComentarioEntidad();
+        comentario.setNoticia(noticia);
+        comentario.setAutor(usuario);
+        comentario.setContenido(contenido);
+        comentario.setFecha(LocalDateTime.now());
 
-    public List<ComentarioEntidad> listarPorUsuario(Integer usuarioId) {
-        return comentarioRepositorio.findByUsuarioId(usuarioId);
-    }
-
-    public Optional<ComentarioEntidad> buscarPorId(Integer id) {
-        if (id == null)
-            return Optional.empty();
-        return comentarioRepositorio.findById(id);
-    }
-
-    @Transactional
-    public ComentarioEntidad crearComentario(ComentarioEntidad comentario) {
-        if (comentario.getFecha() == null) {
-            comentario.setFecha(LocalDateTime.now());
-        }
         return comentarioRepositorio.save(comentario);
     }
 
-    @Transactional
-    public boolean eliminarComentario(Integer id) {
-        if (id != null && comentarioRepositorio.existsById(id)) {
-            comentarioRepositorio.deleteById(id);
-            return true;
+    public void eliminarComentario(Integer id, Integer usuarioSolicitanteId, boolean esAdmin) {
+        ComentarioEntidad comentario = comentarioRepositorio.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comentario no encontrado"));
+
+        if (!esAdmin && !comentario.getAutor().getId().equals(usuarioSolicitanteId)) {
+            throw new RuntimeException("No tienes permiso para eliminar este comentario");
         }
-        return false;
+        comentarioRepositorio.delete(comentario);
+    }
+
+    public List<ComentarioEntidad> listarPorNoticia(Integer noticiaId) {
+        return comentarioRepositorio.findByNoticiaIdOrderByFechaDesc(noticiaId);
+    }
+
+    public long contarComentarios(Integer noticiaId) {
+        return comentarioRepositorio.countByNoticiaId(noticiaId);
     }
 }

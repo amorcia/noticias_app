@@ -97,6 +97,10 @@ public class UsuarioServicio {
                 usuario.setFechaVeto(usuarioActualizado.getFechaVeto());
                 changed = true;
             }
+            if (usuarioActualizado.getSecretKey2FA() != null) {
+                usuario.setSecretKey2FA(usuarioActualizado.getSecretKey2FA());
+                changed = true;
+            }
             if (changed) {
                 return usuarioRepositorio.save(usuario);
             }

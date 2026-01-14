@@ -6,12 +6,9 @@ C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\m
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\controladores\InicioControlador.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\UsuarioApiDTO.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\UsuarioActualizarDTO.java
-C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\utilidades\GenerarHash.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\LoginPeticionDTO.java
-C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\proyecto\backend\NoticiasWebApplication.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\seguridad\CustomUserDetailsService.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\servicios\AuthServicio.java
-C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\utilidades\PasswordUtil.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\controladores\ErrorControlador.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\controladores\AuthControlador.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\UsuarioRespuestaDTO.java
@@ -25,7 +22,7 @@ C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\m
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\controladores\AdminControlador.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\config\WebConfig.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\ComentarioDTO.java
-C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\controladores\GlobalControllerAdvice.java
+C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\NoticiaEliminadaDTO.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\CategoriaDTO.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\seguridad\CustomAuthenticationSuccessHandler.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\servicios\SesionServicio.java
