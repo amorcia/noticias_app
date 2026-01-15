@@ -12,12 +12,19 @@
             <!-- Perfil Header -->
             <div
                 style="background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; display: flex; align-items: center; gap: 2rem;">
-                <div style="position: relative;">
-                    <img th:src="'https://ui-avatars.com/api/?name=' + ${usuario.nombreCompleto} + '&background=0D6EFD&color=fff&size=128'"
-                        alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%;">
-                    <button
-                        style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <div style="position: relative; width: 100px; height: 100px;">
+                    <img th:src="${usuario.imagenUrl != null ? usuario.imagenUrl : 'https://ui-avatars.com/api/?name=' + usuario.nombreCompleto + '&background=0D6EFD&color=fff&size=128'}"
+                        alt="Avatar"
+                        style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+                    <button onclick="triggerAvatarUpload()" title="Cambiar foto"
+                        style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border: 2px solid white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                         <i data-lucide="camera" style="width: 16px;"></i>
+                    </button>
+
+                    <button th:if="${usuario.imagenUrl != null}" onclick="deleteAvatar()" title="Eliminar foto"
+                        style="position: absolute; top: 0; right: -5px; background: var(--danger); color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        <i data-lucide="x" style="width: 14px;"></i>
                     </button>
                 </div>
                 <div>
@@ -112,29 +119,57 @@
                     </div>
                     <span style="font-weight: 600;">Ayuda</span>
                 </a>
+
+                <!-- Seguridad Link (Privilegiados) -->
+                <a href="#seguridad" class="bubble-card"
+                    th:if="${session.usuario != null and (#strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'TRABAJADOR'))}">
+                    <div class="bubble-icon">
+                        <i data-lucide="shield"></i>
+                    </div>
+                    <span style="font-weight: 600;">Seguridad</span>
+                </a>
             </div>
 
             <!-- Secciones de contenido -->
             <div id="datos"
                 style="background: white; border-radius: 1rem; padding: 2rem; margin-top: 2rem; border: 1px solid var(--border);">
                 <h3 style="margin-top: 0;">Mis Datos Personales</h3>
-                <form>
+                <form th:action="@{/auth/perfil/actualizar}" method="post">
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label class="form-label">Nombre Completo</label>
-                        <input type="text" class="form-control" th:value="${usuario.nombreCompleto}" readonly
+                        <input type="text" name="nombreCompleto" class="form-control"
+                            th:value="${usuario.nombreCompleto}"
                             style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem;">
                     </div>
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label class="form-label">Email</label>
-                        <input type="email" class="form-control" th:value="${usuario.email}" readonly
+                        <input type="email" name="email" class="form-control" th:value="${usuario.email}"
                             style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem;">
                     </div>
-                    <button type="button" class="btn btn-primary" style="opacity: 0.5; cursor: not-allowed;">Guardar
-                        Cambios</button>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Edición deshabilitada
-                        temporalmente.</p>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 </form>
             </div>
+
+            <!-- Avatar Upload Form (Hidden) -->
+            <form id="avatarForm" th:action="@{/auth/perfil/imagen}" method="post" enctype="multipart/form-data"
+                style="display:none;">
+                <input type="file" name="file" id="avatarInput" accept="image/*"
+                    onchange="document.getElementById('avatarForm').submit()">
+            </form>
+
+            <form id="deleteAvatarForm" th:action="@{/auth/perfil/imagen/eliminar}" method="post" style="display:none;">
+            </form>
+
+            <script>
+                function triggerAvatarUpload() {
+                    document.getElementById('avatarInput').click();
+                }
+                function deleteAvatar() {
+                    if (confirm('¿Estás seguro de querer eliminar tu foto de perfil?')) {
+                        document.getElementById('deleteAvatarForm').submit();
+                    }
+                }
+            </script>
 
             <!-- Mis Noticias -->
             <div id="mis-noticias" style="margin-top: 3rem;">
@@ -163,6 +198,53 @@
                             <a th:href="@{'/noticia/' + ${noticia.id}}"
                                 style="color: var(--primary); font-weight: 600; text-decoration: none;">Leer más</a>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seguridad (Solo Privilegiados) -->
+            <div id="seguridad"
+                th:if="${session.usuario != null and (#strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'TRABAJADOR'))}"
+                style="background: white; border-radius: 1rem; padding: 2rem; margin-top: 2rem; border: 1px solid var(--border);">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h3 style="margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="shield-alert" style="color: var(--primary);"></i>
+                            Seguridad de la Cuenta
+                        </h3>
+                        <p style="color: var(--text-muted); margin-bottom: 0;">Gestiona la autenticación en dos pasos
+                            (2FA).</p>
+                    </div>
+                    <div th:if="${usuario.secretKey2FA != null}">
+                        <span class="badge badge-success"
+                            style="background: #10B981; color: white; padding: 0.5rem 1rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="check-circle" style="width: 16px;"></i> Activado
+                        </span>
+                    </div>
+                    <div th:unless="${usuario.secretKey2FA != null}">
+                        <span class="badge"
+                            style="background: #ef4444; color: white; padding: 0.5rem 1rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="x-circle" style="width: 16px;"></i> Desactivado
+                        </span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                    <div th:if="${usuario.secretKey2FA == null}">
+                        <p>Protege tu cuenta con la verificación en dos pasos.</p>
+                        <a th:href="@{/auth/2fa/setup}" class="btn btn-primary"
+                            style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="smartphone"></i> Configurar 2FA
+                        </a>
+                    </div>
+                    <div th:if="${usuario.secretKey2FA != null}">
+                        <p>La autenticación en dos pasos está activa. Se te pedirá un código al iniciar sesión.</p>
+                        <form th:action="@{/auth/2fa/disable}" method="post" style="display: inline;">
+                            <button type="submit" class="btn"
+                                style="background: #ef4444; color: white; border: none; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <i data-lucide="trash-2"></i> Desactivar 2FA
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

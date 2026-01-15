@@ -109,7 +109,8 @@ public class ModeracionServicio {
     }
 
     public boolean estaVetado(UsuarioEntidad usuario) {
-        if (usuario.getVetado()) {
+        // Null check to prevent NullPointerException
+        if (usuario.getVetado() != null && usuario.getVetado()) {
             if (usuario.getVetadoHasta() != null && usuario.getVetadoHasta().isBefore(LocalDateTime.now())) {
                 // Veto expirado
                 usuario.setVetado(false);

@@ -37,7 +37,7 @@
 
                     <!-- Card Image -->
                     <div class="card-image" style="width: 100%; height: 250px; overflow: hidden;">
-                        <img th:src="${noticia.imagenUrl != null ? '/uploads/' + noticia.imagenUrl.substring(noticia.imagenUrl.lastIndexOf('/') + 1) : 'https://source.unsplash.com/random/800x600?news'}"
+                        <img th:src="${noticia.imagenUrl != null ? noticia.imagenUrl : 'https://source.unsplash.com/random/800x600?news'}"
                             onerror="this.src='https://source.unsplash.com/random/800x600?news'" alt="Noticia"
                             style="width: 100%; height: 100%; object-fit: cover;">
                     </div>

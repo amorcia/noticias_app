@@ -7,6 +7,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 /**
  * Controlador de autenticación para News App.
  * Maneja login, registro, recuperación de contraseña y confirmación de email.
@@ -19,6 +21,27 @@ public class AuthControlador {
 
     public AuthControlador(AuthServicio authServicio) {
         this.authServicio = authServicio;
+    }
+
+    // ... (rest of methods)
+
+    @PostMapping("/perfil/imagen/eliminar")
+    public String eliminarAvatar(HttpSession session, RedirectAttributes redirectAttributes) {
+        UsuarioDTO dto = (UsuarioDTO) session.getAttribute("usuario");
+        if (dto == null) {
+            return "redirect:/auth/login";
+        }
+
+        boolean ok = authServicio.eliminarAvatar(dto.getId());
+
+        if (ok) {
+            dto.setImagenUrl(null); // Clear session
+            session.setAttribute("usuario", dto);
+            redirectAttributes.addFlashAttribute("mensaje", "Foto de perfil eliminada.");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Error al eliminar la foto.");
+        }
+        return "redirect:/perfil";
     }
 
     @GetMapping("/login")
@@ -52,15 +75,13 @@ public class AuthControlador {
                     || "TRABAJADOR".equalsIgnoreCase(usuario.getRolNombre());
 
             if (isPrivileged) {
-                // Store temp session for 2FA verification
-                session.setAttribute("temp_2fa_user", usuario);
-                session.setAttribute("temp_2fa_token", res.getToken());
-
-                if (usuario.getSecretKey2FA() == null || usuario.getSecretKey2FA().isEmpty()) {
-                    return "redirect:/auth/2fa/setup"; // First time setup
-                } else {
-                    return "redirect:/auth/2fa/verify"; // Normal verification
+                // Store temp session for 2FA verification if enabled
+                if (usuario.getSecretKey2FA() != null && !usuario.getSecretKey2FA().isEmpty()) {
+                    session.setAttribute("temp_2fa_user", usuario);
+                    session.setAttribute("temp_2fa_token", res.getToken());
+                    return "redirect:/auth/2fa/verify";
                 }
+                // If 2FA not enabled, proceed to normal login (Optional 2FA)
             }
 
             // Normal Login Flow (Non-Privileged)
@@ -303,6 +324,17 @@ public class AuthControlador {
         }
     }
 
+    @PostMapping("/2fa/disable")
+    public String disable2fa(HttpSession session) {
+        UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
+        if (usuario != null) {
+            authServicio.desactivar2FA(usuario.getId());
+            usuario.setSecretKey2FA(null);
+            session.setAttribute("usuario", usuario);
+        }
+        return "redirect:/perfil";
+    }
+
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
@@ -316,4 +348,47 @@ public class AuthControlador {
         session.invalidate();
         return "redirect:/";
     }
+
+    @PostMapping("/perfil/actualizar")
+    public String actualizarPerfil(@RequestParam String nombreCompleto, @RequestParam String email,
+            HttpSession session, RedirectAttributes redirectAttributes) {
+        UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
+        if (usuario != null) {
+            try {
+                String result = authServicio.actualizarPerfil(usuario.getId(), nombreCompleto, email,
+                        usuario.getEmail());
+
+                // Always update name in session
+                usuario.setNombreCompleto(nombreCompleto);
+
+                if ("VERIFY".equals(result)) {
+                    redirectAttributes.addFlashAttribute("mensaje",
+                            "Perfil actualizado. Se ha enviado un correo a tu nuevo email para confirmarlo.");
+                    // Do NOT update email in session yet
+                } else {
+                    redirectAttributes.addFlashAttribute("mensaje", "Perfil actualizado correctamente.");
+                    usuario.setEmail(email);
+                    session.setAttribute("usuario", usuario);
+                }
+            } catch (Exception e) {
+                redirectAttributes.addFlashAttribute("error", "Error actualizando perfil: " + e.getMessage());
+            }
+        }
+        return "redirect:/perfil";
+    }
+
+    @PostMapping("/perfil/imagen")
+    public String subirAvatar(@RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            HttpSession session) {
+        UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
+        if (usuario != null && !file.isEmpty()) {
+            String url = authServicio.subirAvatar(usuario.getId(), file);
+            if (url != null) {
+                usuario.setImagenUrl(url);
+                session.setAttribute("usuario", usuario);
+            }
+        }
+        return "redirect:/perfil";
+    }
+
 }

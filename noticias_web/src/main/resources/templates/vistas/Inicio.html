@@ -53,9 +53,27 @@
                                 <div
                                     style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.9rem;">
                                     <span th:text="${noticia.autorNombre}">Autor</span>
-                                    <div>
-                                        <i data-lucide="thumbs-up" style="width: 14px; display: inline;"></i>
-                                        <span th:text="${noticia.likes}">0</span>
+                                    <div style="display: flex; gap: 0.8rem;">
+                                        <!-- Like -->
+                                        <button th:onclick="'votar(\'LIKE\', ' + ${noticia.id} + ')'"
+                                            style="background:none; border:none; padding:0; cursor:pointer; display:flex; align-items:center; gap:0.3rem; color:var(--text-muted);">
+                                            <i data-lucide="thumbs-up" style="width: 14px;"></i>
+                                            <span th:text="${noticia.likes}" style="font-size:0.85rem;">0</span>
+                                        </button>
+                                        <!-- Dislike -->
+                                        <button th:onclick="'votar(\'DISLIKE\', ' + ${noticia.id} + ')'"
+                                            style="background:none; border:none; padding:0; cursor:pointer; display:flex; align-items:center; gap:0.3rem; color:var(--text-muted);">
+                                            <i data-lucide="thumbs-down" style="width: 14px;"></i>
+                                            <span th:text="${noticia.dislikes != null ? noticia.dislikes : 0}"
+                                                style="font-size:0.85rem;">0</span>
+                                        </button>
+                                        <!-- Comments -->
+                                        <a th:href="@{'/noticia/' + ${noticia.id}}"
+                                            style="text-decoration:none; display:flex; align-items:center; gap:0.3rem; color:var(--text-muted);">
+                                            <i data-lucide="message-circle" style="width: 14px;"></i>
+                                            <span th:text="${noticia.comentarios != null ? noticia.comentarios : 0}"
+                                                style="font-size:0.85rem;">0</span>
+                                        </a>
                                     </div>
                                 </div>
                             </div>

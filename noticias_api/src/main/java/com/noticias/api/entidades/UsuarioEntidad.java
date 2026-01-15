@@ -56,6 +56,12 @@ public class UsuarioEntidad {
     @Column(name = "secret_key_2fa")
     private String secretKey2FA;
 
+    @Column(name = "imagen_url")
+    private String imagenUrl;
+
+    @Column(name = "email_pendiente")
+    private String emailPendiente;
+
     public UsuarioEntidad() {
     }
 
@@ -65,6 +71,22 @@ public class UsuarioEntidad {
 
     public void setSecretKey2FA(String secretKey2FA) {
         this.secretKey2FA = secretKey2FA;
+    }
+
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+
+    public void setImagenUrl(String imagenUrl) {
+        this.imagenUrl = imagenUrl;
+    }
+
+    public String getEmailPendiente() {
+        return emailPendiente;
+    }
+
+    public void setEmailPendiente(String emailPendiente) {
+        this.emailPendiente = emailPendiente;
     }
 
     // Getters y setters

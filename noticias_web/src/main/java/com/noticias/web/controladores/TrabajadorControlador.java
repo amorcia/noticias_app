@@ -49,7 +49,7 @@ public class TrabajadorControlador {
             @org.springframework.web.bind.annotation.RequestParam("subtitulo") String subtitulo,
             @org.springframework.web.bind.annotation.RequestParam("contenido") String contenido,
             @org.springframework.web.bind.annotation.RequestParam("categoriaId") Integer categoriaId,
-            @org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @org.springframework.web.bind.annotation.RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
             HttpSession session,
             org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
 

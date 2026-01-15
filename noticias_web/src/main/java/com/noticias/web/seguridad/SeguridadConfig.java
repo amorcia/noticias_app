@@ -41,7 +41,7 @@ public class SeguridadConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 // Recursos estáticos públicos
                                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**",
-                                                                "/error")
+                                                                "/error", "/uploads/**")
                                                 .permitAll()
 
                                                 // Páginas públicas

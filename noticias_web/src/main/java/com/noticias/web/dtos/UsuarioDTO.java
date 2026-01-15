@@ -28,9 +28,18 @@ public class UsuarioDTO {
     private LocalDateTime fechaVeto;
     private LocalDateTime vetadoHasta;
     private String imagenUrl;
+    private String emailPendiente;
 
     // Constructors
     public UsuarioDTO() {
+    }
+
+    public String getEmailPendiente() {
+        return emailPendiente;
+    }
+
+    public void setEmailPendiente(String emailPendiente) {
+        this.emailPendiente = emailPendiente;
     }
 
     // Getters and Setters

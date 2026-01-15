@@ -9,6 +9,7 @@ com\noticias\web\servicios\ApiNoticiasCliente$12.class
 com\noticias\web\servicios\ApiNoticiasCliente$9.class
 com\noticias\web\config\WebConfig.class
 com\noticias\web\controladores\ErrorControlador.class
+com\noticias\web\servicios\ApiNoticiasCliente$19.class
 com\noticias\web\NoticiasWebApplication.class
 com\noticias\web\servicios\ApiNoticiasCliente$1.class
 com\noticias\web\servicios\ApiNoticiasCliente.class

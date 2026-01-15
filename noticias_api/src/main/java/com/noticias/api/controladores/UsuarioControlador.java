@@ -18,9 +18,12 @@ import java.util.Map;
 public class UsuarioControlador {
 
     private final UsuarioServicio usuarioServicio;
+    private final com.noticias.api.servicios.AlmacenamientoServicio almacenamientoServicio;
 
-    public UsuarioControlador(UsuarioServicio usuarioServicio) {
+    public UsuarioControlador(UsuarioServicio usuarioServicio,
+            com.noticias.api.servicios.AlmacenamientoServicio almacenamientoServicio) {
         this.usuarioServicio = usuarioServicio;
+        this.almacenamientoServicio = almacenamientoServicio;
     }
 
     @GetMapping
@@ -126,5 +129,49 @@ public class UsuarioControlador {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/{id}/disable-2fa")
+    public ResponseEntity<Void> desactivar2FA(@PathVariable Integer id) {
+        if (usuarioServicio.desactivar2FA(id)) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
+    @PostMapping("/{id}/imagen")
+    public ResponseEntity<Map<String, String>> subirImagen(@PathVariable Integer id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            String url = almacenamientoServicio.almacenar(file);
+            UsuarioEntidad u = new UsuarioEntidad();
+            u.setImagenUrl(url);
+            usuarioServicio.actualizarUsuario(id, u);
+            return ResponseEntity.ok(Map.of("url", url));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", "Error al subir imagen"));
+        }
+    }
+
+    @DeleteMapping("/{id}/imagen")
+    public ResponseEntity<Void> eliminarImagen(@PathVariable Integer id) {
+        try {
+            UsuarioEntidad u = new UsuarioEntidad();
+            u.setImagenUrl("");
+            // Pass empty string (or special marker) or handle null in service.
+            // Service expects null to skip update.
+            // Let's modify service to handle empty string explicitly if needed, or pass
+            // special logic.
+            // Actually, let's just make service update null if we pass null?
+            // But service null-checks to avoid overwriting with null.
+
+            // Direct approach: find and save.
+            usuarioServicio.eliminarImagen(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

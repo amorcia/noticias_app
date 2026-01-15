@@ -98,6 +98,52 @@ public class ApiNoticiasCliente {
         }
     }
 
+    public boolean eliminarAvatar(Integer id) {
+        String url = apiUrl + "/usuarios/" + id + "/imagen";
+        try {
+            restTemplate.delete(url);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean desactivar2FA(Integer id) {
+        String url = apiUrl + "/usuarios/" + id + "/disable-2fa";
+        try {
+            restTemplate.postForObject(url, null, Void.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Map<String, String> subirAvatar(Integer id, org.springframework.web.multipart.MultipartFile file) {
+        String url = apiUrl + "/usuarios/" + id + "/imagen";
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            org.springframework.util.MultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
+            body.add("file", new org.springframework.core.io.ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            });
+
+            HttpEntity<org.springframework.util.MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body,
+                    headers);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            return response.getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     // ==================== CATEGORÍAS ====================
 
     public List<CategoriaDTO> listarCategorias() {
@@ -193,11 +239,16 @@ public class ApiNoticiasCliente {
 
     public List<NoticiaDTO> listarNoticiasPorCategoria(Integer categoriaId) {
         String url = apiUrl + "/noticias/categoria/" + categoriaId;
-        ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
-                url, HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<NoticiaDTO>>() {
-                });
-        return response.getBody();
+        try {
+            ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                    });
+            return response.getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
     }
 
     public List<NoticiaDTO> listarNoticiasPorCategoriaFiltrado(Integer categoriaId, String filtro, Integer mes,
@@ -268,6 +319,7 @@ public class ApiNoticiasCliente {
         try {
             return restTemplate.getForObject(url, NoticiaDTO.class);
         } catch (Exception e) {
+            System.out.println("❌ Error buscando noticia por ID: " + e.getMessage());
             return null;
         }
     }

@@ -8,7 +8,6 @@ com\noticias\api\servicios\ComentarioServicio.class
 com\noticias\api\entidades\EtiquetaEntidad.class
 com\noticias\api\repositorios\ComentarioRepositorio.class
 com\noticias\api\entidades\ComentarioEntidad.class
-com\noticias\api\util\PasswordHashGenerator.class
 com\noticias\api\repositorios\DenunciaRepositorio.class
 com\noticias\api\repositorios\NoticiaEliminadaRepositorio.class
 com\noticias\api\servicios\ModeracionServicio.class

@@ -131,9 +131,13 @@
                         document.querySelectorAll('.dropdown.active').forEach(d => {
                             if (!d.contains(userBtn)) d.classList.remove('active');
                         });
-                        userBtn.closest('.user-dropdown').classList.toggle('active');
-                        // Reinitialize Lucide icons when dropdown opens
-                        setTimeout(() => lucide.createIcons(), 10);
+                        const dropdown = userBtn.closest('.user-dropdown');
+                        dropdown.classList.toggle('active');
+
+                        // Force icon re-render
+                        if (dropdown.classList.contains('active')) {
+                            lucide.createIcons();
+                        }
                     });
                 }
 

@@ -101,6 +101,14 @@ public class UsuarioServicio {
                 usuario.setSecretKey2FA(usuarioActualizado.getSecretKey2FA());
                 changed = true;
             }
+            if (usuarioActualizado.getImagenUrl() != null) {
+                usuario.setImagenUrl(usuarioActualizado.getImagenUrl());
+                changed = true;
+            }
+            if (usuarioActualizado.getEmailPendiente() != null) {
+                usuario.setEmailPendiente(usuarioActualizado.getEmailPendiente());
+                changed = true;
+            }
             if (changed) {
                 return usuarioRepositorio.save(usuario);
             }
@@ -118,6 +126,13 @@ public class UsuarioServicio {
             UsuarioEntidad usuario = usuarioOpt.get();
             usuario.setActivo(true);
             usuario.setCodigoVerificacion(null);
+
+            // Si hay email pendiente, aplicarlo ahora
+            if (usuario.getEmailPendiente() != null) {
+                usuario.setEmail(usuario.getEmailPendiente());
+                usuario.setEmailPendiente(null);
+            }
+
             usuarioRepositorio.save(usuario);
             return true;
         }
@@ -202,6 +217,28 @@ public class UsuarioServicio {
             return false;
         return usuarioRepositorio.findById(id).map(usuario -> {
             usuario.setTokenSession(null);
+            usuarioRepositorio.save(usuario);
+            return true;
+        }).orElse(false);
+    }
+
+    @Transactional
+    public boolean desactivar2FA(Integer id) {
+        if (id == null)
+            return false;
+        return usuarioRepositorio.findById(id).map(usuario -> {
+            usuario.setSecretKey2FA(null);
+            usuarioRepositorio.save(usuario);
+            return true;
+        }).orElse(false);
+    }
+
+    @Transactional
+    public boolean eliminarImagen(Integer id) {
+        if (id == null)
+            return false;
+        return usuarioRepositorio.findById(id).map(usuario -> {
+            usuario.setImagenUrl(null);
             usuarioRepositorio.save(usuario);
             return true;
         }).orElse(false);

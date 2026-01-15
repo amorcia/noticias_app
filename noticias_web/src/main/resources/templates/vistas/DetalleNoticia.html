@@ -70,7 +70,8 @@
 
             <!-- Category & Date -->
             <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center;">
-                <span class="badge badge-primary" th:text="${noticia.categoria.nombre}">Categoría</span>
+                <span class="badge badge-primary"
+                    th:text="${noticia.categoriaNombre != null ? noticia.categoriaNombre : 'General'}">Categoría</span>
                 <span style="color: var(--text-muted); font-size: 0.9rem;"
                     th:text="${#temporals.format(noticia.fechaPublicacion, 'dd MMMM yyyy, HH:mm')}">Fecha</span>
             </div>
@@ -110,7 +111,7 @@
                         <span id="dislikes-count" th:text="${noticia.dislikes != null ? noticia.dislikes : 0}">0</span>
                     </button>
                     <a href="#comentarios" class="interaction-item comment">
-                        <i data-lucide="message-square" style="width: 20px;"></i>
+                        <i data-lucide="message-circle" style="width: 20px;"></i>
                         <span th:text="${noticia.comentarios != null ? noticia.comentarios : 0}">0</span>
                     </a>
                     <button class="interaction-item report" th:onclick="'openReportModal(' + ${noticia.id} + ')'">
@@ -118,7 +119,7 @@
                     </button>
 
                     <!-- Delete (Admin/Owner) -->
-                    <a th:if="${session.usuario != null and (session.usuario.id == noticia.autorId or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN'))}"
+                    <a th:if="${session.usuario != null and (session.usuario.id == noticia.autorId or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER'))}"
                         th:href="@{'/trabajador/eliminar/' + ${noticia.id}}" class="interaction-item"
                         style="color: var(--danger); margin-left: auto;"
                         onclick="return confirm('¿Estás seguro de eliminar esta noticia?');">
@@ -130,8 +131,8 @@
             <!-- Main Image -->
             <div
                 style="margin-bottom: 3rem; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-lg);">
-                <!-- Fix image URL to use /uploads/ -->
-                <img th:src="${noticia.imagenUrl != null ? '/uploads/' + noticia.imagenUrl.substring(noticia.imagenUrl.lastIndexOf('/') + 1) : 'https://source.unsplash.com/random/1200x800?news'}"
+                <!-- Fix image URL to use direct value (handled by API/Upload logic) -->
+                <img th:src="${noticia.imagenUrl != null ? noticia.imagenUrl : 'https://source.unsplash.com/random/1200x800?news'}"
                     style="width: 100%; height: auto; display: block;"
                     onerror="this.src='https://source.unsplash.com/random/1200x800?news'" alt="Imagen Noticia">
             </div>
@@ -162,17 +163,10 @@
                 <a href="/auth/login">Inicia sesión</a> para participar en la conversación.
             </div>
 
-            <!-- Comments List -->
+            <!-- Comments List (Loaded via AJAX) -->
             <div id="commentsList">
-                <!-- Fallback if listing from backend directly (Eager load) -->
-                <div th:each="comentario : ${noticia.comentariosList}"
-                    style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border);">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <strong th:text="${comentario.autor.nombre}">Usuario</strong>
-                        <span style="font-size: 0.85rem; color: var(--text-muted);"
-                            th:text="${#temporals.format(comentario.fecha, 'dd MMM yyyy')}">Fecha</span>
-                    </div>
-                    <p style="font-size: 1.05rem;" th:text="${comentario.contenido}">Contenido</p>
+                <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                    Cargando comentarios...
                 </div>
             </div>
 

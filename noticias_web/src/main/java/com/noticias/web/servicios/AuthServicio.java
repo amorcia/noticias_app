@@ -251,4 +251,47 @@ public class AuthServicio {
         user.setSecretKey2FA(secret);
         apiCliente.actualizarUsuario(id, user);
     }
+
+    public void desactivar2FA(Integer id) {
+        apiCliente.desactivar2FA(id);
+    }
+
+    public String actualizarPerfil(Integer id, String nombre, String email, String oldEmail) {
+        UsuarioDTO user = new UsuarioDTO();
+        user.setNombreCompleto(nombre);
+
+        if (email != null && !email.equals(oldEmail)) {
+            // Email changed
+            UsuarioDTO existing = apiCliente.buscarUsuarioPorEmail(email);
+            if (existing != null) {
+                throw new RuntimeException("El email ya está en uso por otro usuario.");
+            }
+
+            // Set pending email and verification code
+            user.setEmailPendiente(email);
+            String code = java.util.UUID.randomUUID().toString();
+            user.setCodigoVerificacion(code);
+
+            // Send confirmation email
+            String asunto = "Confirma tu nuevo email - Noticias App";
+            String cuerpo = crearEmailConfirmacion(code);
+            emailServicio.enviarEmail(email, asunto, cuerpo);
+
+            apiCliente.actualizarUsuario(id, user); // Updates name, email_pendiente, code
+            return "VERIFY";
+        } else {
+            // Only name changed
+            apiCliente.actualizarUsuario(id, user);
+            return "UPDATED";
+        }
+    }
+
+    public String subirAvatar(Integer id, org.springframework.web.multipart.MultipartFile file) {
+        java.util.Map<String, String> resp = apiCliente.subirAvatar(id, file);
+        return resp != null ? resp.get("url") : null;
+    }
+
+    public boolean eliminarAvatar(Integer id) {
+        return apiCliente.eliminarAvatar(id);
+    }
 }

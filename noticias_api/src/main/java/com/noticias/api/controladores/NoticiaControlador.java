@@ -100,7 +100,7 @@ public class NoticiaControlador {
             @RequestParam("contenido") String contenido,
             @RequestParam("categoriaId") Integer categoriaId,
             @RequestParam("autorId") Integer autorId,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam(value = "file", required = false) MultipartFile file) {
 
         try {
             // 1. Verificar Usuario
@@ -114,16 +114,18 @@ public class NoticiaControlador {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Usuario vetado. No puedes publicar.");
             }
 
-            // 2. Moderación NSFW
-            if (moderacionServicio.esContenidoNSFW(file)) {
-                moderacionServicio.vetarUsuarioAutomaticamente(autor,
-                        "Intento de subir contenido +18 detectado por IA.");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Contenido inapropiado detectado. Has sido vetado por 7 días.");
+            // 2. Moderación NSFW (Solo si hay archivo)
+            String imagenUrl = null;
+            if (file != null && !file.isEmpty()) {
+                if (moderacionServicio.esContenidoNSFW(file)) {
+                    moderacionServicio.vetarUsuarioAutomaticamente(autor,
+                            "Intento de subir contenido +18 detectado por IA.");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body("Contenido inapropiado detectado. Has sido vetado por 7 días.");
+                }
+                // 3. Almacenar Archivo
+                imagenUrl = almacenamientoServicio.almacenar(file);
             }
-
-            // 3. Almacenar Archivo
-            String imagenUrl = almacenamientoServicio.almacenar(file);
 
             // 4. Crear Noticia
             NoticiaEntidad noticia = new NoticiaEntidad();
@@ -131,7 +133,14 @@ public class NoticiaControlador {
             noticia.setSubtitulo(subtitulo);
             noticia.setContenido(contenido);
             noticia.setImagenUrl(imagenUrl);
-            noticia.setEsAportacionUsuario(true);
+
+            // Determinar si es aportación de usuario (foro) o noticia oficial
+            // Privileged users (TRABAJADOR, ADMIN, OWNER) create official news
+            String rolNombre = autor.getRol() != null ? autor.getRol().getNombre() : "";
+            boolean esOficial = "TRABAJADOR".equalsIgnoreCase(rolNombre) ||
+                    "ADMIN".equalsIgnoreCase(rolNombre) ||
+                    "OWNER".equalsIgnoreCase(rolNombre);
+            noticia.setEsAportacionUsuario(!esOficial); // true for forum, false for official
             noticia.setAutor(autor);
 
             // Asignar categoría (simplificado, idealmente buscar entidad)
