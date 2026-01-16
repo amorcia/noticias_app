@@ -528,11 +528,11 @@ public class ApiNoticiasCliente {
 
             restTemplate.postForEntity(url, requestEntity, String.class);
             return null; // Éxito
-        } catch (org.springframework.web.client.HttpClientErrorException e) {
-            return e.getResponseBodyAsString(); // Error del servidor
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            return e.getResponseBodyAsString(); // Error del servidor (4xx o 5xx)
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error interno al conectar con el servidor.";
+            return "Error interno al conectar con el servidor: " + e.getMessage();
         }
     }
 }

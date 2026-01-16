@@ -23,7 +23,7 @@ public class NoticiaEntidad {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String contenido;
 
-    @Column(name = "imagen_url", length = 255)
+    @Column(name = "imagen_url", length = 255, nullable = true)
     private String imagenUrl;
 
     @ManyToOne(fetch = FetchType.EAGER)

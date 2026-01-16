@@ -238,6 +238,11 @@ public class AuthControlador {
     public String setup2faPage(HttpSession session, Model model) {
         UsuarioDTO user = (UsuarioDTO) session.getAttribute("temp_2fa_user");
         if (user == null) {
+            // Try to get fully logged in user (Re-configuration from Profile)
+            user = (UsuarioDTO) session.getAttribute("usuario");
+        }
+
+        if (user == null) {
             return "redirect:/auth/login";
         }
 
@@ -265,6 +270,13 @@ public class AuthControlador {
     @PostMapping("/2fa/setup")
     public String setup2faPost(@RequestParam("code") int code, HttpSession session, Model model) {
         UsuarioDTO user = (UsuarioDTO) session.getAttribute("temp_2fa_user");
+        boolean isTempUser = true;
+
+        if (user == null) {
+            user = (UsuarioDTO) session.getAttribute("usuario");
+            isTempUser = false;
+        }
+
         String secret = (String) session.getAttribute("temp_2fa_secret");
         String token = (String) session.getAttribute("temp_2fa_token");
 
@@ -277,13 +289,19 @@ public class AuthControlador {
             // Save secret to DB
             UsuarioDTO updateDto = new UsuarioDTO();
             updateDto.setSecretKey2FA(secret);
-            // We need to call API to update user. apiCliente exposed via AuthServicio?
-            // AuthServicio needs a new method 'activar2FA'
+
             authServicio.activar2FA(user.getId(), secret);
 
-            // Login user
-            completeLogin(session, user, token);
-            return "redirect:/";
+            if (isTempUser) {
+                // Login user
+                completeLogin(session, user, token);
+                return "redirect:/";
+            } else {
+                // Already logged in, just update session and redirect to profile
+                user.setSecretKey2FA(secret);
+                session.setAttribute("usuario", user);
+                return "redirect:/perfil";
+            }
         } else {
             model.addAttribute("error", "Código incorrecto");
             // Re-render setup page with NEW secret? Or same? Better same.
@@ -314,23 +332,41 @@ public class AuthControlador {
             return "redirect:/auth/login";
         }
 
+        // Rate Limiting
+        Integer attempts = (Integer) session.getAttribute("2fa_attempts");
+        if (attempts == null)
+            attempts = 0;
+
+        if (attempts >= 3) {
+            session.removeAttribute("temp_2fa_user");
+            session.removeAttribute("temp_2fa_token");
+            session.removeAttribute("2fa_attempts");
+            model.addAttribute("error",
+                    "Has excedido el límite de intentos (3). Por seguridad, inicia sesión de nuevo.");
+            return "vistas/Login";
+        }
+
         com.warrenstrange.googleauth.GoogleAuthenticator gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
         if (gAuth.authorize(user.getSecretKey2FA(), code)) {
+            session.removeAttribute("2fa_attempts");
             completeLogin(session, user, token);
             return "redirect:/";
         } else {
-            model.addAttribute("error", "Código incorrecto");
+            attempts++;
+            session.setAttribute("2fa_attempts", attempts);
+            model.addAttribute("error", "Código incorrecto. Intentos restantes: " + (3 - attempts));
             return "vistas/2fa-verify";
         }
     }
 
     @PostMapping("/2fa/disable")
-    public String disable2fa(HttpSession session) {
+    public String disable2fa(HttpSession session, RedirectAttributes redirectAttributes) {
         UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
         if (usuario != null) {
             authServicio.desactivar2FA(usuario.getId());
             usuario.setSecretKey2FA(null);
             session.setAttribute("usuario", usuario);
+            redirectAttributes.addFlashAttribute("mensaje", "Autenticación en dos pasos desactivada correctamente.");
         }
         return "redirect:/perfil";
     }

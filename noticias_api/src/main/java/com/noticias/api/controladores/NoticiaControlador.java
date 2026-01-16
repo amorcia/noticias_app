@@ -1,5 +1,6 @@
 package com.noticias.api.controladores;
 
+import com.noticias.api.dtos.NoticiaDTO;
 import com.noticias.api.entidades.NoticiaEntidad;
 import com.noticias.api.servicios.NoticiaServicio;
 import com.noticias.api.servicios.ModeracionServicio;
@@ -35,27 +36,27 @@ public class NoticiaControlador {
     }
 
     @GetMapping
-    public ResponseEntity<List<NoticiaEntidad>> listarTodas() {
+    public ResponseEntity<List<NoticiaDTO>> listarTodas() {
         return ResponseEntity.ok(noticiaServicio.listarTodas());
     }
 
     @GetMapping("/destacadas")
-    public ResponseEntity<List<NoticiaEntidad>> listarDestacadas() {
+    public ResponseEntity<List<NoticiaDTO>> listarDestacadas() {
         return ResponseEntity.ok(noticiaServicio.listarDestacadas());
     }
 
     @GetMapping("/populares")
-    public ResponseEntity<List<NoticiaEntidad>> listarPopulares() {
+    public ResponseEntity<List<NoticiaDTO>> listarPopulares() {
         return ResponseEntity.ok(noticiaServicio.listarPopulares());
     }
 
     @GetMapping("/categoria/{categoriaId}")
-    public ResponseEntity<List<NoticiaEntidad>> listarPorCategoria(@PathVariable Integer categoriaId) {
+    public ResponseEntity<List<NoticiaDTO>> listarPorCategoria(@PathVariable Integer categoriaId) {
         return ResponseEntity.ok(noticiaServicio.listarPorCategoria(categoriaId));
     }
 
     @GetMapping("/categoria/{categoriaId}/filtrar")
-    public ResponseEntity<List<NoticiaEntidad>> listarPorCategoriaFiltrado(
+    public ResponseEntity<List<NoticiaDTO>> listarPorCategoriaFiltrado(
             @PathVariable Integer categoriaId,
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) Integer mes,
@@ -64,22 +65,22 @@ public class NoticiaControlador {
     }
 
     @GetMapping("/categoria/nombre/{nombre}")
-    public ResponseEntity<List<NoticiaEntidad>> listarPorCategoriaNombre(@PathVariable String nombre) {
+    public ResponseEntity<List<NoticiaDTO>> listarPorCategoriaNombre(@PathVariable String nombre) {
         return ResponseEntity.ok(noticiaServicio.listarPorCategoriaNombre(nombre));
     }
 
     @GetMapping("/categoria/nombre/{nombre}/foro")
-    public ResponseEntity<List<NoticiaEntidad>> listarPorCategoriaForo(@PathVariable String nombre) {
+    public ResponseEntity<List<NoticiaDTO>> listarPorCategoriaForo(@PathVariable String nombre) {
         return ResponseEntity.ok(noticiaServicio.listarPorCategoriaNombreYTipo(nombre, true));
     }
 
     @GetMapping("/autor/{autorId}")
-    public ResponseEntity<List<NoticiaEntidad>> listarPorAutor(@PathVariable Integer autorId) {
+    public ResponseEntity<List<NoticiaDTO>> listarPorAutor(@PathVariable Integer autorId) {
         return ResponseEntity.ok(noticiaServicio.listarPorAutor(autorId));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<NoticiaEntidad> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<NoticiaDTO> buscarPorId(@PathVariable Integer id) {
         // Incrementar visitas al ver la noticia
         noticiaServicio.incrementarVisitas(id);
         return noticiaServicio.buscarPorId(id)
@@ -88,8 +89,8 @@ public class NoticiaControlador {
     }
 
     @PostMapping
-    public ResponseEntity<NoticiaEntidad> crear(@RequestBody NoticiaEntidad noticia) {
-        NoticiaEntidad creada = noticiaServicio.crearNoticia(noticia);
+    public ResponseEntity<NoticiaDTO> crear(@RequestBody NoticiaEntidad noticia) {
+        NoticiaDTO creada = noticiaServicio.crearNoticia(noticia);
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
@@ -148,7 +149,7 @@ public class NoticiaControlador {
             cat.setId(categoriaId);
             noticia.setCategoria(cat);
 
-            NoticiaEntidad creada = noticiaServicio.crearNoticia(noticia);
+            NoticiaDTO creada = noticiaServicio.crearNoticia(noticia);
             return ResponseEntity.status(HttpStatus.CREATED).body(creada);
 
         } catch (Exception e) {
@@ -157,8 +158,8 @@ public class NoticiaControlador {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<NoticiaEntidad> actualizar(@PathVariable Integer id, @RequestBody NoticiaEntidad noticia) {
-        NoticiaEntidad actualizada = noticiaServicio.actualizarNoticia(id, noticia);
+    public ResponseEntity<NoticiaDTO> actualizar(@PathVariable Integer id, @RequestBody NoticiaEntidad noticia) {
+        NoticiaDTO actualizada = noticiaServicio.actualizarNoticia(id, noticia);
         if (actualizada != null) {
             return ResponseEntity.ok(actualizada);
         }

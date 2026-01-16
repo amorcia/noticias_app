@@ -1,5 +1,6 @@
 package com.noticias.api.servicios;
 
+import com.noticias.api.dtos.NoticiaDTO;
 import com.noticias.api.entidades.NoticiaEntidad;
 import com.noticias.api.entidades.NoticiaEliminadaEntidad;
 import com.noticias.api.repositorios.NoticiaRepositorio;
@@ -27,72 +28,80 @@ public class NoticiaServicio {
         this.noticiaEliminadaRepositorio = noticiaEliminadaRepositorio;
     }
 
-    public List<NoticiaEntidad> listarTodas() {
-        return noticiaRepositorio.findAll();
+    public List<NoticiaDTO> listarTodas() {
+        return noticiaRepositorio.findAll().stream().map(this::convertirADTO).toList();
     }
 
-    public List<NoticiaEntidad> listarDestacadas() {
-        return noticiaRepositorio.findByDestacadaTrue();
+    public List<NoticiaDTO> listarDestacadas() {
+        return noticiaRepositorio.findByDestacadaTrue().stream().map(this::convertirADTO).toList();
     }
 
-    public List<NoticiaEntidad> listarPopulares() {
-        return noticiaRepositorio.findTopPopular(org.springframework.data.domain.PageRequest.of(0, 5));
+    public List<NoticiaDTO> listarPopulares() {
+        return noticiaRepositorio.findTopPopular(org.springframework.data.domain.PageRequest.of(0, 5)).stream()
+                .map(this::convertirADTO).toList();
     }
 
-    public List<NoticiaEntidad> listarPorCategoria(Integer categoriaId) {
-        return noticiaRepositorio.findByCategoriaId(categoriaId);
+    public List<NoticiaDTO> listarPorCategoria(Integer categoriaId) {
+        return noticiaRepositorio.findByCategoriaId(categoriaId).stream().map(this::convertirADTO).toList();
     }
 
-    public List<NoticiaEntidad> listarPorCategoriaNombre(String nombre) {
-        return noticiaRepositorio.findByCategoriaNombre(nombre);
+    public List<NoticiaDTO> listarPorCategoriaNombre(String nombre) {
+        return noticiaRepositorio.findByCategoriaNombre(nombre).stream().map(this::convertirADTO).toList();
     }
 
     public boolean existePorTitulo(String titulo) {
         return noticiaRepositorio.existsByTitulo(titulo);
     }
 
-    public List<NoticiaEntidad> listarPorCategoriaFiltrado(Integer catId, String filtro, Integer mes, Integer anio) {
+    public List<NoticiaDTO> listarPorCategoriaFiltrado(Integer catId, String filtro, Integer mes, Integer anio) {
+        List<NoticiaEntidad> noticias;
         if ("recientes".equals(filtro)) {
-            return noticiaRepositorio.findByCategoriaIdOrderByFechaPublicacionDesc(catId);
+            noticias = noticiaRepositorio.findByCategoriaIdOrderByFechaPublicacionDesc(catId);
         } else if ("mes".equals(filtro) && mes != null && anio != null) {
-            return noticiaRepositorio.findByCategoriaIdAndMesAndAnio(catId, mes, anio);
+            noticias = noticiaRepositorio.findByCategoriaIdAndMesAndAnio(catId, mes, anio);
         } else if ("mejores".equals(filtro)) {
-            return noticiaRepositorio.findByCategoriaIdOrdenPorValoracionDesc(catId);
+            noticias = noticiaRepositorio.findByCategoriaIdOrdenPorValoracionDesc(catId);
         } else if ("peores".equals(filtro)) {
-            return noticiaRepositorio.findByCategoriaIdOrdenPorValoracionAsc(catId);
+            noticias = noticiaRepositorio.findByCategoriaIdOrdenPorValoracionAsc(catId);
+        } else {
+            noticias = noticiaRepositorio.findByCategoriaId(catId); // Default
         }
-        return noticiaRepositorio.findByCategoriaId(catId); // Default
+        return noticias.stream().map(this::convertirADTO).toList();
     }
 
-    public List<NoticiaEntidad> listarPorCategoriaNombreYTipo(String nombre, Boolean esAportacion) {
-        return noticiaRepositorio.findByCategoriaNombreAndEsAportacionUsuario(nombre, esAportacion);
+    public List<NoticiaDTO> listarPorCategoriaNombreYTipo(String nombre, Boolean esAportacion) {
+        return noticiaRepositorio.findByCategoriaNombreAndEsAportacionUsuario(nombre, esAportacion).stream()
+                .map(this::convertirADTO).toList();
     }
 
-    public List<NoticiaEntidad> listarPorAutor(Integer autorId) {
-        return noticiaRepositorio.findByAutorId(autorId);
+    public List<NoticiaDTO> listarPorAutor(Integer autorId) {
+        return noticiaRepositorio.findByAutorId(autorId).stream().map(this::convertirADTO).toList();
     }
 
-    public Optional<NoticiaEntidad> buscarPorId(Integer id) {
+    public Optional<NoticiaDTO> buscarPorId(Integer id) {
         if (id == null)
             return Optional.empty();
-        return noticiaRepositorio.findById(id);
+        return noticiaRepositorio.findById(id).map(this::convertirADTO);
     }
 
     @Transactional
-    public NoticiaEntidad crearNoticia(NoticiaEntidad noticia) {
+    public NoticiaDTO crearNoticia(NoticiaEntidad noticia) {
         if (noticia == null)
             throw new IllegalArgumentException("Noticia cannot be null");
+        if (noticiaRepositorio.existsByTitulo(noticia.getTitulo())) {
+            throw new IllegalArgumentException("Ya existe una noticia con este título");
+        }
         if (noticia.getFechaPublicacion() == null) {
             noticia.setFechaPublicacion(LocalDateTime.now());
         }
         if (noticia.getVisitas() == null) {
             noticia.setVisitas(0);
         }
-        return noticiaRepositorio.save(noticia);
+        return convertirADTO(noticiaRepositorio.save(noticia));
     }
 
     @Transactional
-    public NoticiaEntidad actualizarNoticia(Integer id, NoticiaEntidad noticiaActualizada) {
+    public NoticiaDTO actualizarNoticia(Integer id, NoticiaEntidad noticiaActualizada) {
         if (id == null)
             return null;
         return noticiaRepositorio.findById(id).map(noticia -> {
@@ -114,7 +123,7 @@ public class NoticiaServicio {
             if (noticiaActualizada.getDestacada() != null) {
                 noticia.setDestacada(noticiaActualizada.getDestacada());
             }
-            return noticiaRepositorio.save(noticia);
+            return convertirADTO(noticiaRepositorio.save(noticia));
         }).orElse(null);
     }
 
@@ -186,5 +195,35 @@ public class NoticiaServicio {
         // But here we filter by WHO deleted it. If Admin deletes it -> Show. if
         // User(Owner) deletes it -> Hide.
         // We will filter by Roles that represent Administration acting on others.
+    }
+
+    private NoticiaDTO convertirADTO(NoticiaEntidad entidad) {
+        if (entidad == null)
+            return null;
+        NoticiaDTO dto = new NoticiaDTO();
+        dto.setId(entidad.getId());
+        dto.setTitulo(entidad.getTitulo());
+        dto.setSubtitulo(entidad.getSubtitulo());
+        dto.setContenido(entidad.getContenido());
+        dto.setImagenUrl(entidad.getImagenUrl()); // Can be null
+        dto.setFechaPublicacion(entidad.getFechaPublicacion());
+        dto.setVisitas(entidad.getVisitas());
+        dto.setDestacada(entidad.getDestacada());
+        dto.setEsAportacionUsuario(entidad.getEsAportacionUsuario());
+        dto.setLikes(entidad.getLikes());
+        dto.setDislikes(entidad.getDislikes());
+        dto.setComentariosCount(entidad.getComentariosCount());
+
+        if (entidad.getAutor() != null) {
+            dto.setAutorId(entidad.getAutor().getId());
+            dto.setAutorNombre(entidad.getAutor().getNombreCompleto());
+            dto.setAutorImagenUrl(entidad.getAutor().getImagenUrl());
+        }
+        if (entidad.getCategoria() != null) {
+            dto.setCategoriaId(entidad.getCategoria().getId());
+            dto.setCategoriaNombre(entidad.getCategoria().getNombre());
+            dto.setCategoriaColor(entidad.getCategoria().getColor());
+        }
+        return dto;
     }
 }

@@ -35,11 +35,11 @@
                 <article class="news-card-premium" th:each="noticia : ${noticias}"
                     style="background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s;">
 
-                    <!-- Card Image -->
-                    <div class="card-image" style="width: 100%; height: 250px; overflow: hidden;">
-                        <img th:src="${noticia.imagenUrl != null ? noticia.imagenUrl : 'https://source.unsplash.com/random/800x600?news'}"
-                            onerror="this.src='https://source.unsplash.com/random/800x600?news'" alt="Noticia"
-                            style="width: 100%; height: 100%; object-fit: cover;">
+                    <!-- Card Image (Only if exists) -->
+                    <div class="card-image" th:if="${noticia.imagenUrl != null and !noticia.imagenUrl.isEmpty()}"
+                        style="width: 100%; height: 250px; overflow: hidden;">
+                        <img th:src="${noticia.imagenUrl}" onerror="this.parentElement.style.display='none'"
+                            alt="Noticia" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
 
                     <!-- Card Content -->
@@ -80,7 +80,8 @@
                                 class="interaction-item comment"
                                 style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-muted); padding: 0.5rem; border-radius: 0.375rem; transition: background 0.2s;">
                                 <i data-lucide="message-circle" style="width: 18px; height: 18px;"></i>
-                                <span th:text="${noticia.comentarios != null ? noticia.comentarios : 0}">0</span>
+                                <span
+                                    th:text="${noticia.comentariosCount != null ? noticia.comentariosCount : 0}">0</span>
                             </a>
 
                             <!-- Report Button -->
@@ -93,7 +94,7 @@
                             <!-- Delete Button (Admin/Owner/Author only) -->
                             <button
                                 th:if="${session.usuario != null and (#strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or session.usuario.id == noticia.autorId)}"
-                                th:onclick="'deleteNoticia(' + ${noticia.id} + ')'" class="interaction-item"
+                                th:onclick="'openDeleteModal(' + ${noticia.id} + ')'" class="interaction-item"
                                 style="display: flex; align-items: center; gap: 0.5rem; background: none; border: none; cursor: pointer; color: var(--danger); padding: 0.5rem; border-radius: 0.375rem; margin-left: auto; transition: background 0.2s;">
                                 <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
                             </button>
@@ -116,11 +117,67 @@
         </footer>
     </div>
 
-    <script>
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">Denunciar Noticia</h3>
+            <form id="reportForm">
+                <input type="hidden" id="reportNoticiaId" name="noticiaId">
+                <div class="form-group">
+                    <label class="form-label">Motivo</label>
+                    <select id="reportReason" class="form-control" onchange="checkReason()" required
+                        style="width:100%; padding: 0.75rem; border-radius: 0.5rem; border:1px solid var(--border);">
+                        <option value="">Selecciona un motivo</option>
+                        <option value="SPAM">Spam o publicidad</option>
+                        <option value="ODIO">Discurso de odio</option>
+                        <option value="FALSO">Información falsa</option>
+                        <option value="OTRO">Otro...</option>
+                    </select>
+                </div>
+                <div class="form-group" id="customReasonGroup" style="display: none;">
+                    <label class="form-label">Especificar Motivo</label>
+                    <input type="text" id="customReason" class="form-input" placeholder="Escribe el título">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción (Opcional)</label>
+                    <textarea id="reportDescription" class="form-input" rows="3"></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeReportModal()">Cancelar</button>
+                    <button type="button" onclick="submitReport()" class="btn btn-primary" style="flex: 1;">Enviar
+                        Reporte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Eliminar Noticia</h3>
+            <p>¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer.</p>
+            <form id="deleteForm" method="POST" action="">
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label">Motivo (Opcional)</label>
+                    <input type="text" name="motivo" class="form-input" placeholder="Razón de eliminación...">
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"
+                        style="flex: 1; background-color: var(--danger);">Eliminar Definitivamente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
         lucide.createIcons();
+        const USUARIO_ID = /*[[${session.usuario != null ? session.usuario.id : 0}]]*/ 0;
+        const API_URL = 'http://localhost:8081'; // Adjust if needed
 
         // Interaction functions
         async function toggleLike(id) {
+            if (!USUARIO_ID) return location.href = '/auth/login';
             try {
                 const res = await fetch(`/noticia/${id}/votar?tipo=LIKE`, { method: 'POST' });
                 if (res.ok) location.reload();
@@ -128,23 +185,60 @@
         }
 
         async function toggleDislike(id) {
+            if (!USUARIO_ID) return location.href = '/auth/login';
             try {
                 const res = await fetch(`/noticia/${id}/votar?tipo=DISLIKE`, { method: 'POST' });
                 if (res.ok) location.reload();
             } catch (e) { console.error(e); }
         }
 
-        async function deleteNoticia(id) {
-            if (!confirm('¿Estás seguro de que quieres eliminar esta noticia?')) return;
+        // Modal Logic
+        const reportModal = document.getElementById('reportModal');
+        const deleteModal = document.getElementById('deleteModal');
+
+        // Report
+        function openReportModal(id) {
+            if (!USUARIO_ID) return location.href = '/auth/login';
+            document.getElementById('reportNoticiaId').value = id;
+            reportModal.classList.add('open');
+        }
+        function closeReportModal() {
+            reportModal.classList.remove('open');
+        }
+        function checkReason() {
+            const r = document.getElementById('reportReason').value;
+            document.getElementById('customReasonGroup').style.display = (r === 'OTRO' ? 'block' : 'none');
+        }
+        async function submitReport() {
+            const noticiaId = document.getElementById('reportNoticiaId').value;
+            let motivo = document.getElementById('reportReason').value;
+            if (motivo === 'OTRO') motivo = document.getElementById('customReason').value;
+            const descripcion = document.getElementById('reportDescription').value;
+
             try {
-                const res = await fetch(`/noticia/${id}`, { method: 'DELETE' });
-                if (res.ok) location.reload();
-            } catch (e) { console.error(e); }
+                const res = await fetch(`${API_URL}/interacciones/denuncias`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ noticiaId: noticiaId, usuarioId: USUARIO_ID, motivo: motivo, descripcion: descripcion })
+                });
+                if (res.ok) {
+                    closeReportModal();
+                    alert('Reporte enviado correctamente.');
+                } else {
+                    alert('Error al enviar reporte.');
+                }
+            } catch (e) { console.error(e); alert('Error de conexión.'); }
         }
 
-        function openReportModal(id) {
-            // Implement report modal if needed
-            alert('Funcionalidad de denuncia - ID: ' + id);
+        // Delete
+        function openDeleteModal(id) {
+            // Set form action dynamically
+            const form = document.getElementById('deleteForm');
+            form.action = `/trabajador/noticias/${id}/borrar`;
+            deleteModal.classList.add('open');
+        }
+        function closeDeleteModal() {
+            deleteModal.classList.remove('open');
         }
     </script>
 </body>

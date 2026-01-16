@@ -136,7 +136,9 @@
 
                         // Force icon re-render
                         if (dropdown.classList.contains('active')) {
-                            lucide.createIcons();
+                            setTimeout(() => {
+                                lucide.createIcons();
+                            }, 10);
                         }
                     });
                 }
@@ -152,6 +154,11 @@
                                 if (d !== e.currentTarget.closest('.dropdown')) d.classList.remove('active');
                             });
                             e.currentTarget.closest('.dropdown').classList.toggle('active');
+
+                            // Re-render icons here too for nav dropdowns
+                            setTimeout(() => {
+                                lucide.createIcons();
+                            }, 10);
                         }
                     });
                 });

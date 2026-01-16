@@ -112,29 +112,28 @@
                     </button>
                     <a href="#comentarios" class="interaction-item comment">
                         <i data-lucide="message-circle" style="width: 20px;"></i>
-                        <span th:text="${noticia.comentarios != null ? noticia.comentarios : 0}">0</span>
+                        <span th:text="${noticia.comentariosCount != null ? noticia.comentariosCount : 0}">0</span>
                     </a>
                     <button class="interaction-item report" th:onclick="'openReportModal(' + ${noticia.id} + ')'">
                         <i data-lucide="flag" style="width: 20px;"></i>
                     </button>
 
                     <!-- Delete (Admin/Owner) -->
-                    <a th:if="${session.usuario != null and (session.usuario.id == noticia.autorId or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER'))}"
-                        th:href="@{'/trabajador/eliminar/' + ${noticia.id}}" class="interaction-item"
-                        style="color: var(--danger); margin-left: auto;"
-                        onclick="return confirm('¿Estás seguro de eliminar esta noticia?');">
+                    <button
+                        th:if="${session.usuario != null and (session.usuario.id == noticia.autorId or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER'))}"
+                        th:onclick="'openDeleteModal(' + ${noticia.id} + ')'" class="interaction-item"
+                        style="color: var(--danger); margin-left: auto; background: none; border: none; cursor: pointer;">
                         <i data-lucide="trash-2" style="width: 20px;"></i>
-                    </a>
+                    </button>
                 </div>
             </div>
 
             <!-- Main Image -->
             <div
                 style="margin-bottom: 3rem; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-lg);">
-                <!-- Fix image URL to use direct value (handled by API/Upload logic) -->
-                <img th:src="${noticia.imagenUrl != null ? noticia.imagenUrl : 'https://source.unsplash.com/random/1200x800?news'}"
-                    style="width: 100%; height: auto; display: block;"
-                    onerror="this.src='https://source.unsplash.com/random/1200x800?news'" alt="Imagen Noticia">
+                <img th:if="${noticia.imagenUrl != null and !noticia.imagenUrl.isEmpty()}" th:src="${noticia.imagenUrl}"
+                    style="width: 100%; height: auto; display: block;" onerror="this.style.display='none'"
+                    alt="Imagen Noticia">
             </div>
 
             <!-- Content -->
@@ -144,6 +143,25 @@
             </div>
 
         </article>
+
+        <!-- Delete Modal -->
+        <div id="deleteModal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Eliminar Noticia</h3>
+                <p>¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer.</p>
+                <form id="deleteForm" method="POST" action="">
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label">Motivo (Opcional)</label>
+                        <input type="text" name="motivo" class="form-input" placeholder="Razón de eliminación...">
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"
+                            style="flex: 1; background-color: var(--danger);">Eliminar Definitivamente</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- Comentarios Section -->
         <section id="comentarios" style="margin-top: 4rem; max-width: 800px; margin: 0 auto;">
@@ -316,7 +334,16 @@
             } catch (e) { console.error(e); }
         }
 
-    </script>
-</body>
+        // Delete Modal
+        const deleteModal = document.getElementById('deleteModal');
+        function openDeleteModal(id) {
+            const form = document.getElementById('deleteForm');
+            form.action = `/trabajador/noticias/${id}/borrar`;
+            deleteModal.classList.add('open');
+        }
+        function closeDeleteModal() {
+            deleteModal.classList.remove('open');
+        }
+</body >
 
-</html>
+</html >
