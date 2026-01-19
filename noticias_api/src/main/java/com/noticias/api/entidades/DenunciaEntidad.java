@@ -10,42 +10,35 @@ public class DenunciaEntidad {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private UsuarioEntidad denunciante;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "noticia_id", nullable = true)
+    @ManyToOne
+    @JoinColumn(name = "noticia_id", nullable = false)
     private NoticiaEntidad noticia;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comentario_id", nullable = true)
-    private ComentarioEntidad comentario;
+    @ManyToOne
+    @JoinColumn(name = "denunciante_id", nullable = false)
+    private UsuarioEntidad denunciante;
 
-    private String motivo; // Enum logic handled as String for flexibility: "SPAM", "ODIO", "OTRO"
-    private String descripcion; // Optional description
-    private LocalDateTime fecha;
+    @Column(nullable = false)
+    private String motivo;
 
-    @Column(columnDefinition = "VARCHAR(20) DEFAULT 'PENDIENTE'")
+    @Column(columnDefinition = "TEXT")
+    private String descripcion;
+
+    @Column(nullable = false)
     private String estado = "PENDIENTE";
+
+    private LocalDateTime fecha = LocalDateTime.now();
 
     public DenunciaEntidad() {
     }
 
+    // Getters y Setters
     public Integer getId() {
         return id;
     }
 
     public void setId(Integer id) {
         this.id = id;
-    }
-
-    public UsuarioEntidad getDenunciante() {
-        return denunciante;
-    }
-
-    public void setDenunciante(UsuarioEntidad denunciante) {
-        this.denunciante = denunciante;
     }
 
     public NoticiaEntidad getNoticia() {
@@ -56,12 +49,12 @@ public class DenunciaEntidad {
         this.noticia = noticia;
     }
 
-    public ComentarioEntidad getComentario() {
-        return comentario;
+    public UsuarioEntidad getDenunciante() {
+        return denunciante;
     }
 
-    public void setComentario(ComentarioEntidad comentario) {
-        this.comentario = comentario;
+    public void setDenunciante(UsuarioEntidad denunciante) {
+        this.denunciante = denunciante;
     }
 
     public String getMotivo() {
@@ -80,19 +73,19 @@ public class DenunciaEntidad {
         this.descripcion = descripcion;
     }
 
-    public LocalDateTime getFecha() {
-        return fecha;
-    }
-
-    public void setFecha(LocalDateTime fecha) {
-        this.fecha = fecha;
-    }
-
     public String getEstado() {
         return estado;
     }
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public LocalDateTime getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDateTime fecha) {
+        this.fecha = fecha;
     }
 }

@@ -2,6 +2,9 @@ package com.noticias.api.controladores;
 
 import com.noticias.api.dtos.NoticiaDTO;
 import com.noticias.api.entidades.NoticiaEntidad;
+import com.noticias.api.entidades.NoticiaEliminadaEntidad;
+import com.noticias.api.entidades.UsuarioEntidad;
+import com.noticias.api.repositorios.UsuarioRepositorio;
 import com.noticias.api.servicios.NoticiaServicio;
 import com.noticias.api.servicios.ModeracionServicio;
 import com.noticias.api.servicios.AlmacenamientoServicio;
@@ -23,12 +26,12 @@ public class NoticiaControlador {
     private final NoticiaServicio noticiaServicio;
     private final ModeracionServicio moderacionServicio;
     private final AlmacenamientoServicio almacenamientoServicio;
-    private final com.noticias.api.repositorios.UsuarioRepositorio usuarioRepositorio;
+    private final UsuarioRepositorio usuarioRepositorio;
 
     public NoticiaControlador(NoticiaServicio noticiaServicio,
             ModeracionServicio moderacionServicio,
             AlmacenamientoServicio almacenamientoServicio,
-            com.noticias.api.repositorios.UsuarioRepositorio usuarioRepositorio) {
+            UsuarioRepositorio usuarioRepositorio) {
         this.noticiaServicio = noticiaServicio;
         this.moderacionServicio = moderacionServicio;
         this.almacenamientoServicio = almacenamientoServicio;
@@ -84,6 +87,13 @@ public class NoticiaControlador {
         // Incrementar visitas al ver la noticia
         noticiaServicio.incrementarVisitas(id);
         return noticiaServicio.buscarPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/titulo")
+    public ResponseEntity<NoticiaDTO> buscarPorTitulo(@RequestParam String titulo) {
+        return noticiaServicio.buscarPorTitulo(titulo)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -152,6 +162,8 @@ public class NoticiaControlador {
             NoticiaDTO creada = noticiaServicio.crearNoticia(noticia);
             return ResponseEntity.status(HttpStatus.CREATED).body(creada);
 
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al publicar: " + e.getMessage());
         }
@@ -179,7 +191,7 @@ public class NoticiaControlador {
             @RequestParam(required = false) String motivo,
             @RequestParam(required = false) Integer eliminadorId) {
 
-        com.noticias.api.entidades.UsuarioEntidad eliminador = null;
+        UsuarioEntidad eliminador = null;
         if (eliminadorId != null) {
             eliminador = usuarioRepositorio.findById(eliminadorId).orElse(null);
         }
@@ -190,8 +202,24 @@ public class NoticiaControlador {
         return ResponseEntity.notFound().build();
     }
 
+    @DeleteMapping("/titulo")
+    public ResponseEntity<Void> eliminarPorTitulo(@RequestParam String titulo,
+            @RequestParam(required = false) String motivo,
+            @RequestParam(required = false) Integer eliminadorId) {
+
+        UsuarioEntidad eliminador = null;
+        if (eliminadorId != null) {
+            eliminador = usuarioRepositorio.findById(eliminadorId).orElse(null);
+        }
+
+        if (noticiaServicio.eliminarNoticiaPorTitulo(titulo, motivo, eliminador)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     @GetMapping("/eliminadas/admin")
-    public ResponseEntity<List<com.noticias.api.entidades.NoticiaEliminadaEntidad>> listarEliminadasAdmin() {
+    public ResponseEntity<List<NoticiaEliminadaEntidad>> listarEliminadasAdmin() {
         return ResponseEntity.ok(noticiaServicio.listarNoticiasEliminadasPorAdmin());
     }
 

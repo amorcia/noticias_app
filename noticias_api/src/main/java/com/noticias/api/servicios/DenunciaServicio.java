@@ -13,27 +13,36 @@ import java.time.LocalDateTime;
 @Service
 public class DenunciaServicio {
 
-    @Autowired
-    private DenunciaRepositorio denunciaRepositorio;
-    @Autowired
-    private NoticiaRepositorio noticiaRepositorio;
-    @Autowired
-    private UsuarioRepositorio usuarioRepositorio;
+        @Autowired
+        private DenunciaRepositorio denunciaRepositorio;
+        @Autowired
+        private NoticiaRepositorio noticiaRepositorio;
+        @Autowired
+        private UsuarioRepositorio usuarioRepositorio;
 
-    public DenunciaEntidad crearDenunciaNoticia(Integer noticiaId, Integer usuarioId, String motivo,
-            String descripcion) {
-        NoticiaEntidad noticia = noticiaRepositorio.findById(noticiaId)
-                .orElseThrow(() -> new RuntimeException("Noticia no encontrada"));
-        UsuarioEntidad denunciante = usuarioRepositorio.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        public DenunciaEntidad crearDenunciaNoticia(Integer noticiaId, Integer usuarioId, String motivo,
+                        String descripcion) {
+                if (noticiaId == null)
+                        throw new IllegalArgumentException("El ID de la noticia no puede ser nulo");
+                if (usuarioId == null)
+                        throw new IllegalArgumentException("El ID del usuario no puede ser nulo");
 
-        DenunciaEntidad denuncia = new DenunciaEntidad();
-        denuncia.setNoticia(noticia);
-        denuncia.setDenunciante(denunciante);
-        denuncia.setMotivo(motivo);
-        denuncia.setDescripcion(descripcion);
-        denuncia.setFecha(LocalDateTime.now());
+                NoticiaEntidad noticia = noticiaRepositorio.findById(noticiaId)
+                                .orElseThrow(() -> new RuntimeException("Noticia no encontrada"));
+                UsuarioEntidad denunciante = usuarioRepositorio.findById(usuarioId)
+                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        return denunciaRepositorio.save(denuncia);
-    }
+                DenunciaEntidad denuncia = new DenunciaEntidad();
+                denuncia.setNoticia(noticia);
+                denuncia.setDenunciante(denunciante);
+                denuncia.setMotivo(motivo);
+                denuncia.setDescripcion(descripcion);
+                denuncia.setFecha(LocalDateTime.now());
+
+                return denunciaRepositorio.save(denuncia);
+        }
+
+        public java.util.List<DenunciaEntidad> listarTodas() {
+                return denunciaRepositorio.findAllByOrderByFechaDesc();
+        }
 }

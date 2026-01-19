@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface NoticiaRepositorio extends JpaRepository<NoticiaEntidad, Integer> {
@@ -20,6 +21,8 @@ public interface NoticiaRepositorio extends JpaRepository<NoticiaEntidad, Intege
     List<NoticiaEntidad> buscarPorParteDelTituloOCategoria(@Param("nombre") String nombre);
 
     boolean existsByTitulo(String titulo);
+
+    Optional<NoticiaEntidad> findByTitulo(String titulo);
 
     @Query("SELECT n FROM NoticiaEntidad n JOIN n.categoria c WHERE c.nombre = :nombreCategoria")
     List<NoticiaEntidad> findByCategoriaNombre(String nombreCategoria);

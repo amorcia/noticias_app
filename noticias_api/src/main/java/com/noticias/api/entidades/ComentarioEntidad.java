@@ -10,22 +10,23 @@ public class ComentarioEntidad {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private UsuarioEntidad autor;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "noticia_id", nullable = false)
     private NoticiaEntidad noticia;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "autor_id", nullable = false)
+    private UsuarioEntidad autor;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String contenido;
 
-    private LocalDateTime fecha;
+    private LocalDateTime fecha = LocalDateTime.now();
 
     public ComentarioEntidad() {
     }
 
+    // Getters y Setters
     public Integer getId() {
         return id;
     }
@@ -34,20 +35,20 @@ public class ComentarioEntidad {
         this.id = id;
     }
 
-    public UsuarioEntidad getAutor() {
-        return autor;
-    }
-
-    public void setAutor(UsuarioEntidad autor) {
-        this.autor = autor;
-    }
-
     public NoticiaEntidad getNoticia() {
         return noticia;
     }
 
     public void setNoticia(NoticiaEntidad noticia) {
         this.noticia = noticia;
+    }
+
+    public UsuarioEntidad getAutor() {
+        return autor;
+    }
+
+    public void setAutor(UsuarioEntidad autor) {
+        this.autor = autor;
     }
 
     public String getContenido() {

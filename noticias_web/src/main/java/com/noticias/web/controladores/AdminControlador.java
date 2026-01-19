@@ -1,5 +1,6 @@
 package com.noticias.web.controladores;
 
+import com.noticias.web.dtos.DenunciaDTO;
 import com.noticias.web.dtos.UsuarioDTO;
 import com.noticias.web.servicios.ApiNoticiasCliente;
 import jakarta.servlet.http.HttpSession;
@@ -38,14 +39,18 @@ public class AdminControlador {
         }
 
         try {
+            List<UsuarioDTO> todosUsuarios = apiCliente.listarUsuarios();
             List<Map<String, Object>> sanciones = apiCliente.listarSanciones();
             List<UsuarioDTO> vetados = apiCliente.listarVetados();
             List<com.noticias.web.dtos.NoticiaEliminadaDTO> noticiasEliminadas = apiCliente.listarNoticiasEliminadas();
+            List<DenunciaDTO> denuncias = apiCliente.listarDenuncias();
             Map<String, Object> stats = apiCliente.getAdminStats();
 
+            model.addAttribute("usuarios", todosUsuarios);
             model.addAttribute("sanciones", sanciones);
             model.addAttribute("vetados", vetados);
             model.addAttribute("noticiasEliminadas", noticiasEliminadas);
+            model.addAttribute("denuncias", denuncias);
             model.addAttribute("stats", stats);
         } catch (Exception e) {
             e.printStackTrace();
@@ -64,7 +69,10 @@ public class AdminControlador {
             HttpSession session,
             RedirectAttributes redirectAttributes) {
         UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
-        if (admin == null || !"ADMIN".equals(admin.getRolNombre())) {
+        String rol = admin != null ? admin.getRolNombre() : null;
+        boolean esAdmin = "ADMIN".equalsIgnoreCase(rol) || "OWNER".equalsIgnoreCase(rol);
+
+        if (admin == null || !esAdmin) {
             return "redirect:/auth/login";
         }
 
@@ -75,5 +83,47 @@ public class AdminControlador {
             redirectAttributes.addFlashAttribute("error", "Error al resolver sanción.");
         }
         return "redirect:/admin/panel";
+    }
+
+    @PostMapping("/usuarios/{id}/vetar")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> vetarUsuario(@PathVariable Integer id,
+            @RequestParam String motivo,
+            HttpSession session) {
+        UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
+        if (admin == null || (!"ADMIN".equalsIgnoreCase(admin.getRolNombre())
+                && !"OWNER".equalsIgnoreCase(admin.getRolNombre()))) {
+            return org.springframework.http.ResponseEntity.status(403).body("No tienes permisos");
+        }
+        boolean exito = apiCliente.vetarUsuario(id, motivo);
+        return exito ? org.springframework.http.ResponseEntity.ok().build()
+                : org.springframework.http.ResponseEntity.status(500).build();
+    }
+
+    @PostMapping("/usuarios/{id}/desvetar")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> desvetarUsuario(@PathVariable Integer id, HttpSession session) {
+        UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
+        if (admin == null || (!"ADMIN".equalsIgnoreCase(admin.getRolNombre())
+                && !"OWNER".equalsIgnoreCase(admin.getRolNombre()))) {
+            return org.springframework.http.ResponseEntity.status(403).body("No tienes permisos");
+        }
+        boolean exito = apiCliente.desvetarUsuario(id);
+        return exito ? org.springframework.http.ResponseEntity.ok().build()
+                : org.springframework.http.ResponseEntity.status(500).build();
+    }
+
+    @PostMapping("/denuncias/{id}/resolver")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> resolverDenuncia(@PathVariable Integer id,
+            @RequestParam String estado, HttpSession session) {
+        UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
+        if (admin == null || (!"ADMIN".equalsIgnoreCase(admin.getRolNombre())
+                && !"OWNER".equalsIgnoreCase(admin.getRolNombre()))) {
+            return org.springframework.http.ResponseEntity.status(403).body("No tienes permisos");
+        }
+        boolean exito = apiCliente.resolverDenuncia(id, estado);
+        return exito ? org.springframework.http.ResponseEntity.ok().build()
+                : org.springframework.http.ResponseEntity.status(500).build();
     }
 }

@@ -9,7 +9,6 @@
     <section>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        <!-- Styles moved HERE to ensure they are rendered by Thymeleaf layout -->
         <style>
             .admin-dashboard-container {
                 display: flex;
@@ -28,12 +27,10 @@
                 border: 1px solid var(--border);
             }
 
-            /* Sidebar */
             .admin-sidebar {
                 width: 260px;
                 flex-shrink: 0;
                 background: #f8fafc;
-                /* Lighter sidebar contrast */
                 border-right: 1px solid var(--border);
                 display: flex;
                 flex-direction: column;
@@ -88,7 +85,6 @@
                 stroke: white;
             }
 
-            /* Content Area */
             .admin-content {
                 flex: 1;
                 padding: 2.5rem;
@@ -107,7 +103,6 @@
                 margin-bottom: 0.5rem;
             }
 
-            /* Dashboard Grid */
             .stats-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -153,7 +148,6 @@
                 gap: 0.25rem;
             }
 
-            /* Charts */
             .charts-row {
                 display: grid;
                 grid-template-columns: 2fr 1fr;
@@ -168,7 +162,6 @@
                 border: 1px solid var(--border);
                 box-shadow: var(--shadow-sm);
                 height: 400px;
-                /* Fixed height for Chart.js */
                 position: relative;
             }
 
@@ -188,7 +181,6 @@
                 }
             }
 
-            /* Table */
             .table-container {
                 border: 1px solid var(--border);
                 border-radius: 1rem;
@@ -221,12 +213,10 @@
         </style>
 
         <div class="admin-dashboard-container fade-in">
-            <!-- Global Messages -->
             <div th:if="${mensaje}" class="alert alert-success" th:text="${mensaje}"></div>
             <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
             <div class="dashboard-card-layout">
-                <!-- Sidebar -->
                 <aside class="admin-sidebar">
                     <div class="sidebar-header">
                         <i data-lucide="shield-check" style="width: 28px; height: 28px;"></i>
@@ -237,11 +227,17 @@
                         <button class="nav-btn active" onclick="showTab('dashboard', this)">
                             <i data-lucide="layout-grid"></i> Dashboard
                         </button>
+                        <button class="nav-btn" onclick="showTab('usuarios', this)">
+                            <i data-lucide="users"></i> Usuarios
+                        </button>
                         <button class="nav-btn" onclick="showTab('sanciones', this)">
                             <i data-lucide="gavel"></i> Sanciones
                         </button>
                         <button class="nav-btn" onclick="showTab('vetados', this)">
                             <i data-lucide="user-x"></i> Usr. Vetados
+                        </button>
+                        <button class="nav-btn" onclick="showTab('denuncias', this)">
+                            <i data-lucide="flag"></i> Reportes
                         </button>
                         <button class="nav-btn" onclick="showTab('borradas', this)">
                             <i data-lucide="trash"></i> Noticias Borradas
@@ -253,7 +249,6 @@
                     </nav>
                 </aside>
 
-                <!-- Content -->
                 <main class="admin-content">
 
                     <!-- DASHBOARD TAB -->
@@ -300,6 +295,55 @@
                                     <canvas id="pieChart"></canvas>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Usuarios -->
+                    <div id="usuarios" class="tab-content" style="display: none;">
+                        <div class="content-header">
+                            <h2>Gestión de Usuarios</h2>
+                        </div>
+                        <div class="table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Rol</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="u : ${usuarios}">
+                                        <td th:text="${u.id}">1</td>
+                                        <td th:text="${u.nombreCompleto}">Nombre</td>
+                                        <td th:text="${u.email}">email@example.com</td>
+                                        <td>
+                                            <span class="badge" th:text="${u.rolNombre}">ROL</span>
+                                        </td>
+                                        <td>
+                                            <span th:if="${u.vetado}" class="badge badge-danger">VETADO</span>
+                                            <span th:unless="${u.vetado}" class="badge badge-success">ACTIVO</span>
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; gap: 0.5rem;">
+                                                <button th:if="${!u.vetado}" class="btn btn-ghost btn-sm"
+                                                    th:onclick="'openVetoModal(' + ${u.id} + ')'"
+                                                    style="color: var(--danger);">
+                                                    <i data-lucide="user-x" style="width: 14px;"></i>
+                                                </button>
+                                                <button th:if="${u.vetado}" class="btn btn-ghost btn-sm"
+                                                    th:onclick="'desvetarUsuario(' + ${u.id} + ')'"
+                                                    style="color: var(--success);">
+                                                    <i data-lucide="user-check" style="width: 14px;"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -351,8 +395,9 @@
                                                 th:text="${sancion.resolucion}" class="text-muted">Resuelta</span>
                                         </td>
                                     </tr>
-                                    <tr th:if="${sanciones.empty}">
-                                        <td colspan="5" style="text-align: center; color: var(--text-muted);">No hay
+                                    <tr th:if="${sanciones == null or sanciones.empty}">
+                                        <td colspan="5"
+                                            style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay
                                             sanciones pendientes.</td>
                                     </tr>
                                 </tbody>
@@ -382,17 +427,82 @@
                                         <td th:text="${user.vetadoHasta}">Permanente</td>
                                         <td th:text="${user.motivoVeto}">Rules Violated</td>
                                     </tr>
-                                    <tr th:if="${vetados.empty}">
-                                        <td colspan="4" style="text-align: center; color: var(--text-muted);">No hay
+                                    <tr th:if="${vetados == null or vetados.empty}">
+                                        <td colspan="4"
+                                            style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay
                                             usuarios vetados actualmente.</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
+                    <!-- Tab: Noticias Denunciadas -->
+                    <div id="denuncias" class="tab-content" style="display: none;">
+                        <div class="content-header">
+                            <h2>Reportes de Noticias</h2>
+                        </div>
+                        <div class="table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Noticia</th>
+                                        <th>Denunciante</th>
+                                        <th>Motivo</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="d : ${denuncias}">
+                                        <td>
+                                            <a th:href="@{'/noticia/' + ${d.noticia.id}}" target="_blank"
+                                                style="font-weight: 600; text-decoration: none; color: var(--primary);"
+                                                th:text="${d.noticia.titulo}">Título</a>
+                                        </td>
+                                        <td>
+                                            <div
+                                                th:text="${d.denunciante != null ? d.denunciante.nombreCompleto : 'Anónimo'}">
+                                                Usuario</div>
+                                        </td>
+                                        <td>
+                                            <div class="badge badge-accent" th:text="${d.motivo}">MOTIVO</div>
+                                            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;"
+                                                th:text="${d.descripcion}">Desc...</div>
+                                        </td>
+                                        <td th:text="${#temporals.format(d.fecha, 'dd/MM/yyyy HH:mm')}">Fecha</td>
+                                        <td>
+                                            <div style="display: flex; gap: 0.5rem;">
+                                                <button class="btn btn-danger btn-sm"
+                                                    th:data-titulo="${d.noticia.titulo}" th:data-denuncia="${d.id}"
+                                                    onclick="openDeleteModal(this.getAttribute('data-titulo'), this.getAttribute('data-denuncia'))"
+                                                    style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                                    <i data-lucide="trash-2" style="width: 14px; display: inline;"></i>
+                                                    Borrar Noticia
+                                                </button>
+                                                <button class="btn btn-ghost btn-sm"
+                                                    th:onclick="'resolverDenuncia(' + ${d.id} + ', \'DESESTIMADA\')'"
+                                                    style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border: 1px solid var(--border);">
+                                                    Ignorar
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${denuncias == null or denuncias.empty}">
+                                        <td colspan="5"
+                                            style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay
+                                            reportes pendientes.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <!-- Tab: Noticias Borradas -->
                     <div id="borradas" class="tab-content" style="display: none;">
-                        <h2 style="margin-bottom: 2rem;">Historial de Noticias Borradas</h2>
+                        <div class="content-header">
+                            <h2>Historial de Noticias Borradas</h2>
+                        </div>
                         <div class="table-container">
                             <table class="custom-table">
                                 <thead>
@@ -423,9 +533,9 @@
                                         <td th:text="${borrada.motivo}">Motivo...</td>
                                     </tr>
                                     <tr th:if="${noticiasEliminadas == null or noticiasEliminadas.empty}">
-                                        <td colspan="5" style="text-align: center; padding: 2rem;">No hay noticias
-                                            borradas por
-                                            administración.</td>
+                                        <td colspan="5"
+                                            style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay
+                                            noticias borradas por administración.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -435,60 +545,215 @@
             </div>
         </div>
 
-        <script th:inline="javascript">
-            function showTab(tabId, btn) {
-                // Hide all tabs
-                document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-                // Show target
-                document.getElementById(tabId).style.display = 'block';
+        <!-- Veto Modal -->
+        <div id="vetoModal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Bannear Usuario</h3>
+                <p>Indica el motivo del veto para este usuario.</p>
+                <form id="vetoForm">
+                    <input type="hidden" name="id" id="vetoUserId">
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label">Motivo</label>
+                        <input type="text" name="motivo" id="vetoMotivo" class="form-input"
+                            placeholder="Razón del baneo..." required>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button type="button" class="btn btn-ghost" onclick="closeVetoModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"
+                            style="flex: 1; background-color: var(--danger);">Aplicar Veto</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-                // Update buttons
+        <!-- Delete Modal -->
+        <div id="deleteModal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Eliminar Noticia</h3>
+                <p>¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer.</p>
+                <form id="deleteForm">
+                    <input type="hidden" name="titulo" id="deleteTitulo">
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label">Motivo (Obligatorio para Admin)</label>
+                        <input type="text" id="deleteMotivoInput" name="motivo" class="form-input"
+                            placeholder="Razón de eliminación..." required>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"
+                            style="flex: 1; background-color: var(--danger);">Eliminar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Feedback Modal -->
+        <div id="feedbackModal" class="modal-overlay">
+            <div class="modal-content" style="text-align: center;">
+                <div id="feedbackIconContainer" style="margin-bottom: 2rem; display: flex; justify-content: center;">
+                    <i data-lucide="check-circle" style="width: 64px; height: 64px; color: var(--success);"></i>
+                </div>
+                <h3 id="feedbackTitle" style="margin-bottom: 0.75rem; font-size: 1.75rem; font-weight: 800;">¡Éxito!
+                </h3>
+                <p id="feedbackMessage"
+                    style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; font-size: 1.1rem;"></p>
+                <button onclick="closeFeedbackModal()" class="btn btn-primary"
+                    style="width: 100%; padding: 1rem;">Aceptar</button>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            const contextPath = /*[[@{/}]]*/ '';
+
+            function showTab(tabId, btn) {
+                document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+                document.getElementById(tabId).style.display = 'block';
                 document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
                 if (btn) btn.classList.add('active');
+                lucide.createIcons();
             }
 
-            // Init Icons
+            const deleteModal = document.getElementById('deleteModal');
+            let currentReportId = null;
+
+            function openDeleteModal(titulo, reportId = null) {
+                document.getElementById('deleteTitulo').value = titulo;
+                currentReportId = reportId;
+                deleteModal.classList.add('open');
+            }
+            function closeDeleteModal() {
+                deleteModal.classList.remove('open');
+                currentReportId = null;
+            }
+
+            // AJAX Delete
+            async function handleDeletion(event) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                try {
+                    const res = await fetch(`${contextPath}trabajador/noticias/borrar`, {
+                        method: 'POST',
+                        body: new URLSearchParams(formData)
+                    });
+                    if (res.ok) {
+                        if (currentReportId) {
+                            await fetch(`${contextPath}admin/denuncias/${currentReportId}/resolver?estado=RESUELTA`, { method: 'POST' });
+                        }
+                        closeDeleteModal();
+                        showFeedback('Eliminado', 'La noticia ha sido borrada.', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showFeedback('Error', 'No se pudo eliminar la noticia.', 'error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showFeedback('Error', 'Error de conexión.', 'error');
+                }
+            }
+            document.getElementById('deleteForm').addEventListener('submit', handleDeletion);
+
+            // Feedback Logic
+            function showFeedback(title, msg, type = 'success') {
+                const titleEl = document.getElementById('feedbackTitle');
+                const msgEl = document.getElementById('feedbackMessage');
+                const iconContainer = document.getElementById('feedbackIconContainer');
+
+                titleEl.innerText = title;
+                msgEl.innerText = msg;
+
+                if (type === 'error') {
+                    iconContainer.innerHTML = '<i data-lucide="x-circle" style="width: 64px; height: 64px; color: var(--danger);"></i>';
+                    titleEl.style.color = 'var(--danger)';
+                } else {
+                    iconContainer.innerHTML = '<i data-lucide="check-circle" style="width: 64px; height: 64px; color: var(--success);"></i>';
+                    titleEl.style.color = 'var(--text-main)';
+                }
+
+                document.getElementById('feedbackModal').classList.add('open');
+                lucide.createIcons();
+            }
+            function closeFeedbackModal() {
+                document.getElementById('feedbackModal').classList.remove('open');
+            }
+
+            // Veto Logic
+            const vetoModal = document.getElementById('vetoModal');
+            function openVetoModal(userId) {
+                document.getElementById('vetoUserId').value = userId;
+                vetoModal.classList.add('open');
+            }
+            function closeVetoModal() {
+                vetoModal.classList.remove('open');
+            }
+            async function handleVeto(e) {
+                e.preventDefault();
+                const userId = document.getElementById('vetoUserId').value;
+                const motivo = document.getElementById('vetoMotivo').value;
+                try {
+                    const res = await fetch(`${contextPath}admin/usuarios/${userId}/vetar?motivo=${encodeURIComponent(motivo)}`, { method: 'POST' });
+                    if (res.ok) {
+                        closeVetoModal();
+                        showFeedback('Usuario Vetado', 'El usuario ha sido deshabilitado.', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showFeedback('Error', 'No se pudo vetar al usuario.', 'error');
+                    }
+                } catch (e) { console.error(e); }
+            }
+            document.getElementById('vetoForm').addEventListener('submit', handleVeto);
+
+            async function desvetarUsuario(id) {
+                try {
+                    const res = await fetch(`${contextPath}admin/usuarios/${id}/desvetar`, { method: 'POST' });
+                    if (res.ok) {
+                        showFeedback('Usuario Activado', 'El usuario vuelve a tener acceso.', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showFeedback('Error', 'No se pudo activar al usuario.', 'error');
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            async function resolverDenuncia(id, estado) {
+                try {
+                    const res = await fetch(`${contextPath}admin/denuncias/${id}/resolver?estado=${estado}`, { method: 'POST' });
+                    if (res.ok) {
+                        showFeedback('Reporte Actualizado', 'El reporte ha sido marcado como ' + estado.toLowerCase() + '.', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showFeedback('Error', 'No se pudo actualizar el reporte.', 'error');
+                    }
+                } catch (e) { console.error(e); }
+            }
+
             lucide.createIcons();
 
-            // Init Charts
             document.addEventListener('DOMContentLoaded', function () {
                 const stats = /*[[${stats}]]*/ {};
-
-                // Colors from variables
                 const primaryColor = '#2563eb';
                 const dangerColor = '#ef4444';
-                const secondaryColor = '#e2e8f0';
 
-                // Bar Chart
                 const ctxBar = document.getElementById('barChart');
                 if (ctxBar) {
                     new Chart(ctxBar.getContext('2d'), {
                         type: 'bar',
                         data: {
-                            labels: ['Total Usuarios', 'Sanciones', 'Pendientes', 'Noticias (Est)'],
+                            labels: ['Total Usuarios', 'Sanciones', 'Pendientes', 'Noticias'],
                             datasets: [{
                                 label: 'Registros',
-                                data: [stats.totalUsuarios, stats.totalSanciones, stats.sancionesPendientes, 25],
+                                data: [stats.totalUsuarios, stats.totalSanciones || 0, stats.sancionesPendientes, stats.totalNoticias || 0],
                                 backgroundColor: [primaryColor, '#f59e0b', '#ef4444', '#10b981'],
-                                borderRadius: 6,
-                                barThickness: 40
+                                borderRadius: 6
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false }
-                            },
-                            scales: {
-                                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                                x: { grid: { display: false } }
-                            }
+                            plugins: { legend: { display: false } }
                         }
                     });
                 }
 
-                // Pie Chart
                 const ctxPie = document.getElementById('pieChart');
                 if (ctxPie) {
                     const activos = (stats.totalUsuarios || 0) - (stats.usuariosVetados || 0);
@@ -498,18 +763,14 @@
                             labels: ['Activos', 'Vetados'],
                             datasets: [{
                                 data: [activos, stats.usuariosVetados],
-                                backgroundColor: [primaryColor, dangerColor],
-                                borderWidth: 0,
-                                hoverOffset: 4
+                                backgroundColor: [primaryColor, dangerColor]
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             cutout: '70%',
-                            plugins: {
-                                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
-                            }
+                            plugins: { legend: { position: 'bottom' } }
                         }
                     });
                 }

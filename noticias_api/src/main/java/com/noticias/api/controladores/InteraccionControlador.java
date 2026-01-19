@@ -67,4 +67,9 @@ public class InteraccionControlador {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/denuncias")
+    public ResponseEntity<?> listarDenuncias() {
+        return ResponseEntity.ok(denunciaServicio.listarTodas());
+    }
 }

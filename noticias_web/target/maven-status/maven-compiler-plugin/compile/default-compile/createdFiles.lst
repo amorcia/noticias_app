@@ -8,7 +8,9 @@ com\noticias\web\controladores\GlobalDataAdvice.class
 com\noticias\web\servicios\ApiNoticiasCliente$12.class
 com\noticias\web\servicios\ApiNoticiasCliente$9.class
 com\noticias\web\config\WebConfig.class
+com\noticias\web\dtos\DenunciaDTO.class
 com\noticias\web\controladores\ErrorControlador.class
+com\noticias\web\controladores\InteraccionWebControlador.class
 com\noticias\web\servicios\ApiNoticiasCliente$19.class
 com\noticias\web\NoticiasWebApplication.class
 com\noticias\web\servicios\ApiNoticiasCliente$1.class
@@ -17,6 +19,7 @@ com\noticias\web\controladores\AuthControlador.class
 com\noticias\web\dtos\UsuarioActualizarDTO.class
 com\noticias\web\servicios\ApiNoticiasCliente$5.class
 com\noticias\web\servicios\ApiNoticiasCliente$8.class
+com\noticias\web\dtos\ComentarioDTO$AutorDTO.class
 com\noticias\web\seguridad\SeguridadConfig.class
 com\noticias\web\servicios\SesionServicio.class
 com\noticias\web\dtos\LoginPeticionDTO.class
@@ -27,6 +30,7 @@ com\noticias\web\controladores\InicioControlador.class
 com\noticias\web\dtos\NoticiaDTO.class
 com\noticias\web\seguridad\CustomAuthenticationSuccessHandler.class
 com\noticias\web\servicios\ApiNoticiasCliente$10.class
+com\noticias\web\servicios\ApiNoticiasCliente$20.class
 com\noticias\web\servicios\UsuarioServicio.class
 com\noticias\web\servicios\ApiNoticiasCliente$17.class
 com\noticias\web\dtos\UsuarioRespuestaDTO.class

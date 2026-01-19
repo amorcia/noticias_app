@@ -324,6 +324,16 @@ public class ApiNoticiasCliente {
         }
     }
 
+    public NoticiaDTO buscarNoticiaPorTitulo(String titulo) {
+        String encodedTitulo = java.net.URLEncoder.encode(titulo, java.nio.charset.StandardCharsets.UTF_8);
+        String url = apiUrl + "/noticias/titulo?titulo=" + encodedTitulo;
+        try {
+            return restTemplate.getForObject(url, NoticiaDTO.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public NoticiaDTO crearNoticia(NoticiaDTO noticia) {
         String url = apiUrl + "/noticias";
         return restTemplate.postForObject(url, noticia, NoticiaDTO.class);
@@ -370,10 +380,56 @@ public class ApiNoticiasCliente {
         }
     }
 
-    // ==================== COMENTARIOS ====================
+    public boolean eliminarNoticiaPorTitulo(String titulo, String motivo, Integer eliminadorId) {
+        // Encode titulo
+        String encodedTitulo = java.net.URLEncoder.encode(titulo, java.nio.charset.StandardCharsets.UTF_8);
+        String url = apiUrl + "/noticias/titulo?titulo=" + encodedTitulo;
+        if (motivo != null)
+            url += "&motivo=" + motivo;
+        if (eliminadorId != null)
+            url += "&eliminadorId=" + eliminadorId;
+
+        try {
+            restTemplate.delete(url);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean enviarDenuncia(Integer noticiaId, Integer usuarioId, String motivo, String descripcion) {
+        String url = apiUrl + "/interacciones/denuncias";
+        Map<String, Object> payload = Map.of(
+                "noticiaId", noticiaId,
+                "usuarioId", usuarioId,
+                "motivo", motivo,
+                "descripcion", descripcion != null ? descripcion : "");
+
+        try {
+            restTemplate.postForObject(url, payload, String.class);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public java.util.List<com.noticias.web.dtos.DenunciaDTO> listarDenuncias() {
+        try {
+            return restTemplate.exchange(
+                    apiUrl + "/interacciones/denuncias",
+                    org.springframework.http.HttpMethod.GET,
+                    null,
+                    new org.springframework.core.ParameterizedTypeReference<java.util.List<com.noticias.web.dtos.DenunciaDTO>>() {
+                    }).getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new java.util.ArrayList<>();
+        }
+    }
 
     public List<ComentarioDTO> listarComentariosPorNoticia(Integer noticiaId) {
-        String url = apiUrl + "/comentarios/noticia/" + noticiaId;
+        String url = apiUrl + "/interacciones/comentarios/noticia/" + noticiaId;
         ResponseEntity<List<ComentarioDTO>> response = restTemplate.exchange(
                 url, HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<ComentarioDTO>>() {
@@ -382,8 +438,15 @@ public class ApiNoticiasCliente {
     }
 
     public ComentarioDTO crearComentario(ComentarioDTO comentario) {
-        String url = apiUrl + "/comentarios";
-        return restTemplate.postForObject(url, comentario, ComentarioDTO.class);
+        String url = apiUrl + "/interacciones/comentarios";
+
+        // Match API payload expectations
+        Map<String, Object> payload = Map.of(
+                "noticiaId", comentario.getNoticiaId(),
+                "usuarioId", comentario.getAutor().getId(),
+                "contenido", comentario.getContenido());
+
+        return restTemplate.postForObject(url, payload, ComentarioDTO.class);
     }
 
     public boolean eliminarComentario(Integer id) {
@@ -494,7 +557,7 @@ public class ApiNoticiasCliente {
             return restTemplate.getForObject(url, Map.class);
         } catch (Exception e) {
             e.printStackTrace();
-            return Map.of("totalUsuarios", 0, "usuariosVetados", 0, "porcentajeVetados", 0);
+            return Map.of("totalUsuarios", 0, "usuariosVetados", 0, "porcentajeVetados", 0, "totalNoticias", 0);
         }
     }
     // ==================== NOTICIAS MULTIPART ====================
@@ -533,6 +596,17 @@ public class ApiNoticiasCliente {
         } catch (Exception e) {
             e.printStackTrace();
             return "Error interno al conectar con el servidor: " + e.getMessage();
+        }
+    }
+
+    public boolean resolverDenuncia(Integer id, String estado) {
+        String url = apiUrl + "/admin/denuncias/" + id + "/resolver?estado=" + estado;
+        try {
+            restTemplate.postForObject(url, null, Map.class);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

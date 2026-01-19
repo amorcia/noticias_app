@@ -27,6 +27,9 @@ public class AdminControlador {
     @Autowired
     private SancionRepositorio sancionRepositorio;
 
+    @Autowired
+    private com.noticias.api.repositorios.NoticiaRepositorio noticiaRepositorio;
+
     // moderacionServicio eliminada por no usarse
 
     // --- ESTADÍSTICAS ---
@@ -36,12 +39,14 @@ public class AdminControlador {
         long usuariosVetados = usuarioRepositorio.findByVetadoTrue().size();
         long totalSanciones = sancionRepositorio.count();
         long sancionesPendientes = sancionRepositorio.findByEstado("PENDIENTE").size();
+        long totalNoticias = noticiaRepositorio.count();
 
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
         stats.put("totalUsuarios", totalUsuarios);
         stats.put("usuariosVetados", usuariosVetados);
         stats.put("totalSanciones", totalSanciones);
         stats.put("sancionesPendientes", sancionesPendientes);
+        stats.put("totalNoticias", totalNoticias);
 
         double porcentajeVetados = totalUsuarios > 0 ? ((double) usuariosVetados / totalUsuarios) * 100 : 0;
         stats.put("porcentajeVetados", Math.round(porcentajeVetados * 100.0) / 100.0);

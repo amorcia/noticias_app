@@ -117,7 +117,9 @@
                                     <!-- Delete -->
                                     <button
                                         th:if="${session.usuario != null and (session.usuario.id == noticia.autorId or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER'))}"
-                                        th:onclick="'openDeleteModal(' + ${noticia.id} + ')'"
+                                        th:data-titulo="${noticia.titulo}"
+                                        th:data-espropio="${session.usuario.id == noticia.autorId}"
+                                        onclick="openDeleteModal(this.getAttribute('data-titulo'), this.getAttribute('data-espropio') === 'true')"
                                         style="background:none; border:none; padding:0; cursor:pointer; display:flex; align-items:center; gap:0.3rem; color:var(--danger); margin-left: auto;">
                                         <i data-lucide="trash-2" style="width: 16px;"></i>
                                     </button>
@@ -198,10 +200,12 @@
         <div class="modal-content">
             <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Eliminar Noticia</h3>
             <p>¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer.</p>
-            <form id="deleteForm" method="POST" action="">
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label class="form-label">Motivo (Opcional)</label>
-                    <input type="text" name="motivo" class="form-input" placeholder="Razón de eliminación...">
+            <form id="deleteForm" method="POST" action="/trabajador/noticias/borrar">
+                <input type="hidden" name="titulo" id="deleteTitulo">
+                <div class="form-group" style="margin-top: 1rem;" id="deleteMotivoGroup">
+                    <label class="form-label">Motivo</label>
+                    <input type="text" name="motivo" id="deleteMotivoInput" class="form-input"
+                        placeholder="Razón de eliminación...">
                 </div>
                 <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                     <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
@@ -213,34 +217,56 @@
     </div>
 
 
+    <!-- Success/Error Modal -->
+    <div id="successModal" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <div id="modalIconContainer" style="margin-bottom: 2rem; display: flex; justify-content: center;">
+                <i data-lucide="check-circle" id="modalIcon"
+                    style="width: 64px; height: 64px; color: var(--success);"></i>
+            </div>
+            <h3 id="successTitle"
+                style="margin-bottom: 0.75rem; font-size: 1.75rem; font-weight: 800; color: var(--text-main);">¡Éxito!
+            </h3>
+            <p id="successMessage"
+                style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; font-size: 1.1rem;"></p>
+            <button onclick="closeSuccessModal()" class="btn btn-primary"
+                style="width: 100%; padding: 1rem;">Aceptar</button>
+        </div>
+    </div>
+
     <script th:inline="javascript">
         lucide.createIcons();
         const USUARIO_ID = /*[[${session.usuario != null ? session.usuario.id : 0}]]*/ 0;
 
         // Like/Dislike
+        const contextPath = /*[[@{/}]]*/ '';
+
         async function toggleLike(id) {
-            if (!USUARIO_ID) return location.href = '/auth/login';
+            if (!USUARIO_ID) return location.href = contextPath + 'auth/login';
             try {
-                const res = await fetch(`/noticia/${id}/votar?tipo=LIKE`, { method: 'POST' });
+                const res = await fetch(`${contextPath}interacciones/noticia/${id}/votar?tipo=LIKE`, { method: 'POST' });
                 if (res.ok) location.reload();
+                else showSuccess('Error', 'No se pudo registrar tu voto.', 'error');
             } catch (e) { console.error(e); }
         }
 
         async function toggleDislike(id) {
-            if (!USUARIO_ID) return location.href = '/auth/login';
+            if (!USUARIO_ID) return location.href = contextPath + 'auth/login';
             try {
-                const res = await fetch(`/noticia/${id}/votar?tipo=DISLIKE`, { method: 'POST' });
+                const res = await fetch(`${contextPath}interacciones/noticia/${id}/votar?tipo=DISLIKE`, { method: 'POST' });
                 if (res.ok) location.reload();
+                else showSuccess('Error', 'No se pudo registrar tu voto.', 'error');
             } catch (e) { console.error(e); }
         }
 
         // Modal Logic
         const reportModal = document.getElementById('reportModal');
         const deleteModal = document.getElementById('deleteModal');
+        const successModal = document.getElementById('successModal');
 
         // Report
         function openReportModal(id) {
-            if (!USUARIO_ID) return location.href = '/auth/login';
+            if (!USUARIO_ID) return location.href = '/noticias/auth/login';
             document.getElementById('reportNoticiaId').value = id;
             reportModal.classList.add('open');
         }
@@ -257,42 +283,101 @@
             if (motivo === 'OTRO') motivo = document.getElementById('customReason').value;
             const descripcion = document.getElementById('reportDescription').value;
 
-            // Assuming API is accessible directly or via Web Proxy.
-            // Web Controller for Report not shown, so using API directly if possible, or needing a Web Endpoint.
-            // Assuming /interacciones/denuncias exists on Web Controller acting as proxy or we call API port if accessible (CORS?)
-            // The original Code used API_URL 'http://localhost:8081'. This might fail if browser can't see it (Docker).
-            // Best to fetch to a Web Controller endpoint.
-            // IF no web endpoint exists, we might need to add one.
-            // For now, let's try the direct API call typical of this project structure or check if "fetch" was working before.
-            // DetalleNoticia used: const API_URL = 'http://localhost:8081';
+            if (!motivo) return; // Validate
 
             try {
-                const res = await fetch(`http://localhost:8081/interacciones/denuncias`, {
+                const res = await fetch(`/interacciones/denuncias`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ noticiaId: noticiaId, usuarioId: USUARIO_ID, motivo: motivo, descripcion: descripcion })
+                    body: JSON.stringify({ noticiaId: Number(noticiaId), usuarioId: USUARIO_ID, motivo: motivo, descripcion: descripcion })
                 });
                 if (res.ok) {
                     closeReportModal();
-                    // Custom unified success modal/toast would be better than alert, but alert is standard for "success" feedback if no toast lib.
-                    // User argued about alerts on confirmation. Success message might be tolerant?
-                    // Let's safe bet:
-                    alert('Reporte enviado correctamente.');
+                    showSuccess('Reporte Enviado', 'El equipo de moderación revisará tu reporte.');
                 } else {
-                    alert('Error al enviar reporte.');
+                    showSuccess('Error', 'No se pudo enviar el reporte.'); // Reusing modal for error too simpler
                 }
-            } catch (e) { console.error(e); alert('Error de conexión.'); }
+            } catch (e) { console.error(e); }
         }
 
         // Delete
-        function openDeleteModal(id) {
-            // Set form action dynamically
-            const form = document.getElementById('deleteForm');
-            form.action = `/trabajador/noticias/${id}/borrar`;
+        async function handleDeletion(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            try {
+                const res = await fetch(`${contextPath}trabajador/noticias/borrar`, {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+
+                if (res.ok) {
+                    closeDeleteModal();
+                    showSuccess('Eliminado', 'La noticia ha sido eliminada correctamente.');
+                    // Reload or redirect after a short delay
+                    setTimeout(() => {
+                        if (window.location.pathname.includes('/noticia/')) {
+                            location.href = contextPath;
+                        } else {
+                            location.reload();
+                        }
+                    }, 1500);
+                } else {
+                    showSuccess('Error', 'No tienes permiso o ha habido un error.', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showSuccess('Error', 'Error de conexión.', 'error');
+            }
+        }
+
+        // Attach event listener
+        document.getElementById('deleteForm').addEventListener('submit', handleDeletion);
+
+        function openDeleteModal(titulo, esPropio) {
+            document.getElementById('deleteTitulo').value = titulo;
+            const motivoGroup = document.getElementById('deleteMotivoGroup');
+            const motivoInput = document.getElementById('deleteMotivoInput');
+
+            if (esPropio) {
+                motivoGroup.style.display = 'none';
+                motivoInput.required = false;
+                motivoInput.value = 'Borrado por el autor';
+            } else {
+                motivoGroup.style.display = 'block';
+                motivoInput.required = true;
+                motivoInput.value = '';
+            }
+
             deleteModal.classList.add('open');
         }
         function closeDeleteModal() {
             deleteModal.classList.remove('open');
+        }
+
+        // Success/Error Modal
+        function showSuccess(title, msg, type = 'success') {
+            const titleEl = document.getElementById('successTitle');
+            const msgEl = document.getElementById('successMessage');
+            const iconContainer = document.getElementById('modalIconContainer');
+
+            titleEl.innerText = title;
+            msgEl.innerText = msg;
+
+            if (type === 'error') {
+                iconContainer.innerHTML = '<i data-lucide="x-circle" style="width: 64px; height: 64px; color: var(--danger);"></i>';
+                titleEl.style.color = 'var(--danger)';
+            } else {
+                iconContainer.innerHTML = '<i data-lucide="check-circle" style="width: 64px; height: 64px; color: var(--success);"></i>';
+                titleEl.style.color = 'var(--text-main)';
+            }
+
+            successModal.classList.add('open');
+            lucide.createIcons();
+        }
+        function closeSuccessModal() {
+            successModal.classList.remove('open');
         }
 
     </script>

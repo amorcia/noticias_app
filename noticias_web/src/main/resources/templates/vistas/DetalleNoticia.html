@@ -9,131 +9,140 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
-<body>
+<body style="background: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; min-height: 100vh;">
 
-    <!-- Header -->
-    <header class="main-header">
-        <nav class="nav-container">
-            <a th:href="@{/}" class="logo">
-                <i data-lucide="newspaper"></i>
-                NoticiasApp
+    <!-- Navbar Container -->
+    <header
+        style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border);">
+        <nav
+            style="max-width: 1200px; margin: 0 auto; height: 80px; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem;">
+            <a th:href="@{/}"
+                style="font-size: 1.8rem; font-weight: 900; color: var(--primary); text-decoration: none;">
+                Noticias<span style="color: var(--text-main);">App</span>
             </a>
-
-            <div class="nav-links">
-                <a th:href="@{/}" class="nav-link">Inicio</a>
-
-                <div class="dropdown">
-                    <a href="#" class="nav-link">
-                        Categorías <i data-lucide="chevron-down" style="width:14px; display:inline;"></i>
+            <div style="display: flex; gap: 1.5rem; align-items: center;">
+                <a th:href="@{/}" class="btn btn-ghost">Inicio</a>
+                <div th:if="${session.usuario != null}" style="display: flex; gap: 1rem; align-items: center;">
+                    <div th:if="${session.usuario.rol == 'ADMIN' or session.usuario.rol == 'OWNER' or session.usuario.rol == 'TRABAJADOR'}"
+                        style="display: flex; gap: 0.5rem;">
+                        <a th:href="@{/trabajador/subir-noticia}" class="btn btn-ghost" title="Subir Noticia">
+                            <i data-lucide="plus-circle" style="width: 20px;"></i>
+                        </a>
+                        <a th:if="${session.usuario.rol == 'ADMIN' or session.usuario.rol == 'OWNER'}"
+                            th:href="@{/admin/panel}" class="btn btn-ghost" title="Panel Admin">
+                            <i data-lucide="shield" style="width: 20px;"></i>
+                        </a>
+                    </div>
+                    <a th:href="@{/auth/perfil}"
+                        style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-main);">
+                        <img th:if="${session.usuario.imagenUrl != null}" th:src="${session.usuario.imagenUrl}"
+                            style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+                        <i th:unless="${session.usuario.imagenUrl != null}" data-lucide="user" style="width: 20px;"></i>
+                        <span th:text="${session.usuario.nombreCompleto}" style="font-weight: 600;">Usuario</span>
                     </a>
-                    <div class="dropdown-menu">
-                        <div th:each="cat : ${categorias}">
-                            <a th:href="@{'/categoria/' + ${cat.nombre}}" class="dropdown-item"
-                                style="font-weight: 600;" th:text="${cat.nombre}">Categoría</a>
-                            <a th:each="sub : ${cat.subcategorias}" th:href="@{'/categoria/' + ${sub.nombre}}"
-                                class="dropdown-item"
-                                style="padding-left: 1.5rem; font-size: 0.9em; color: var(--text-muted);"
-                                th:text="${sub.nombre}">
-                                Subcategoría
-                            </a>
-                        </div>
-                    </div>
                 </div>
-            </div>
-
-            <div class="auth-section">
-                <th:block th:if="${session.usuario != null}">
-                    <div class="user-dropdown">
-                        <button class="user-dropdown-btn">
-                            <span th:text="${session.usuario.nombre}">Usuario</span>
-                            <i data-lucide="chevron-down"></i>
-                        </button>
-                        <div class="dropdown-menu">
-                            <a th:href="@{/perfil}" class="dropdown-item">Perfil</a>
-                            <a th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN')}"
-                                th:href="@{/admin/panel}" class="dropdown-item">Panel Admin</a>
-                            <a th:href="@{/auth/logout}" class="dropdown-item">Cerrar Sesión</a>
-                        </div>
-                    </div>
-                </th:block>
-                <th:block th:if="${session.usuario == null}">
-                    <a th:href="@{/auth/login}" class="btn">Login</a>
-                </th:block>
+                <a th:unless="${session.usuario != null}" th:href="@{/auth/login}" class="btn btn-primary">Entrar</a>
             </div>
         </nav>
     </header>
 
-    <main class="container" style="padding: 3rem 1rem; max-width: 900px; margin: 0 auto;">
+    <main style="max-width: 900px; margin: 3rem auto; padding: 0 1.5rem;">
 
-        <!-- Premium Article Layout -->
-        <article class="news-card-premium" style="border: none; box-shadow: none; background: transparent;">
+        <!-- Back Link -->
+        <a th:href="@{/}"
+            style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-muted); text-decoration: none; margin-bottom: 2rem; font-weight: 500; transition: color 0.2s;"
+            onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+            <i data-lucide="arrow-left" style="width: 18px;"></i> Volver a portada
+        </a>
 
-            <!-- Category & Date -->
-            <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center;">
-                <span class="badge badge-primary"
-                    th:text="${noticia.categoriaNombre != null ? noticia.categoriaNombre : 'General'}">Categoría</span>
-                <span style="color: var(--text-muted); font-size: 0.9rem;"
-                    th:text="${#temporals.format(noticia.fechaPublicacion, 'dd MMMM yyyy, HH:mm')}">Fecha</span>
+        <article>
+            <!-- Meta Information -->
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                <span th:text="${noticia.categoriaNombre}"
+                    th:style="'background: ' + ${noticia.categoriaColor} + '20; color: ' + ${noticia.categoriaColor} + '; padding: 0.4rem 1rem; border-radius: 2rem; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;'">
+                    Categoría
+                </span>
+                <span
+                    style="color: var(--text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem;">
+                    <i data-lucide="calendar" style="width: 16px;"></i>
+                    <span th:text="${#temporals.format(noticia.fechaPublicacion, 'dd MMMM, yyyy')}">Fecha</span>
+                </span>
             </div>
 
             <!-- Title -->
-            <h1 style="font-size: 3rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; color: var(--text-main);"
-                th:text="${noticia.titulo}">Título de la Noticia</h1>
+            <h1 style="font-size: 3.5rem; font-weight: 950; line-height: 1.1; margin-bottom: 1.5rem; color: var(--text-main); letter-spacing: -1.5px;"
+                th:text="${noticia.titulo}">
+                Título de la Noticia
+            </h1>
 
             <!-- Subtitle -->
-            <h2 style="font-size: 1.5rem; font-weight: 400; color: var(--secondary); margin-bottom: 2rem; line-height: 1.4;"
-                th:text="${noticia.subtitulo}">Subtítulo...</h2>
+            <p style="font-size: 1.5rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 3rem; font-weight: 400;"
+                th:text="${noticia.subtitulo}">
+                Subtítulo o descripción breve de la noticia para captar atención.
+            </p>
 
             <!-- Author & Actions -->
             <div
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div
-                        style="width: 48px; height: 48px; background: var(--border); border-radius: 50%; overflow: hidden;">
-                        <img th:src="@{/images/default-avatar.png}" style="width:100%; height:100%; object-fit:cover;"
-                            onerror="this.src='https://ui-avatars.com/api/?name=Author&background=random'">
+                style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 3rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <img th:if="${noticia.autorImagenUrl != null}" th:src="${noticia.autorImagenUrl}"
+                        style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+                    <div th:unless="${noticia.autorImagenUrl != null}"
+                        style="width: 50px; height: 50px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="user" style="color: var(--text-muted);"></i>
                     </div>
                     <div>
-                        <div style="font-weight: 700;" th:text="${noticia.autorNombre}">Autor</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">Redactor</div>
+                        <div style="font-weight: 700; color: var(--text-main);" th:text="${noticia.autorNombre}">Autor
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Redactor NoticiasApp</div>
                     </div>
                 </div>
 
-                <!-- Interaction Bar -->
-                <div class="interaction-bar" style="border: none; padding: 0;">
-                    <button id="btnLike" class="interaction-item like" th:onclick="'toggleLike(' + ${noticia.id} + ')'">
-                        <i data-lucide="thumbs-up" style="width: 20px;"></i>
-                        <span id="likes-count" th:text="${noticia.likes != null ? noticia.likes : 0}">0</span>
-                    </button>
-                    <button id="btnDislike" class="interaction-item dislike"
-                        th:onclick="'toggleDislike(' + ${noticia.id} + ')'">
-                        <i data-lucide="thumbs-down" style="width: 20px;"></i>
-                        <span id="dislikes-count" th:text="${noticia.dislikes != null ? noticia.dislikes : 0}">0</span>
-                    </button>
-                    <a href="#comentarios" class="interaction-item comment">
-                        <i data-lucide="message-circle" style="width: 20px;"></i>
-                        <span th:text="${noticia.comentariosCount != null ? noticia.comentariosCount : 0}">0</span>
-                    </a>
-                    <button class="interaction-item report" th:onclick="'openReportModal(' + ${noticia.id} + ')'">
-                        <i data-lucide="flag" style="width: 20px;"></i>
+                <div style="display: flex; gap: 0.5rem;">
+                    <!-- Like/Dislike -->
+                    <div style="display: flex; background: #f1f5f9; border-radius: 2rem; padding: 0.25rem;">
+                        <button th:onclick="'toggleLike(' + ${noticia.id} + ')'" class="btn btn-ghost"
+                            style="padding: 0.5rem 1rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="thumbs-up" style="width: 18px;"></i>
+                            <span th:text="${noticia.likes}">0</span>
+                        </button>
+                        <div style="width: 1px; background: var(--border); margin: 0.5rem 0;"></div>
+                        <button th:onclick="'toggleDislike(' + ${noticia.id} + ')'" class="btn btn-ghost"
+                            style="padding: 0.5rem 1rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="thumbs-down" style="width: 18px;"></i>
+                            <span th:text="${noticia.dislikes}">0</span>
+                        </button>
+                    </div>
+
+                    <!-- Report -->
+                    <button th:onclick="'openReportModal(' + ${noticia.id} + ')'" class="btn btn-ghost"
+                        style="padding: 0.5rem 1rem; border-radius: 2rem; color: var(--text-muted);" title="Reportar">
+                        <i data-lucide="flag" style="width: 18px;"></i>
                     </button>
 
-                    <!-- Delete (Admin/Owner) -->
+                    <!-- Delete (If owner or Admin) -->
                     <button
-                        th:if="${session.usuario != null and (session.usuario.id == noticia.autorId or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER'))}"
-                        th:onclick="'openDeleteModal(' + ${noticia.id} + ')'" class="interaction-item"
-                        style="color: var(--danger); margin-left: auto; background: none; border: none; cursor: pointer;">
-                        <i data-lucide="trash-2" style="width: 20px;"></i>
+                        th:if="${session.usuario != null and (session.usuario.id == noticia.autorId or session.usuario.rol == 'ADMIN' or session.usuario.rol == 'OWNER')}"
+                        th:data-titulo="${noticia.titulo}" th:data-propio="${session.usuario.id == noticia.autorId}"
+                        onclick="openDeleteModal(this.getAttribute('data-titulo'), this.getAttribute('data-propio') === 'true')"
+                        class="btn btn-ghost" style="padding: 0.5rem 1rem; border-radius: 2rem; color: var(--danger);"
+                        title="Eliminar">
+                        <i data-lucide="trash-2" style="width: 18px;"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Main Image -->
-            <div
+            <div th:if="${noticia.imagenUrl != null and !noticia.imagenUrl.isEmpty()}"
                 style="margin-bottom: 3rem; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-lg);">
-                <img th:if="${noticia.imagenUrl != null and !noticia.imagenUrl.isEmpty()}" th:src="${noticia.imagenUrl}"
-                    style="width: 100%; height: auto; display: block;" onerror="this.style.display='none'"
-                    alt="Imagen Noticia">
+                <img th:src="${noticia.imagenUrl}" style="width: 100%; height: auto; display: block;"
+                    onerror="this.style.display='none'" alt="Imagen Noticia">
+            </div>
+
+            <!-- No Image Fallback for Detail -->
+            <div th:unless="${noticia.imagenUrl != null and !noticia.imagenUrl.isEmpty()}"
+                style="margin-bottom: 3rem; border-radius: var(--radius); height: 200px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border);">
+                <i data-lucide="newspaper" style="width: 64px; height: 64px; color: var(--border);"></i>
             </div>
 
             <!-- Content -->
@@ -144,15 +153,34 @@
 
         </article>
 
+        <!-- Success/Error Modal -->
+        <div id="successModal" class="modal-overlay">
+            <div class="modal-content" style="text-align: center;">
+                <div id="modalIconContainer" style="margin-bottom: 2rem; display: flex; justify-content: center;">
+                    <i data-lucide="check-circle" id="modalIcon"
+                        style="width: 64px; height: 64px; color: var(--success);"></i>
+                </div>
+                <h3 id="successTitle"
+                    style="margin-bottom: 0.75rem; font-size: 1.75rem; font-weight: 800; color: var(--text-main);">
+                    ¡Éxito!</h3>
+                <p id="successMessage"
+                    style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; font-size: 1.1rem;"></p>
+                <button onclick="closeSuccessModal()" class="btn btn-primary"
+                    style="width: 100%; padding: 1rem;">Aceptar</button>
+            </div>
+        </div>
+
         <!-- Delete Modal -->
         <div id="deleteModal" class="modal-overlay">
             <div class="modal-content">
                 <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Eliminar Noticia</h3>
                 <p>¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer.</p>
-                <form id="deleteForm" method="POST" action="">
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label class="form-label">Motivo (Opcional)</label>
-                        <input type="text" name="motivo" class="form-input" placeholder="Razón de eliminación...">
+                <form id="deleteForm">
+                    <input type="hidden" name="titulo" id="deleteTitulo">
+                    <div class="form-group" style="margin-top: 1rem;" id="deleteMotivoGroup">
+                        <label class="form-label">Motivo</label>
+                        <input type="text" name="motivo" id="deleteMotivoInput" class="form-input"
+                            placeholder="Razón de eliminación...">
                     </div>
                     <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                         <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
@@ -178,7 +206,7 @@
                 </form>
             </div>
             <div th:unless="${session.usuario != null}" class="alert alert-info" style="text-align: center;">
-                <a href="/auth/login">Inicia sesión</a> para participar en la conversación.
+                <a th:href="@{/auth/login}">Inicia sesión</a> para participar en la conversación.
             </div>
 
             <!-- Comments List (Loaded via AJAX) -->
@@ -211,7 +239,7 @@
                 </div>
                 <div class="form-group" id="customReasonGroup" style="display: none;">
                     <label class="form-label">Especificar Motivo</label>
-                    <input type="text" id="customReason" class="form-input" placeholder="Escribe el título">
+                    <input type="text" id="customReason" class="form-input" placeholder="Escribe el motivo">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Descripción (Opcional)</label>
@@ -227,28 +255,32 @@
     </div>
 
     <script th:inline="javascript">
-        lucide.createIcons();
-        const API_URL = 'http://localhost:8081'; // Adjust if using Docker internal DNS vs Browser localhost
-        // For Browser, it must be localhost usually.
-
+        const contextPath = /*[[@{/}]]*/ '';
         const NOTICIA_ID = /*[[${noticia.id}]]*/ 0;
         const USUARIO_ID = /*[[${session.usuario != null ? session.usuario.id : 0}]]*/ 0;
 
-        // Load Comments via AJAX (if not eager loaded)
+        lucide.createIcons();
+
+        // Load Comments via AJAX
         async function loadComments() {
             try {
-                const response = await fetch(`${API_URL}/interacciones/comentarios/noticia/${NOTICIA_ID}`);
+                const response = await fetch(`${contextPath}interacciones/comentarios/noticia/${NOTICIA_ID}`);
                 if (response.ok) {
                     const comments = await response.json();
                     const list = document.getElementById('commentsList');
                     list.innerHTML = '';
+                    if (!comments || comments.length === 0) {
+                        list.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">Sé el primero en comentar.</div>';
+                        return;
+                    }
                     comments.forEach(c => {
                         const div = document.createElement('div');
                         div.style = "margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border);";
+                        const authorName = c.usuarioNombre || (c.autor ? c.autor.nombreCompleto : 'Anónimo');
                         div.innerHTML = `
                              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                <strong>${c.autor.nombre}</strong>
-                                <span style="font-size: 0.85rem; color: var(--text-muted);">${new Date(c.fecha).toLocaleDateString()}</span>
+                                <strong>${authorName}</strong>
+                                <span style="font-size: 0.85rem; color: var(--text-muted);">${c.fecha ? new Date(c.fecha).toLocaleDateString() : ''}</span>
                             </div>
                             <p style="font-size: 1.05rem;">${c.contenido}</p>
                         `;
@@ -258,15 +290,15 @@
             } catch (e) { console.error(e); }
         }
 
-        loadComments(); // Init load
+        loadComments();
 
         async function postComment() {
-            if (!USUARIO_ID) return location.href = '/auth/login';
+            if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
             const content = document.getElementById('commentContent').value;
-            if (!content) return;
+            if (!content || !content.trim()) return;
 
             try {
-                const res = await fetch(`${API_URL}/interacciones/comentarios`, {
+                const res = await fetch(`${contextPath}interacciones/comentarios`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ noticiaId: NOTICIA_ID, usuarioId: USUARIO_ID, contenido: content })
@@ -275,35 +307,38 @@
                     document.getElementById('commentContent').value = '';
                     loadComments();
                 } else {
-                    alert('Error al publicar comentario');
+                    showSuccess('Error', 'No se ha podido publicar el comentario. Revisa si has sido sancionado.', 'error');
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+                showSuccess('Error', 'Error de conexión', 'error');
+            }
         }
 
         async function toggleLike(id) {
-            if (!USUARIO_ID) return location.href = '/auth/login';
+            if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
             try {
-                const res = await fetch(`/noticia/${id}/votar?tipo=LIKE`, { method: 'POST' });
-                if (res.ok) {
-                    // Quick UI update or reload. Reload is safer for synced counts.
-                    location.reload();
-                }
+                const res = await fetch(`${contextPath}interacciones/noticia/${id}/votar?tipo=LIKE`, { method: 'POST' });
+                if (res.ok) location.reload();
+                else showSuccess('Error', 'No se pudo votar', 'error');
             } catch (e) { console.error(e); }
         }
 
         async function toggleDislike(id) {
-            if (!USUARIO_ID) return location.href = '/auth/login';
+            if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
             try {
-                const res = await fetch(`/noticia/${id}/votar?tipo=DISLIKE`, { method: 'POST' });
-                if (res.ok) {
-                    location.reload();
-                }
+                const res = await fetch(`${contextPath}interacciones/noticia/${id}/votar?tipo=DISLIKE`, { method: 'POST' });
+                if (res.ok) location.reload();
+                else showSuccess('Error', 'No se pudo votar', 'error');
             } catch (e) { console.error(e); }
         }
 
         // Modal Reports
         const reportModal = document.getElementById('reportModal');
+        const successModal = document.getElementById('successModal');
+
         function openReportModal(id) {
+            if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
             document.getElementById('reportNoticiaId').value = id;
             reportModal.classList.add('open');
         }
@@ -312,38 +347,101 @@
         }
         function checkReason() {
             const r = document.getElementById('reportReason').value;
-            document.getElementById('customReasonGroup').style.display = (r === 'OTRO' ? 'block' : 'none');
+            const group = document.getElementById('customReasonGroup');
+            if (group) group.style.display = (r === 'OTRO' ? 'block' : 'none');
         }
         async function submitReport() {
-            if (!USUARIO_ID) return location.href = '/auth/login';
+            if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
             const noticiaId = document.getElementById('reportNoticiaId').value;
             let motivo = document.getElementById('reportReason').value;
-            if (motivo === 'OTRO') motivo = document.getElementById('customReason').value;
+            if (motivo === 'OTRO') {
+                motivo = document.getElementById('customReason').value;
+            }
             const descripcion = document.getElementById('reportDescription').value;
 
+            if (!motivo) return alert('Selecciona un motivo');
+
             try {
-                const res = await fetch(`${API_URL}/interacciones/denuncias`, {
+                const res = await fetch(`${contextPath}interacciones/denuncias`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ noticiaId: noticiaId, usuarioId: USUARIO_ID, motivo: motivo, descripcion: descripcion })
+                    body: JSON.stringify({ noticiaId: Number(noticiaId), usuarioId: USUARIO_ID, motivo: motivo, descripcion: descripcion })
                 });
                 if (res.ok) {
                     closeReportModal();
-                    alert('Reporte enviado.');
+                    showSuccess('Reporte Enviado', 'Gracias por avisarnos. Revisaremos el contenido.');
+                } else {
+                    showSuccess('Error', 'No se pudo enviar el reporte.', 'error');
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+                showSuccess('Error', 'Error de conexión', 'error');
+            }
         }
 
-        // Delete Modal
+        // Delete Logic AJAX
         const deleteModal = document.getElementById('deleteModal');
-        function openDeleteModal(id) {
-            const form = document.getElementById('deleteForm');
-            form.action = `/trabajador/noticias/${id}/borrar`;
+        async function handleDeletion(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            try {
+                const res = await fetch(`${contextPath}trabajador/noticias/borrar`, {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+                if (res.ok) {
+                    closeDeleteModal();
+                    showSuccess('Eliminado', 'La noticia ha sido borrada.');
+                    setTimeout(() => location.href = contextPath, 1500);
+                } else {
+                    showSuccess('Error', 'No se pudo eliminar.', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showSuccess('Error', 'Error de conexión', 'error');
+            }
+        }
+        document.getElementById('deleteForm').addEventListener('submit', handleDeletion);
+
+        function openDeleteModal(titulo, esPropio) {
+            document.getElementById('deleteTitulo').value = titulo;
+            const group = document.getElementById('deleteMotivoGroup');
+            const input = document.getElementById('deleteMotivoInput');
+            if (esPropio) {
+                group.style.display = 'none';
+                input.required = false;
+                input.value = 'Borrado por autor';
+            } else {
+                group.style.display = 'block';
+                input.required = true;
+                input.value = '';
+            }
             deleteModal.classList.add('open');
         }
         function closeDeleteModal() {
             deleteModal.classList.remove('open');
         }
-</body >
 
-</html >
+        function showSuccess(title, msg, type = 'success') {
+            const titleEl = document.getElementById('successTitle');
+            const msgEl = document.getElementById('successMessage');
+            const iconContainer = document.getElementById('modalIconContainer');
+            titleEl.innerText = title;
+            msgEl.innerText = msg;
+            if (type === 'error') {
+                iconContainer.innerHTML = '<i data-lucide="x-circle" style="width: 64px; height: 64px; color: var(--danger);"></i>';
+                titleEl.style.color = 'var(--danger)';
+            } else {
+                iconContainer.innerHTML = '<i data-lucide="check-circle" style="width: 64px; height: 64px; color: var(--success);"></i>';
+                titleEl.style.color = 'var(--text-main)';
+            }
+            successModal.classList.add('open');
+            lucide.createIcons();
+        }
+        function closeSuccessModal() {
+            successModal.classList.remove('open');
+        }
+    </script>
+</body>
+
+</html>

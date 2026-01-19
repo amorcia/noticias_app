@@ -84,6 +84,12 @@ public class NoticiaServicio {
         return noticiaRepositorio.findById(id).map(this::convertirADTO);
     }
 
+    public Optional<NoticiaDTO> buscarPorTitulo(String titulo) {
+        if (titulo == null || titulo.isBlank())
+            return Optional.empty();
+        return noticiaRepositorio.findByTitulo(titulo).map(this::convertirADTO);
+    }
+
     @Transactional
     public NoticiaDTO crearNoticia(NoticiaEntidad noticia) {
         if (noticia == null)
@@ -179,6 +185,18 @@ public class NoticiaServicio {
     @Transactional
     public boolean eliminarNoticia(Integer id) {
         return eliminarNoticia(id, "Eliminación directa", null);
+    }
+
+    @Transactional
+    public boolean eliminarNoticiaPorTitulo(String titulo, String motivo,
+            com.noticias.api.entidades.UsuarioEntidad eliminador) {
+        if (titulo == null || titulo.isBlank())
+            return false;
+        Optional<NoticiaEntidad> noticiaOpt = noticiaRepositorio.findByTitulo(titulo);
+        if (noticiaOpt.isPresent()) {
+            return eliminarNoticia(noticiaOpt.get().getId(), motivo, eliminador);
+        }
+        return false;
     }
 
     @Transactional(readOnly = true)

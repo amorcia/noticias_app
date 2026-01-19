@@ -5,15 +5,13 @@ import java.time.LocalDateTime;
 public class ComentarioDTO {
     private Integer id;
     private String contenido;
-    private Integer usuarioId;
-    private String usuarioNombre;
+    private AutorDTO autor;
     private Integer noticiaId;
     private LocalDateTime fecha;
 
     public ComentarioDTO() {
     }
 
-    // Getters and Setters
     public Integer getId() {
         return id;
     }
@@ -30,20 +28,21 @@ public class ComentarioDTO {
         this.contenido = contenido;
     }
 
-    public Integer getUsuarioId() {
-        return usuarioId;
+    public AutorDTO getAutor() {
+        return autor;
     }
 
-    public void setUsuarioId(Integer usuarioId) {
-        this.usuarioId = usuarioId;
+    public void setAutor(AutorDTO autor) {
+        this.autor = autor;
+    }
+
+    // Convenience getters for Thymeleaf
+    public Integer getUsuarioId() {
+        return autor != null ? autor.getId() : null;
     }
 
     public String getUsuarioNombre() {
-        return usuarioNombre;
-    }
-
-    public void setUsuarioNombre(String usuarioNombre) {
-        this.usuarioNombre = usuarioNombre;
+        return autor != null ? autor.getNombreCompleto() : "Anónimo";
     }
 
     public Integer getNoticiaId() {
@@ -60,5 +59,26 @@ public class ComentarioDTO {
 
     public void setFecha(LocalDateTime fecha) {
         this.fecha = fecha;
+    }
+
+    public static class AutorDTO {
+        private Integer id;
+        private String nombreCompleto;
+
+        public Integer getId() {
+            return id;
+        }
+
+        public void setId(Integer id) {
+            this.id = id;
+        }
+
+        public String getNombreCompleto() {
+            return nombreCompleto;
+        }
+
+        public void setNombreCompleto(String nombreCompleto) {
+            this.nombreCompleto = nombreCompleto;
+        }
     }
 }

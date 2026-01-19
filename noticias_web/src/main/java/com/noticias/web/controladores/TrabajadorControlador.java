@@ -78,31 +78,33 @@ public class TrabajadorControlador {
         return "redirect:/";
     }
 
-    @org.springframework.web.bind.annotation.PostMapping("/noticias/{id}/borrar")
-    public String borrarNoticia(@org.springframework.web.bind.annotation.PathVariable Integer id,
+    @org.springframework.web.bind.annotation.PostMapping("/noticias/borrar")
+    public org.springframework.http.ResponseEntity<?> borrarNoticia(
+            @org.springframework.web.bind.annotation.RequestParam String titulo,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String motivo,
+            @org.springframework.web.bind.annotation.RequestHeader(value = "X-Requested-With", required = false) String requestedWith,
             HttpSession session,
             org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
 
         if (!sesionServicio.validarSesion(session)) {
-            return "redirect:/auth/login";
+            return org.springframework.http.ResponseEntity.status(401).body("Sesión no válida");
         }
 
         var usuario = sesionServicio.obtenerUsuarioLogueado(session);
-        var noticia = apiCliente.buscarNoticiaPorId(id);
+        var noticia = apiCliente.buscarNoticiaPorTitulo(titulo);
 
         if (noticia == null) {
-            redirectAttributes.addFlashAttribute("error", "Noticia no encontrada");
-            return "redirect:/";
+            return org.springframework.http.ResponseEntity.status(404).body("Noticia no encontrada");
         }
 
         // Permisos: Dueño de la noticia, Admin o Owner del sitio
         boolean esAutor = noticia.getAutorId() != null && noticia.getAutorId().equals(usuario.getId());
-        boolean esAdmin = "ADMIN".equalsIgnoreCase(usuario.getRol()) || "OWNER".equalsIgnoreCase(usuario.getRol());
+        String rol = usuario.getRol();
+        boolean esAdmin = "ADMIN".equalsIgnoreCase(rol) || "OWNER".equalsIgnoreCase(rol);
 
         if (!esAutor && !esAdmin) {
-            redirectAttributes.addFlashAttribute("error", "No tienes permiso para borrar esta noticia");
-            return "redirect:/noticias/" + id;
+            return org.springframework.http.ResponseEntity.status(403)
+                    .body("No tienes permiso para borrar esta noticia");
         }
 
         // Determinar motivo
@@ -111,14 +113,12 @@ public class TrabajadorControlador {
             motivoFinal = "Eliminado por el propietario";
         }
 
-        boolean exito = apiCliente.eliminarNoticia(id, motivoFinal, usuario.getId());
+        boolean exito = apiCliente.eliminarNoticiaPorTitulo(titulo, motivoFinal, usuario.getId());
 
         if (exito) {
-            redirectAttributes.addFlashAttribute("mensaje", "Noticia eliminada correctamente");
-            return "redirect:/";
+            return org.springframework.http.ResponseEntity.ok("Noticia eliminada");
         } else {
-            redirectAttributes.addFlashAttribute("error", "Error al eliminar la noticia");
-            return "redirect:/noticias/" + id;
+            return org.springframework.http.ResponseEntity.status(500).body("Error al eliminar la noticia");
         }
     }
 }
