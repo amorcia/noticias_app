@@ -5,6 +5,7 @@ import com.noticias.web.dtos.UsuarioDTO;
 import com.noticias.web.servicios.ApiNoticiasCliente;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -63,26 +64,34 @@ public class AdminControlador {
     }
 
     @PostMapping("/sanciones/{id}/resolver")
-    public String resolverSancion(@PathVariable Integer id,
+    public ResponseEntity<?> resolverSancion(@PathVariable Integer id,
             @RequestParam String resolucion,
             @RequestParam String accion,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
+            @RequestHeader(value = "X-Requested-With", required = false) String requestedWith,
+            HttpSession session) {
         UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
         String rol = admin != null ? admin.getRolNombre() : null;
         boolean esAdmin = "ADMIN".equalsIgnoreCase(rol) || "OWNER".equalsIgnoreCase(rol);
 
         if (admin == null || !esAdmin) {
-            return "redirect:/auth/login";
+            if ("XMLHttpRequest".equals(requestedWith)) {
+                return ResponseEntity.status(403).body("No tienes permisos de administrador");
+            }
+            return ResponseEntity.status(302).header("Location", "/auth/login").build();
         }
 
         try {
             apiCliente.resolverSancion(id, resolucion, accion, admin.getId());
-            redirectAttributes.addFlashAttribute("mensaje", "Sanción resuelta correctamente.");
+            if ("XMLHttpRequest".equals(requestedWith)) {
+                return ResponseEntity.ok(Map.of("mensaje", "Sanción resuelta"));
+            }
+            return ResponseEntity.status(302).header("Location", "/admin/panel?success=sancion").build();
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al resolver sanción.");
+            if ("XMLHttpRequest".equals(requestedWith)) {
+                return ResponseEntity.status(500).body("Error al resolver la sanción: " + e.getMessage());
+            }
+            return ResponseEntity.status(302).header("Location", "/admin/panel?error=sancion").build();
         }
-        return "redirect:/admin/panel";
     }
 
     @PostMapping("/usuarios/{id}/vetar")
@@ -120,10 +129,50 @@ public class AdminControlador {
         UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
         if (admin == null || (!"ADMIN".equalsIgnoreCase(admin.getRolNombre())
                 && !"OWNER".equalsIgnoreCase(admin.getRolNombre()))) {
-            return org.springframework.http.ResponseEntity.status(403).body("No tienes permisos");
+            return ResponseEntity.status(403).body("No tienes permisos");
         }
         boolean exito = apiCliente.resolverDenuncia(id, estado);
-        return exito ? org.springframework.http.ResponseEntity.ok().build()
-                : org.springframework.http.ResponseEntity.status(500).build();
+        return exito ? ResponseEntity.ok().build()
+                : ResponseEntity.status(500).build();
+    }
+
+    @PostMapping("/usuarios/{id}/rol")
+    @ResponseBody
+    public ResponseEntity<?> cambiarRol(@PathVariable Integer id, @RequestParam Integer rolId, HttpSession session) {
+        UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
+        String rol = admin != null ? admin.getRolNombre() : null;
+        boolean esOwner = "OWNER".equalsIgnoreCase(rol);
+
+        if (admin == null || !esOwner) {
+            return ResponseEntity.status(403).body("Solo el OWNER puede cambiar roles");
+        }
+
+        try {
+            UsuarioDTO u = new UsuarioDTO();
+            u.setRolId(rolId);
+            apiCliente.actualizarUsuario(id, u);
+            return ResponseEntity.ok(Map.of("mensaje", "Rol actualizado"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/usuarios/{id}")
+    @ResponseBody
+    public ResponseEntity<?> eliminarUsuario(@PathVariable Integer id, HttpSession session) {
+        UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
+        String rol = admin != null ? admin.getRolNombre() : null;
+        boolean esOwner = "OWNER".equalsIgnoreCase(rol);
+
+        if (admin == null || !esOwner) {
+            return ResponseEntity.status(403).body("Solo el OWNER puede eliminar usuarios");
+        }
+
+        try {
+            apiCliente.eliminarUsuario(id);
+            return ResponseEntity.ok(Map.of("mensaje", "Usuario eliminado"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
     }
 }

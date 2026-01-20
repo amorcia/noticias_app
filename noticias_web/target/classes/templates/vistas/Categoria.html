@@ -14,40 +14,8 @@
 <body
     style="background: var(--bg-main); color: var(--text-main); font-family: 'Outfit', sans-serif; min-height: 100vh;">
     <div class="app-container">
-        <!-- Header Container -->
-        <header
-            style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border);">
-            <nav
-                style="max-width: 1200px; margin: 0 auto; height: 80px; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem;">
-                <a th:href="@{/}"
-                    style="font-size: 1.8rem; font-weight: 900; color: var(--primary); text-decoration: none;">
-                    Noticias<span style="color: var(--text-main);">App</span>
-                </a>
-                <div style="display: flex; gap: 1.5rem; align-items: center;">
-                    <a th:href="@{/}" class="btn btn-ghost">Inicio</a>
-                    <div th:if="${session.usuario != null}" style="display: flex; gap: 1rem; align-items: center;">
-                        <a th:if="${session.usuario.rol == 'ADMIN' or session.usuario.rol == 'OWNER' or session.usuario.rol == 'TRABAJADOR'}"
-                            th:href="@{/trabajador/subir-noticia}" class="btn btn-ghost" title="Subir Noticia">
-                            <i data-lucide="plus-circle" style="width: 20px;"></i>
-                        </a>
-                        <a th:if="${session.usuario.rol == 'ADMIN' or session.usuario.rol == 'OWNER'}"
-                            th:href="@{/admin/panel}" class="btn btn-ghost" title="Panel Admin">
-                            <i data-lucide="shield" style="width: 20px;"></i>
-                        </a>
-                        <a th:href="@{/auth/perfil}"
-                            style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-main);">
-                            <img th:if="${session.usuario.imagenUrl != null}" th:src="${session.usuario.imagenUrl}"
-                                style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
-                            <i th:unless="${session.usuario.imagenUrl != null}" data-lucide="user"
-                                style="width: 20px;"></i>
-                            <span th:text="${session.usuario.nombreCompleto}" style="font-weight: 600;">Usuario</span>
-                        </a>
-                    </div>
-                    <a th:unless="${session.usuario != null}" th:href="@{/auth/login}"
-                        class="btn btn-primary">Entrar</a>
-                </div>
-            </nav>
-        </header>
+        <!-- Header -->
+        <header th:replace="~{vistas/Fragmentos :: header}"></header>
 
         <main class="container" style="max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem;">
             <!-- Category Header -->

@@ -19,6 +19,7 @@ com\noticias\api\repositorios\CategoriaRepositorio.class
 com\noticias\api\servicios\InteraccionServicio.class
 com\noticias\api\servicios\ModeracionServicio$2.class
 com\noticias\api\controladores\AdminControlador.class
+com\noticias\api\repositorios\VotoComentarioRepositorio.class
 com\noticias\api\repositorios\NoticiaRepositorio.class
 com\noticias\api\entidades\RolEntidad.class
 com\noticias\api\NoticiasApiApplication.class
@@ -30,6 +31,7 @@ com\noticias\api\controladores\NoticiaControlador.class
 com\noticias\api\dtos\NoticiaDTO.class
 com\noticias\api\repositorios\EtiquetaRepositorio.class
 com\noticias\api\entidades\NoticiaEntidad.class
+com\noticias\api\entidades\VotoComentarioEntidad.class
 com\noticias\api\controladores\CategoriaControlador.class
 com\noticias\api\controladores\InteraccionControlador.class
 com\noticias\api\entidades\DenunciaEntidad.class

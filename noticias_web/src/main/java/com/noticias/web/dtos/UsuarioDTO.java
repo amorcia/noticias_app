@@ -172,6 +172,14 @@ public class UsuarioDTO {
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("rol")
+    public java.util.Map<String, Object> getRolObject() {
+        if (rolId != null) {
+            return java.util.Map.of("id", rolId);
+        }
+        return null;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("rol")
     private void unpackRol(java.util.Map<String, Object> rol) {
         if (rol != null) {
             this.rolNombre = (String) rol.get("nombre");

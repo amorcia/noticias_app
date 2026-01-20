@@ -97,10 +97,15 @@ public class InicioControlador {
 
     @PostMapping("/noticia/{id}/votar")
     @ResponseBody
-    public String votarNoticia(@PathVariable Integer id, @RequestParam String tipo) {
+    public String votarNoticia(@PathVariable Integer id, @RequestParam String tipo,
+            jakarta.servlet.http.HttpSession session) {
         try {
+            UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
+            if (usuario == null) {
+                return "LOGIN_REQUIRED";
+            }
             boolean like = "LIKE".equalsIgnoreCase(tipo);
-            apiCliente.votarNoticia(id, like);
+            apiCliente.votarNoticia(id, like, usuario.getId());
             return "OK";
         } catch (Exception e) {
             return "ERROR";
@@ -110,6 +115,19 @@ public class InicioControlador {
     @GetMapping("/ajustes")
     public String ajustes() {
         return "vistas/Ajustes";
+    }
+
+    @GetMapping("/vuestras-noticias")
+    public String vuestrasNoticias(jakarta.servlet.http.HttpSession session, Model model) {
+        try {
+            UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
+            model.addAttribute("isLoggedIn", usuario != null);
+            model.addAttribute("noticias", apiCliente.listarTodasLasNoticias()); // Or a specific community feed if
+                                                                                 // available
+        } catch (Exception e) {
+            model.addAttribute("noticias", List.of());
+        }
+        return "vistas/VuestrasNoticias";
     }
 
     @GetMapping("/perfil")

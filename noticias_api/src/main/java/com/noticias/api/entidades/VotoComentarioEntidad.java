@@ -1,0 +1,70 @@
+package com.noticias.api.entidades;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "votos_comentarios")
+public class VotoComentarioEntidad {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private UsuarioEntidad usuario;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comentario_id", nullable = false)
+    private ComentarioEntidad comentario;
+
+    @Column(nullable = false)
+    private String tipo; // "LIKE", "DISLIKE"
+
+    @Column(nullable = false)
+    private LocalDateTime fecha = LocalDateTime.now();
+
+    public VotoComentarioEntidad() {
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public UsuarioEntidad getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(UsuarioEntidad usuario) {
+        this.usuario = usuario;
+    }
+
+    public ComentarioEntidad getComentario() {
+        return comentario;
+    }
+
+    public void setComentario(ComentarioEntidad comentario) {
+        this.comentario = comentario;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public LocalDateTime getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDateTime fecha) {
+        this.fecha = fecha;
+    }
+}

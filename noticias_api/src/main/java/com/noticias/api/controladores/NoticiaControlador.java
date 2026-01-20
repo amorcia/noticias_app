@@ -179,11 +179,19 @@ public class NoticiaControlador {
     }
 
     @PostMapping("/{id}/votar")
-    public ResponseEntity<Void> votar(@PathVariable Integer id, @RequestParam Boolean like) {
-        if (noticiaServicio.votar(id, like)) {
+    public ResponseEntity<Void> votar(@PathVariable Integer id, @RequestParam Boolean like,
+            @RequestParam Integer usuarioId) {
+        if (noticiaServicio.votar(id, like, usuarioId)) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{id}/voto")
+    public ResponseEntity<java.util.Map<String, String>> obtenerVoto(@PathVariable Integer id,
+            @RequestParam Integer usuarioId) {
+        String tipo = noticiaServicio.obtenerTipoVoto(id, usuarioId);
+        return ResponseEntity.ok(java.util.Map.of("tipo", tipo != null ? tipo : "NONE"));
     }
 
     @DeleteMapping("/{id}")

@@ -23,18 +23,23 @@ public class InteraccionControlador {
     // --- Comentarios ---
 
     @GetMapping("/comentarios/noticia/{noticiaId}")
-    public ResponseEntity<List<ComentarioEntidad>> listarComentarios(@PathVariable Integer noticiaId) {
-        return ResponseEntity.ok(comentarioServicio.listarPorNoticia(noticiaId));
+    public ResponseEntity<List<ComentarioEntidad>> listarComentarios(@PathVariable Integer noticiaId,
+            @RequestParam(required = false) Integer usuarioId) {
+        return ResponseEntity.ok(comentarioServicio.listarPorNoticia(noticiaId, usuarioId));
     }
 
     @PostMapping("/comentarios")
     public ResponseEntity<?> crearComentario(@RequestBody Map<String, Object> payload) {
         try {
-            Integer noticiaId = (Integer) payload.get("noticiaId");
-            Integer usuarioId = (Integer) payload.get("usuarioId");
+            Integer noticiaId = payload.get("noticiaId") != null ? Integer.valueOf(payload.get("noticiaId").toString())
+                    : null;
+            Integer usuarioId = payload.get("usuarioId") != null ? Integer.valueOf(payload.get("usuarioId").toString())
+                    : null;
             String contenido = (String) payload.get("contenido");
+            Integer padreId = payload.get("padreId") != null ? Integer.valueOf(payload.get("padreId").toString())
+                    : null;
 
-            return ResponseEntity.ok(comentarioServicio.crearComentario(noticiaId, usuarioId, contenido));
+            return ResponseEntity.ok(comentarioServicio.crearComentario(noticiaId, usuarioId, contenido, padreId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -52,17 +57,37 @@ public class InteraccionControlador {
         }
     }
 
+    @PostMapping("/comentarios/{id}/votar")
+    public ResponseEntity<Void> votarComentario(@PathVariable Integer id, @RequestParam Boolean like,
+            @RequestParam Integer usuarioId) {
+        if (comentarioServicio.votar(id, like, usuarioId)) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     // --- Denuncias ---
 
     @PostMapping("/denuncias")
     public ResponseEntity<?> crearDenuncia(@RequestBody Map<String, Object> payload) {
         try {
-            Integer noticiaId = (Integer) payload.get("noticiaId");
-            Integer usuarioId = (Integer) payload.get("usuarioId");
+            Integer noticiaId = payload.get("noticiaId") != null ? Integer.valueOf(payload.get("noticiaId").toString())
+                    : null;
+            Integer comentarioId = payload.get("comentarioId") != null
+                    ? Integer.valueOf(payload.get("comentarioId").toString())
+                    : null;
+            Integer usuarioId = payload.get("usuarioId") != null ? Integer.valueOf(payload.get("usuarioId").toString())
+                    : null;
             String motivo = (String) payload.get("motivo");
             String descripcion = (String) payload.get("descripcion");
 
-            return ResponseEntity.ok(denunciaServicio.crearDenunciaNoticia(noticiaId, usuarioId, motivo, descripcion));
+            if (comentarioId != null) {
+                return ResponseEntity
+                        .ok(denunciaServicio.crearDenunciaComentario(comentarioId, usuarioId, motivo, descripcion));
+            } else {
+                return ResponseEntity
+                        .ok(denunciaServicio.crearDenunciaNoticia(noticiaId, usuarioId, motivo, descripcion));
+            }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

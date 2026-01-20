@@ -9,5 +9,7 @@ import java.util.List;
 public interface ComentarioRepositorio extends JpaRepository<ComentarioEntidad, Integer> {
     List<ComentarioEntidad> findByNoticiaIdOrderByFechaDesc(Integer noticiaId);
 
+    List<ComentarioEntidad> findByNoticiaIdAndPadreIsNullOrderByFechaDesc(Integer noticiaId);
+
     long countByNoticiaId(Integer noticiaId);
 }

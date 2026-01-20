@@ -8,6 +8,19 @@ public class ComentarioDTO {
     private AutorDTO autor;
     private Integer noticiaId;
     private LocalDateTime fecha;
+    private Integer likes = 0;
+    private Integer dislikes = 0;
+    private Integer padreId;
+    private String votoUsuario = "NONE";
+    private java.util.List<ComentarioDTO> respuestas = new java.util.ArrayList<>();
+
+    public String getVotoUsuario() {
+        return votoUsuario;
+    }
+
+    public void setVotoUsuario(String votoUsuario) {
+        this.votoUsuario = votoUsuario;
+    }
 
     public ComentarioDTO() {
     }
@@ -59,6 +72,38 @@ public class ComentarioDTO {
 
     public void setFecha(LocalDateTime fecha) {
         this.fecha = fecha;
+    }
+
+    public Integer getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Integer likes) {
+        this.likes = likes;
+    }
+
+    public Integer getDislikes() {
+        return dislikes;
+    }
+
+    public void setDislikes(Integer dislikes) {
+        this.dislikes = dislikes;
+    }
+
+    public Integer getPadreId() {
+        return padreId;
+    }
+
+    public void setPadreId(Integer padreId) {
+        this.padreId = padreId;
+    }
+
+    public java.util.List<ComentarioDTO> getRespuestas() {
+        return respuestas;
+    }
+
+    public void setRespuestas(java.util.List<ComentarioDTO> respuestas) {
+        this.respuestas = respuestas;
     }
 
     public static class AutorDTO {

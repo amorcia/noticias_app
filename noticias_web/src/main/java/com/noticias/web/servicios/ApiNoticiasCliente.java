@@ -346,9 +346,19 @@ public class ApiNoticiasCliente {
         return response.getBody();
     }
 
-    public void votarNoticia(Integer id, boolean like) {
-        String url = apiUrl + "/noticias/" + id + "/votar?like=" + like;
+    public void votarNoticia(Integer id, boolean like, Integer usuarioId) {
+        String url = apiUrl + "/noticias/" + id + "/votar?like=" + like + "&usuarioId=" + usuarioId;
         restTemplate.postForObject(url, null, Void.class);
+    }
+
+    public String obtenerVotoUsuario(Integer noticiaId, Integer usuarioId) {
+        String url = apiUrl + "/noticias/" + noticiaId + "/voto?usuarioId=" + usuarioId;
+        try {
+            Map<String, String> response = restTemplate.getForObject(url, Map.class);
+            return response != null ? response.get("tipo") : "NONE";
+        } catch (Exception e) {
+            return "NONE";
+        }
     }
 
     public List<NoticiaEliminadaDTO> listarNoticiasEliminadas() {
@@ -397,13 +407,17 @@ public class ApiNoticiasCliente {
         }
     }
 
-    public boolean enviarDenuncia(Integer noticiaId, Integer usuarioId, String motivo, String descripcion) {
+    public boolean enviarDenuncia(Integer noticiaId, Integer comentarioId, Integer usuarioId, String motivo,
+            String descripcion) {
         String url = apiUrl + "/interacciones/denuncias";
-        Map<String, Object> payload = Map.of(
-                "noticiaId", noticiaId,
-                "usuarioId", usuarioId,
-                "motivo", motivo,
-                "descripcion", descripcion != null ? descripcion : "");
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        if (noticiaId != null)
+            payload.put("noticiaId", noticiaId);
+        if (comentarioId != null)
+            payload.put("comentarioId", comentarioId);
+        payload.put("usuarioId", usuarioId);
+        payload.put("motivo", motivo);
+        payload.put("descripcion", descripcion != null ? descripcion : "");
 
         try {
             restTemplate.postForObject(url, payload, String.class);
@@ -428,8 +442,11 @@ public class ApiNoticiasCliente {
         }
     }
 
-    public List<ComentarioDTO> listarComentariosPorNoticia(Integer noticiaId) {
+    public List<ComentarioDTO> listarComentariosPorNoticia(Integer noticiaId, Integer usuarioId) {
         String url = apiUrl + "/interacciones/comentarios/noticia/" + noticiaId;
+        if (usuarioId != null) {
+            url += "?usuarioId=" + usuarioId;
+        }
         ResponseEntity<List<ComentarioDTO>> response = restTemplate.exchange(
                 url, HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<ComentarioDTO>>() {
@@ -441,16 +458,23 @@ public class ApiNoticiasCliente {
         String url = apiUrl + "/interacciones/comentarios";
 
         // Match API payload expectations
-        Map<String, Object> payload = Map.of(
-                "noticiaId", comentario.getNoticiaId(),
-                "usuarioId", comentario.getAutor().getId(),
-                "contenido", comentario.getContenido());
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("noticiaId", comentario.getNoticiaId());
+        payload.put("usuarioId", comentario.getAutor().getId());
+        payload.put("contenido", comentario.getContenido());
+        if (comentario.getPadreId() != null)
+            payload.put("padreId", comentario.getPadreId());
 
         return restTemplate.postForObject(url, payload, ComentarioDTO.class);
     }
 
+    public void votarComentario(Integer id, boolean like, Integer usuarioId) {
+        String url = apiUrl + "/interacciones/comentarios/" + id + "/votar?like=" + like + "&usuarioId=" + usuarioId;
+        restTemplate.postForObject(url, null, Void.class);
+    }
+
     public boolean eliminarComentario(Integer id) {
-        String url = apiUrl + "/comentarios/" + id;
+        String url = apiUrl + "/interacciones/comentarios/" + id;
         try {
             restTemplate.delete(url);
             return true;
@@ -603,6 +627,17 @@ public class ApiNoticiasCliente {
         String url = apiUrl + "/admin/denuncias/" + id + "/resolver?estado=" + estado;
         try {
             restTemplate.postForObject(url, null, Map.class);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean eliminarUsuario(Integer id) {
+        String url = apiUrl + "/usuarios/" + id;
+        try {
+            restTemplate.delete(url);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

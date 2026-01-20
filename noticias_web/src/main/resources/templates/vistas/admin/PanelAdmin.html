@@ -321,7 +321,20 @@
                                         <td th:text="${u.nombreCompleto}">Nombre</td>
                                         <td th:text="${u.email}">email@example.com</td>
                                         <td>
-                                            <span class="badge" th:text="${u.rolNombre}">ROL</span>
+                                            <!-- Si es OWNER, puede cambiar roles -->
+                                            <select
+                                                th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER')}"
+                                                class="form-input"
+                                                style="padding: 0.2rem; height: auto; font-size: 0.8rem; width: auto;"
+                                                th:onchange="'cambiarRol(' + ${u.id} + ', this.value)'">
+                                                <option value="1" th:selected="${u.rolId == 1}">Owner</option>
+                                                <option value="2" th:selected="${u.rolId == 2}">Admin</option>
+                                                <option value="3" th:selected="${u.rolId == 3}">Trabajador</option>
+                                                <option value="4" th:selected="${u.rolId == 4}">User</option>
+                                            </select>
+                                            <span
+                                                th:unless="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER')}"
+                                                class="badge" th:text="${u.rolNombre}">ROL</span>
                                         </td>
                                         <td>
                                             <span th:if="${u.vetado}" class="badge badge-danger">VETADO</span>
@@ -338,6 +351,11 @@
                                                     th:onclick="'desvetarUsuario(' + ${u.id} + ')'"
                                                     style="color: var(--success);">
                                                     <i data-lucide="user-check" style="width: 14px;"></i>
+                                                </button>
+                                                <button class="btn btn-ghost btn-sm"
+                                                    th:onclick="'eliminarUsuario(' + ${u.id} + ')'"
+                                                    style="color: var(--danger);">
+                                                    <i data-lucide="trash-2" style="width: 14px;"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -376,7 +394,7 @@
                                         </td>
                                         <td>
                                             <form th:if="${sancion.estado == 'PENDIENTE'}"
-                                                th:action="@{/admin/sanciones/{id}/resolver(id=${sancion.id})}"
+                                                th:onsubmit="'handleResolverSancion(event, ' + ${sancion.id} + ')'"
                                                 method="post" style="display: flex; gap: 0.5rem;">
                                                 <select name="accion" class="form-input"
                                                     style="padding: 0.3rem; height: auto;">
@@ -722,6 +740,54 @@
                         setTimeout(() => location.reload(), 1500);
                     } else {
                         showFeedback('Error', 'No se pudo actualizar el reporte.', 'error');
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            async function handleResolverSancion(event, id) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                try {
+                    const res = await fetch(`${contextPath}admin/sanciones/${id}/resolver`, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new URLSearchParams(formData)
+                    });
+                    if (res.ok) {
+                        showFeedback('Sanción Resuelta', 'La sanción ha sido procesada correctamente.', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showFeedback('Error', 'No se pudo resolver la sanción.', 'error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showFeedback('Error', 'Error de conexión.', 'error');
+                }
+            }
+
+            async function cambiarRol(id, rolId) {
+                try {
+                    const res = await fetch(`${contextPath}admin/usuarios/${id}/rol?rolId=${rolId}`, { method: 'POST' });
+                    if (res.ok) {
+                        showFeedback('Rol Actualizado', 'El rol del usuario ha sido modificado.', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        const error = await res.text();
+                        showFeedback('Error', error || 'No se pudo cambiar el rol.', 'error');
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            async function eliminarUsuario(id) {
+                if (!confirm('¿Estás seguro de que quieres eliminar este usuario permanentemente?')) return;
+                try {
+                    const res = await fetch(`${contextPath}admin/usuarios/${id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        showFeedback('Usuario Eliminado', 'El usuario ha sido borrado del sistema.', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        const error = await res.text();
+                        showFeedback('Error', error || 'No se pudo eliminar al usuario.', 'error');
                     }
                 } catch (e) { console.error(e); }
             }

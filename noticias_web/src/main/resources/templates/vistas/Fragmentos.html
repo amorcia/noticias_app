@@ -19,7 +19,6 @@
                         Categorías <i data-lucide="chevron-down" style="width: 14px; display: inline;"></i>
                     </a>
                     <div class="dropdown-menu" style="min-width: 200px;">
-                        <!-- Tecnología -->
                         <div class="dropdown-header"
                             style="padding: 0.5rem 1rem; font-weight: 700; color: var(--text-main); font-size: 0.9rem;">
                             Tecnología</div>
@@ -29,7 +28,6 @@
                         <a th:href="@{/categoria/Hardware}" class="dropdown-item"
                             style="padding-left: 1.5rem;">Hardware</a>
 
-                        <!-- Deportes -->
                         <div class="dropdown-header"
                             style="padding: 0.5rem 1rem; font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-top: 0.5rem;">
                             Deportes</div>
@@ -37,7 +35,6 @@
                         <a th:href="@{/categoria/Baloncesto}" class="dropdown-item"
                             style="padding-left: 1.5rem;">Baloncesto</a>
 
-                        <!-- Others -->
                         <div style="border-top: 1px solid var(--border); margin: 0.5rem 0;"></div>
                         <a th:href="@{/categoria/Politica}" class="dropdown-item">Política</a>
                         <a th:href="@{/categoria/Cultura}" class="dropdown-item">Cultura</a>
@@ -50,7 +47,6 @@
                         Vuestras Noticias <i data-lucide="chevron-down" style="width: 14px; display: inline;"></i>
                     </a>
                     <div class="dropdown-menu" style="min-width: 200px;">
-                        <!-- Tecnología -->
                         <div class="dropdown-header"
                             style="padding: 0.5rem 1rem; font-weight: 700; color: var(--text-main); font-size: 0.9rem;">
                             Tecnología</div>
@@ -58,7 +54,6 @@
                         <a th:href="@{/foro/IA}" class="dropdown-item" style="padding-left: 1.5rem;">IA</a>
                         <a th:href="@{/foro/Hardware}" class="dropdown-item" style="padding-left: 1.5rem;">Hardware</a>
 
-                        <!-- Deportes -->
                         <div class="dropdown-header"
                             style="padding: 0.5rem 1rem; font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-top: 0.5rem;">
                             Deportes</div>
@@ -66,7 +61,6 @@
                         <a th:href="@{/foro/Baloncesto}" class="dropdown-item"
                             style="padding-left: 1.5rem;">Baloncesto</a>
 
-                        <!-- Others -->
                         <div style="border-top: 1px solid var(--border); margin: 0.5rem 0;"></div>
                         <a th:href="@{/foro/Politica}" class="dropdown-item">Política</a>
                         <a th:href="@{/foro/Cultura}" class="dropdown-item">Cultura</a>
@@ -75,30 +69,25 @@
             </div>
 
             <div class="nav-actions">
-                <!-- Botón Subir Noticia (Movido a la derecha) -->
+                <!-- Botón Subir (Siempre visible si trabajador/admin) -->
                 <a th:if="${session.usuario != null and (#strings.equalsIgnoreCase(session.usuario.rolNombre, 'TRABAJADOR') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER'))}"
-                    th:href="@{/trabajador/subir-noticia}"
-                    style="display: flex; align-items: center; gap: 0.5rem; background-color: #2563EB; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem; text-decoration: none; font-weight: 500; font-size: 0.875rem; margin-right: 1rem;">
+                    th:href="@{/trabajador/subir-noticia}" class="btn btn-primary btn-sm">
                     <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>
                     Subir
                 </a>
 
                 <div class="user-dropdown" th:if="${session.usuario != null}">
-                    <button class="user-dropdown-btn"
-                        style="border: none; padding: 0; background: none; cursor: pointer;">
-                        <img th:src="'https://ui-avatars.com/api/?name=' + ${session.usuario.nombre} + '&background=0D6EFD&color=fff'"
-                            class="user-avatar"
-                            style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="Avatar">
+                    <button class="user-dropdown-btn">
+                        <img th:src="${session.usuario.imagenUrl != null ? session.usuario.imagenUrl : 'https://ui-avatars.com/api/?name=' + session.usuario.nombreCompleto + '&background=0D6EFD&color=fff'}"
+                            class="user-avatar" alt="Avatar">
                     </button>
                     <div class="dropdown-menu">
                         <a th:href="@{/perfil}" class="dropdown-item">
                             <i data-lucide="user" style="width: 16px; margin-right: 0.5rem;"></i> Mi Perfil
                         </a>
-                        <!-- Botón Ajustes Añadido -->
                         <a th:href="@{/ajustes}" class="dropdown-item">
                             <i data-lucide="settings" style="width: 16px; margin-right: 0.5rem;"></i> Ajustes
                         </a>
-                        <!-- Panel Admin en Azul -->
                         <a th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER')}"
                             th:href="@{/admin/panel}" class="dropdown-item"
                             style="color: var(--primary); font-weight: 500;">
@@ -122,48 +111,36 @@
             document.addEventListener('DOMContentLoaded', () => {
                 lucide.createIcons();
 
-                // User Dropdown
+                // User Dropdown toggle
                 const userBtn = document.querySelector('.user-dropdown-btn');
                 if (userBtn) {
                     userBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        // Close other dropdowns
-                        document.querySelectorAll('.dropdown.active').forEach(d => {
-                            if (!d.contains(userBtn)) d.classList.remove('active');
-                        });
                         const dropdown = userBtn.closest('.user-dropdown');
                         dropdown.classList.toggle('active');
-
-                        // Force icon re-render
-                        if (dropdown.classList.contains('active')) {
-                            setTimeout(() => {
-                                lucide.createIcons();
-                            }, 10);
-                        }
+                        // Close other nav dropdowns
+                        document.querySelectorAll('.dropdown.active').forEach(d => d.classList.remove('active'));
                     });
                 }
 
-                // Nav Dropdowns
-                document.querySelectorAll('.nav-links .dropdown .nav-link').forEach(link => {
+                // Nav Dropdowns (Categorias, Foro)
+                document.querySelectorAll('.dropdown .nav-link').forEach(link => {
                     link.addEventListener('click', (e) => {
-                        if (e.currentTarget.nextElementSibling && e.currentTarget.nextElementSibling.classList.contains('dropdown-menu')) {
+                        const dropdown = link.closest('.dropdown');
+                        if (dropdown) {
                             e.preventDefault();
                             e.stopPropagation();
-                            // Close other dropdowns
+                            dropdown.classList.toggle('active');
+                            // Close user dropdown if open
+                            document.querySelector('.user-dropdown.active')?.classList.remove('active');
+                            // Close other nav dropdowns
                             document.querySelectorAll('.dropdown.active').forEach(d => {
-                                if (d !== e.currentTarget.closest('.dropdown')) d.classList.remove('active');
+                                if (d !== dropdown) d.classList.remove('active');
                             });
-                            e.currentTarget.closest('.dropdown').classList.toggle('active');
-
-                            // Re-render icons here too for nav dropdowns
-                            setTimeout(() => {
-                                lucide.createIcons();
-                            }, 10);
                         }
                     });
                 });
 
-                // Close all on window click
                 window.addEventListener('click', () => {
                     document.querySelectorAll('.dropdown.active, .user-dropdown.active').forEach(d => d.classList.remove('active'));
                 });

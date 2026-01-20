@@ -21,11 +21,17 @@ public class NoticiaServicio {
 
     private final NoticiaRepositorio noticiaRepositorio;
     private final NoticiaEliminadaRepositorio noticiaEliminadaRepositorio;
+    private final com.noticias.api.repositorios.VotoRepositorio votoRepositorio;
+    private final com.noticias.api.repositorios.UsuarioRepositorio usuarioRepositorio;
 
     public NoticiaServicio(NoticiaRepositorio noticiaRepositorio,
-            NoticiaEliminadaRepositorio noticiaEliminadaRepositorio) {
+            NoticiaEliminadaRepositorio noticiaEliminadaRepositorio,
+            com.noticias.api.repositorios.VotoRepositorio votoRepositorio,
+            com.noticias.api.repositorios.UsuarioRepositorio usuarioRepositorio) {
         this.noticiaRepositorio = noticiaRepositorio;
         this.noticiaEliminadaRepositorio = noticiaEliminadaRepositorio;
+        this.votoRepositorio = votoRepositorio;
+        this.usuarioRepositorio = usuarioRepositorio;
     }
 
     public List<NoticiaDTO> listarTodas() {
@@ -144,19 +150,72 @@ public class NoticiaServicio {
         }).orElse(false);
     }
 
+    @Transactional(readOnly = true)
+    public String obtenerTipoVoto(Integer noticiaId, Integer usuarioId) {
+        if (noticiaId == null || usuarioId == null)
+            return "NONE";
+        return votoRepositorio.findByUsuarioAndNoticia(
+                usuarioRepositorio.getReferenceById(usuarioId),
+                noticiaRepositorio.getReferenceById(noticiaId))
+                .map(com.noticias.api.entidades.VotoEntidad::getTipo)
+                .orElse("NONE");
+    }
+
     @Transactional
-    public boolean votar(Integer id, boolean isLike) {
-        if (id == null)
+    public boolean votar(Integer id, boolean isLike, Integer usuarioId) {
+        if (id == null || usuarioId == null)
             return false;
-        return noticiaRepositorio.findById(id).map(noticia -> {
-            if (isLike) {
-                noticia.setLikes(noticia.getLikes() + 1);
+
+        NoticiaEntidad noticia = noticiaRepositorio.findById(id).orElse(null);
+        com.noticias.api.entidades.UsuarioEntidad usuario = usuarioRepositorio.findById(usuarioId).orElse(null);
+
+        if (noticia == null || usuario == null)
+            return false;
+
+        String tipoNuevo = isLike ? "LIKE" : "DISLIKE";
+        Optional<com.noticias.api.entidades.VotoEntidad> votoExistente = votoRepositorio.findByUsuarioAndNoticia(
+                usuario,
+                noticia);
+
+        if (votoExistente.isPresent()) {
+            com.noticias.api.entidades.VotoEntidad voto = votoExistente.get();
+            if (voto.getTipo().equals(tipoNuevo)) {
+                // Si es el mismo tipo, quitamos el voto
+                votoRepositorio.delete(voto);
+                if (isLike)
+                    noticia.setLikes(noticia.getLikes() - 1);
+                else
+                    noticia.setDislikes(noticia.getDislikes() - 1);
             } else {
-                noticia.setDislikes(noticia.getDislikes() + 1);
+                // Si es tipo distinto, cambiamos el voto
+                voto.setTipo(tipoNuevo);
+                voto.setFecha(LocalDateTime.now());
+                votoRepositorio.save(voto);
+                if (isLike) {
+                    noticia.setLikes(noticia.getLikes() + 1);
+                    noticia.setDislikes(noticia.getDislikes() - 1);
+                } else {
+                    noticia.setLikes(noticia.getLikes() - 1);
+                    noticia.setDislikes(noticia.getDislikes() + 1);
+                }
             }
-            noticiaRepositorio.save(noticia);
-            return true;
-        }).orElse(false);
+        } else {
+            // No hay voto previo, creamos uno nuevo
+            com.noticias.api.entidades.VotoEntidad nuevoVoto = new com.noticias.api.entidades.VotoEntidad();
+            nuevoVoto.setNoticia(noticia);
+            nuevoVoto.setUsuario(usuario);
+            nuevoVoto.setTipo(tipoNuevo);
+            nuevoVoto.setFecha(LocalDateTime.now());
+            votoRepositorio.save(nuevoVoto);
+
+            if (isLike)
+                noticia.setLikes(noticia.getLikes() + 1);
+            else
+                noticia.setDislikes(noticia.getDislikes() + 1);
+        }
+
+        noticiaRepositorio.save(noticia);
+        return true;
     }
 
     @Transactional

@@ -19,13 +19,13 @@
 
                 <!-- Botón Publicar (solo si está autenticado) -->
                 <div th:if="${isLoggedIn}">
-                    <a th:href="@{/vuestras-noticias/publicar}" class="btn btn-primary">
+                    <a th:href="@{/trabajador/subir-noticia}" class="btn btn-primary btn-sm">
                         <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
                         Publicar Noticia
                     </a>
                 </div>
                 <div th:unless="${isLoggedIn}">
-                    <a th:href="@{/auth/login}" class="btn btn-primary">
+                    <a th:href="@{/auth/login}" class="btn btn-primary btn-sm">
                         <i data-lucide="log-in" style="width: 18px; height: 18px;"></i>
                         Inicia sesión para publicar
                     </a>

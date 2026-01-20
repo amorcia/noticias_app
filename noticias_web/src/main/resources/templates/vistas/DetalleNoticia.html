@@ -7,44 +7,146 @@
     <title th:text="${noticia.titulo} + ' | NoticiasApp'">Detalle Noticia</title>
     <link rel="stylesheet" th:href="@{/css/estilos.css}">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .vote-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            border: 2px solid var(--border);
+            background: var(--surface);
+            color: var(--text-main);
+        }
+
+        .vote-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .vote-btn.active-like {
+            background: #e0f2fe;
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+
+        .vote-btn.active-dislike {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #dc2626;
+        }
+
+        /* Comment Styling */
+        .comment-node {
+            margin-bottom: 1.5rem;
+            padding-left: 0;
+            position: relative;
+        }
+
+        .comment-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            transition: all 0.2s;
+        }
+
+        .comment-card:hover {
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-md);
+        }
+
+        .comment-replies {
+            margin-left: 3rem;
+            margin-top: 1rem;
+            border-left: 2px solid var(--border);
+            padding-left: 1.5rem;
+        }
+
+        .comment-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .comment-author-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .comment-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .comment-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            cursor: pointer;
+            transition: color 0.2s;
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: inherit;
+            padding: 0;
+        }
+
+        .comment-action-btn:hover {
+            color: var(--primary);
+        }
+
+        .comment-action-btn i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .comment-action-btn.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .reply-form-container {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+    </style>
 </head>
 
 <body style="background: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; min-height: 100vh;">
 
-    <!-- Navbar Container -->
-    <header
-        style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border);">
-        <nav
-            style="max-width: 1200px; margin: 0 auto; height: 80px; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem;">
-            <a th:href="@{/}"
-                style="font-size: 1.8rem; font-weight: 900; color: var(--primary); text-decoration: none;">
-                Noticias<span style="color: var(--text-main);">App</span>
-            </a>
-            <div style="display: flex; gap: 1.5rem; align-items: center;">
-                <a th:href="@{/}" class="btn btn-ghost">Inicio</a>
-                <div th:if="${session.usuario != null}" style="display: flex; gap: 1rem; align-items: center;">
-                    <div th:if="${session.usuario.rol == 'ADMIN' or session.usuario.rol == 'OWNER' or session.usuario.rol == 'TRABAJADOR'}"
-                        style="display: flex; gap: 0.5rem;">
-                        <a th:href="@{/trabajador/subir-noticia}" class="btn btn-ghost" title="Subir Noticia">
-                            <i data-lucide="plus-circle" style="width: 20px;"></i>
-                        </a>
-                        <a th:if="${session.usuario.rol == 'ADMIN' or session.usuario.rol == 'OWNER'}"
-                            th:href="@{/admin/panel}" class="btn btn-ghost" title="Panel Admin">
-                            <i data-lucide="shield" style="width: 20px;"></i>
-                        </a>
-                    </div>
-                    <a th:href="@{/auth/perfil}"
-                        style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-main);">
-                        <img th:if="${session.usuario.imagenUrl != null}" th:src="${session.usuario.imagenUrl}"
-                            style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
-                        <i th:unless="${session.usuario.imagenUrl != null}" data-lucide="user" style="width: 20px;"></i>
-                        <span th:text="${session.usuario.nombreCompleto}" style="font-weight: 600;">Usuario</span>
-                    </a>
-                </div>
-                <a th:unless="${session.usuario != null}" th:href="@{/auth/login}" class="btn btn-primary">Entrar</a>
-            </div>
-        </nav>
-    </header>
+    <!-- Header -->
+    <header th:replace="~{vistas/Fragmentos :: header}"></header>
 
     <main style="max-width: 900px; margin: 3rem auto; padding: 0 1.5rem;">
 
@@ -101,16 +203,17 @@
                 <div style="display: flex; gap: 0.5rem;">
                     <!-- Like/Dislike -->
                     <div style="display: flex; background: #f1f5f9; border-radius: 2rem; padding: 0.25rem;">
-                        <button th:onclick="'toggleLike(' + ${noticia.id} + ')'" class="btn btn-ghost"
-                            style="padding: 0.5rem 1rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <button id="likeBtn" th:onclick="'toggleLike(' + ${noticia.id} + ')'" class="btn btn-ghost"
+                            style="padding: 0.5rem 1rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s;">
                             <i data-lucide="thumbs-up" style="width: 18px;"></i>
-                            <span th:text="${noticia.likes}">0</span>
+                            <span id="likeCount" th:text="${noticia.likes}">0</span>
                         </button>
                         <div style="width: 1px; background: var(--border); margin: 0.5rem 0;"></div>
-                        <button th:onclick="'toggleDislike(' + ${noticia.id} + ')'" class="btn btn-ghost"
-                            style="padding: 0.5rem 1rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <button id="dislikeBtn" th:onclick="'toggleDislike(' + ${noticia.id} + ')'"
+                            class="btn btn-ghost"
+                            style="padding: 0.5rem 1rem; border-radius: 2rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s;">
                             <i data-lucide="thumbs-down" style="width: 18px;"></i>
-                            <span th:text="${noticia.dislikes}">0</span>
+                            <span id="dislikeCount" th:text="${noticia.dislikes}">0</span>
                         </button>
                     </div>
 
@@ -212,7 +315,6 @@
             <!-- Comments List (Loaded via AJAX) -->
             <div id="commentsList">
                 <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                    Cargando comentarios...
                 </div>
             </div>
 
@@ -222,32 +324,51 @@
 
     <!-- Report Modal -->
     <div id="reportModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">Denunciar Noticia</h3>
+        <div class="modal-content" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 id="reportModalTitle" style="font-size: 1.5rem; font-weight: 700;">Denunciar</h3>
+                <button onclick="closeReportModal()"
+                    style="background:none; border:none; cursor:pointer; color:var(--text-muted);">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
             <form id="reportForm">
                 <input type="hidden" id="reportNoticiaId" name="noticiaId">
-                <div class="form-group">
-                    <label class="form-label">Motivo</label>
-                    <select id="reportReason" class="form-control" onchange="checkReason()" required
-                        style="width:100%; padding: 0.75rem; border-radius: 0.5rem; border:1px solid var(--border);">
+                <input type="hidden" id="reportComentarioId" name="comentarioId">
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Motivo de
+                        la denuncia</label>
+                    <select id="reportReason" class="form-input" onchange="checkReason()" required
+                        style="width:100%; padding: 0.75rem; border-radius: 0.5rem; border:1px solid var(--border); background: var(--surface); color: var(--text-main);">
                         <option value="">Selecciona un motivo</option>
-                        <option value="SPAM">Spam o publicidad</option>
-                        <option value="ODIO">Discurso de odio</option>
-                        <option value="FALSO">Información falsa</option>
-                        <option value="OTRO">Otro...</option>
+                        <option value="SPAM">Spam o contenido comercial</option>
+                        <option value="ODIO">Lenguaje de odio o acoso</option>
+                        <option value="FALSO">Desinformación</option>
+                        <option value="INAPROPIADO">Contenido inapropiado</option>
+                        <option value="OTRO">Otro motivo...</option>
                     </select>
                 </div>
-                <div class="form-group" id="customReasonGroup" style="display: none;">
-                    <label class="form-label">Especificar Motivo</label>
-                    <input type="text" id="customReason" class="form-input" placeholder="Escribe el motivo">
+
+                <div class="form-group" id="customReasonGroup" style="display: none; margin-bottom: 1.5rem;">
+                    <label class="form-label"
+                        style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Especificar Motivo</label>
+                    <input type="text" id="customReason" class="form-input" placeholder="Breve descripción del motivo"
+                        style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface);">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Descripción (Opcional)</label>
-                    <textarea id="reportDescription" class="form-input" rows="3"></textarea>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Detalles
+                        adicionales (opcional)</label>
+                    <textarea id="reportDescription" class="form-input" rows="3"
+                        placeholder="Proporciona más contexto si es necesario..."
+                        style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); resize: vertical;"></textarea>
                 </div>
+
                 <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button type="button" class="btn btn-ghost" onclick="closeReportModal()">Cancelar</button>
-                    <button type="button" onclick="submitReport()" class="btn btn-primary" style="flex: 1;">Enviar
+                    <button type="button" class="btn btn-ghost" onclick="closeReportModal()"
+                        style="flex: 1;">Cancelar</button>
+                    <button type="button" onclick="submitReport()" class="btn btn-primary" style="flex: 2;">Enviar
                         Reporte</button>
                 </div>
             </form>
@@ -258,53 +379,165 @@
         const contextPath = /*[[@{/}]]*/ '';
         const NOTICIA_ID = /*[[${noticia.id}]]*/ 0;
         const USUARIO_ID = /*[[${session.usuario != null ? session.usuario.id : 0}]]*/ 0;
+        const USUARIO_ROL = /*[[${session.usuario != null ? session.usuario.rolNombre : ''}]]*/ '';
 
         lucide.createIcons();
 
-        // Load Comments via AJAX
+        // Render Comments recursively
+        function renderComment(c, depth = 0) {
+            if (!c) return '';
+            const authorName = c.usuarioNombre || (c.autor ? c.autor.nombreCompleto : 'Anónimo');
+            const authorId = c.usuarioId || (c.autor ? c.autor.id : null);
+            const authorInitial = (authorName || '?').charAt(0).toUpperCase();
+
+            // Permissions
+            const isAuthor = (USUARIO_ID && USUARIO_ID === authorId);
+            const canDelete = isAuthor || USUARIO_ROL === 'ADMIN' || USUARIO_ROL === 'OWNER';
+
+            const commentHtml = `
+                <div class="comment-node" id="comment-${c.id}" style="${depth > 0 ? '' : 'margin-left: 0;'}">
+                    <div class="comment-card">
+                        <div class="comment-meta">
+                            <div class="comment-author-img">${authorInitial}</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 1rem; color: var(--text-main);">${authorName}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">${c.fecha ? new Date(c.fecha).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }) : ''}</div>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                ${canDelete ? `
+                                    <button onclick="deleteComment(${c.id})" class="btn-ghost" title="Eliminar" style="color: var(--danger); padding: 5px; background:none; border:none; cursor:pointer; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">
+                                        <i data-lucide="trash-2" style="width: 18px;"></i>
+                                    </button>
+                                ` : ''}
+                                <button onclick="openReportModal(null, ${c.id})" class="btn-ghost" title="Reportar" style="color: var(--text-muted); padding: 5px; background:none; border:none; cursor:pointer; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">
+                                    <i data-lucide="flag" style="width: 18px;"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="line-height: 1.6; font-size: 1.05rem; color: var(--text-main); margin: 0.5rem 0;">${c.contenido}</div>
+                        
+                        <div class="comment-actions">
+                            <button onclick="voteComment(${c.id}, 'LIKE')" class="comment-action-btn ${c.votoUsuario === 'LIKE' ? 'active' : ''}" id="comment-like-${c.id}">
+                                <i data-lucide="thumbs-up"></i> <span>${c.likes || 0}</span>
+                            </button>
+                            <button onclick="voteComment(${c.id}, 'DISLIKE')" class="comment-action-btn ${c.votoUsuario === 'DISLIKE' ? 'active' : ''}" id="comment-dislike-${c.id}">
+                                <i data-lucide="thumbs-down"></i> <span>${c.dislikes || 0}</span>
+                            </button>
+                            <button onclick="toggleReplyForm(${c.id})" class="comment-action-btn">
+                                <i data-lucide="reply"></i> Responder
+                            </button>
+                        </div>
+
+                        <div id="reply-form-${c.id}" class="reply-form-container">
+                            <textarea id="reply-text-${c.id}" class="form-input" rows="2" placeholder="Escribe tu respuesta..." 
+                                style="width: 100%; margin: 0.5rem 0; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main);"></textarea>
+                            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                <button onclick="toggleReplyForm(${c.id})" class="btn btn-ghost btn-sm">Cancelar</button>
+                                <button onclick="postComment(${c.id})" class="btn btn-primary btn-sm">Responder</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="comment-replies" id="replies-${c.id}" style="${depth >= 3 ? 'border-left: none; padding-left: 0;' : ''}">
+                        ${c.respuestas && Array.isArray(c.respuestas) && c.respuestas.length > 0 ? c.respuestas.map(r => renderComment(r, depth + 1)).join('') : ''}
+                    </div>
+                </div>
+            `;
+            return commentHtml;
+        }
+
         async function loadComments() {
+            const list = document.getElementById('commentsList');
             try {
-                const response = await fetch(`${contextPath}interacciones/comentarios/noticia/${NOTICIA_ID}`);
+                const url = `${contextPath}interacciones/comentarios/noticia/${NOTICIA_ID}`;
+                console.log("Fetching comments from:", url);
+                const response = await fetch(url);
                 if (response.ok) {
                     const comments = await response.json();
-                    const list = document.getElementById('commentsList');
                     list.innerHTML = '';
                     if (!comments || comments.length === 0) {
-                        list.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">Sé el primero en comentar.</div>';
+                        list.innerHTML = `
+                            <div style="text-align: center; color: var(--text-muted); padding: 4rem 2rem; border: 2px dashed var(--border); border-radius: 1rem;">
+                                <i data-lucide="message-square" style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                <p>Aún no hay comentarios. Sé el primero en opinar.</p>
+                            </div>
+                        `;
+                        lucide.createIcons();
                         return;
                     }
+
+                    let html = '';
                     comments.forEach(c => {
-                        const div = document.createElement('div');
-                        div.style = "margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border);";
-                        const authorName = c.usuarioNombre || (c.autor ? c.autor.nombreCompleto : 'Anónimo');
-                        div.innerHTML = `
-                             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                <strong>${authorName}</strong>
-                                <span style="font-size: 0.85rem; color: var(--text-muted);">${c.fecha ? new Date(c.fecha).toLocaleDateString() : ''}</span>
-                            </div>
-                            <p style="font-size: 1.05rem;">${c.contenido}</p>
-                        `;
-                        list.appendChild(div);
+                        html += renderComment(c);
                     });
+                    list.innerHTML = html;
+                    lucide.createIcons();
+                } else {
+                    console.error("Failed to load comments:", response.status);
+                    list.innerHTML = '<p style="text-align:center; color: var(--danger);">Error al cargar los comentarios.</p>';
                 }
+            } catch (e) {
+                console.error("Error in loadComments:", e);
+                list.innerHTML = '<p style="text-align:center; color: var(--danger);">Error de conexión.</p>';
+            }
+        }
+
+        function toggleReplyForm(id) {
+            if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
+            const form = document.getElementById(`reply-form-${id}`);
+            const text = document.getElementById(`reply-text-${id}`);
+            if (form.style.display === 'block') {
+                form.style.display = 'none';
+            } else {
+                form.style.display = 'block';
+                text.focus();
+            }
+        }
+
+        async function voteComment(commentId, tipo) {
+            if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
+            try {
+                const res = await fetch(`${contextPath}interacciones/comentarios/${commentId}/votar?tipo=${tipo}`, { method: 'POST' });
+                if (res.ok) {
+                    loadComments(); // Re-load to update counts and hierarchy
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function deleteComment(id) {
+            if (!confirm('¿Seguro que quieres eliminar este comentario?')) return;
+            try {
+                const res = await fetch(`${contextPath}interacciones/comentarios/${id}`, { method: 'DELETE' });
+                if (res.ok) loadComments();
+                else showSuccess('Error', 'No se pudo eliminar el comentario', 'error');
             } catch (e) { console.error(e); }
         }
 
         loadComments();
 
-        async function postComment() {
+        async function postComment(padreId = null) {
             if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
-            const content = document.getElementById('commentContent').value;
+
+            const textarea = padreId ? document.getElementById(`reply-text-${padreId}`) : document.getElementById('commentContent');
+            const content = textarea.value;
             if (!content || !content.trim()) return;
 
             try {
+                const payload = {
+                    noticiaId: NOTICIA_ID,
+                    usuarioId: USUARIO_ID,
+                    contenido: content
+                };
+                if (padreId) payload.padreId = padreId;
+
                 const res = await fetch(`${contextPath}interacciones/comentarios`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ noticiaId: NOTICIA_ID, usuarioId: USUARIO_ID, contenido: content })
+                    body: JSON.stringify(payload)
                 });
                 if (res.ok) {
-                    document.getElementById('commentContent').value = '';
+                    textarea.value = '';
+                    if (padreId) toggleReplyForm(padreId);
                     loadComments();
                 } else {
                     showSuccess('Error', 'No se ha podido publicar el comentario. Revisa si has sido sancionado.', 'error');
@@ -315,31 +548,98 @@
             }
         }
 
+        // Voting Logic
+        let currentUserVote = 'NONE';
+
+        async function loadUserVote() {
+            if (!USUARIO_ID) return;
+            try {
+                const res = await fetch(`${contextPath}interacciones/noticia/${NOTICIA_ID}/voto`);
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUserVote = data.voto;
+                    updateVoteStyles();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function updateVoteStyles() {
+            const likeBtn = document.getElementById('likeBtn');
+            const dislikeBtn = document.getElementById('dislikeBtn');
+
+            likeBtn.classList.remove('active-like');
+            dislikeBtn.classList.remove('active-dislike');
+
+            if (currentUserVote === 'LIKE') {
+                likeBtn.classList.add('active-like');
+            } else if (currentUserVote === 'DISLIKE') {
+                dislikeBtn.classList.add('active-dislike');
+            }
+        }
+
         async function toggleLike(id) {
             if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
-            try {
-                const res = await fetch(`${contextPath}interacciones/noticia/${id}/votar?tipo=LIKE`, { method: 'POST' });
-                if (res.ok) location.reload();
-                else showSuccess('Error', 'No se pudo votar', 'error');
-            } catch (e) { console.error(e); }
+            await sendVote(id, 'LIKE');
         }
 
         async function toggleDislike(id) {
             if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
+            await sendVote(id, 'DISLIKE');
+        }
+
+        async function sendVote(id, tipo) {
             try {
-                const res = await fetch(`${contextPath}interacciones/noticia/${id}/votar?tipo=DISLIKE`, { method: 'POST' });
-                if (res.ok) location.reload();
-                else showSuccess('Error', 'No se pudo votar', 'error');
+                const res = await fetch(`${contextPath}interacciones/noticia/${id}/votar?tipo=${tipo}`, { method: 'POST' });
+                if (res.ok) {
+                    // Actualizar counts y estado localmente para feedback inmediato
+                    const oldVote = currentUserVote;
+                    if (oldVote === tipo) {
+                        currentUserVote = 'NONE';
+                        decrementCount(tipo);
+                    } else {
+                        if (oldVote !== 'NONE') decrementCount(oldVote);
+                        currentUserVote = tipo;
+                        incrementCount(tipo);
+                    }
+                    updateVoteStyles();
+                } else {
+                    showSuccess('Error', 'No se pudo registrar el voto', 'error');
+                }
             } catch (e) { console.error(e); }
         }
+
+        function incrementCount(tipo) {
+            const el = document.getElementById(tipo.toLowerCase() + 'Count');
+            el.innerText = parseInt(el.innerText) + 1;
+        }
+        function decrementCount(tipo) {
+            const el = document.getElementById(tipo.toLowerCase() + 'Count');
+            el.innerText = Math.max(0, parseInt(el.innerText) - 1);
+        }
+
+        loadUserVote();
 
         // Modal Reports
         const reportModal = document.getElementById('reportModal');
         const successModal = document.getElementById('successModal');
 
-        function openReportModal(id) {
+        function openReportModal(noticiaId, comentarioId = null) {
             if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
-            document.getElementById('reportNoticiaId').value = id;
+
+            // Reset
+            document.getElementById('reportForm').reset();
+            document.getElementById('customReasonGroup').style.display = 'none';
+
+            if (comentarioId) {
+                document.getElementById('reportModalTitle').innerText = 'Denunciar Comentario';
+                document.getElementById('reportNoticiaId').value = '';
+                document.getElementById('reportComentarioId').value = comentarioId;
+            } else {
+                document.getElementById('reportModalTitle').innerText = 'Denunciar Noticia';
+                document.getElementById('reportNoticiaId').value = noticiaId || NOTICIA_ID;
+                document.getElementById('reportComentarioId').value = '';
+            }
+
             reportModal.classList.add('open');
         }
         function closeReportModal() {
@@ -353,6 +653,7 @@
         async function submitReport() {
             if (!USUARIO_ID) return location.href = `${contextPath}auth/login`;
             const noticiaId = document.getElementById('reportNoticiaId').value;
+            const comentarioId = document.getElementById('reportComentarioId').value;
             let motivo = document.getElementById('reportReason').value;
             if (motivo === 'OTRO') {
                 motivo = document.getElementById('customReason').value;
@@ -362,10 +663,18 @@
             if (!motivo) return alert('Selecciona un motivo');
 
             try {
+                const payload = {
+                    usuarioId: USUARIO_ID,
+                    motivo: motivo,
+                    descripcion: descripcion
+                };
+                if (noticiaId) payload.noticiaId = Number(noticiaId);
+                if (comentarioId) payload.comentarioId = Number(comentarioId);
+
                 const res = await fetch(`${contextPath}interacciones/denuncias`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ noticiaId: Number(noticiaId), usuarioId: USUARIO_ID, motivo: motivo, descripcion: descripcion })
+                    body: JSON.stringify(payload)
                 });
                 if (res.ok) {
                     closeReportModal();

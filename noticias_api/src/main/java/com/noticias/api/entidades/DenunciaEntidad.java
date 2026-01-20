@@ -11,8 +11,12 @@ public class DenunciaEntidad {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "noticia_id", nullable = false)
+    @JoinColumn(name = "noticia_id", nullable = true)
     private NoticiaEntidad noticia;
+
+    @ManyToOne
+    @JoinColumn(name = "comentario_id", nullable = true)
+    private ComentarioEntidad comentario;
 
     @ManyToOne
     @JoinColumn(name = "denunciante_id", nullable = false)
@@ -47,6 +51,14 @@ public class DenunciaEntidad {
 
     public void setNoticia(NoticiaEntidad noticia) {
         this.noticia = noticia;
+    }
+
+    public ComentarioEntidad getComentario() {
+        return comentario;
+    }
+
+    public void setComentario(ComentarioEntidad comentario) {
+        this.comentario = comentario;
     }
 
     public UsuarioEntidad getDenunciante() {
