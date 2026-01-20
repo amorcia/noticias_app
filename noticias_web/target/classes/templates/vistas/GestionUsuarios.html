@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Usuarios - NoticiasApp</title>
+  <link rel="stylesheet" th:href="@{/css/estilos.css}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="contenedor-principal">
+    <div class="tarjeta tarjeta-gestion">
+
+      <div class="encabezado-gestion">
+        <a th:href="@{/menu}" class="btn-volver">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 19-7-7 7-7" />
+            <path d="M19 12H5" />
+          </svg>
+          Volver
+        </a>
+        <h1>Gestión de Usuarios</h1>
+        <div style="width: 80px;"></div>
+      </div>
+
+      <div th:if="${error}" class="mensaje-error visible">
+        <span th:text="${error}">Error message</span>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="d-flex justify-between mb-3 align-center"
+        style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+        <button type="button" class="btn btn-primario" style="width: auto;"
+          onclick="document.getElementById('modalCrear').classList.add('visible')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <line x1="20" x2="20" y1="8" y2="14" />
+            <line x1="23" x2="17" y1="11" y2="11" />
+          </svg>
+          Añadir Usuario
+        </button>
+
+        <form th:action="@{/usuarios/eliminar}" method="post" id="formEliminar">
+          <button type="button" class="btn btn-peligro" style="width: auto;" onclick="confirmarEliminacion()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              <line x1="10" x2="10" y1="11" y2="17" />
+              <line x1="14" x2="14" y1="11" y2="17" />
+            </svg>
+            Eliminar Seleccionados
+          </button>
+        </form>
+      </div>
+
+      <!-- Tabla de Usuarios -->
+      <div style="overflow-x: auto;">
+        <div th:if="${#lists.isEmpty(usuarios)}" class="mensaje-info" style="text-align: center; padding: 2rem;">
+          <p>No hay usuarios registrados o no se pudieron cargar.</p>
+        </div>
+
+        <table class="tabla-gestion" th:if="${not #lists.isEmpty(usuarios)}">
+          <thead>
+            <tr>
+              <th>Select</th>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="usuario : ${usuarios}">
+              <td>
+                <div class="grupo-form-checkbox">
+                  <input type="checkbox" name="emails" th:value="${usuario.email}" form="formEliminar"
+                    class="input-checkbox"
+                    th:disabled="${currentEmail == usuario.email 
+                                                          or (currentUserRole == 'Admin' and (usuario.rolNombre == 'Admin' or usuario.rolNombre == 'Owner'))
+                                                          or (currentUserRole == 'Owner' and usuario.rolNombre == 'Owner')}">
+                </div>
+              </td>
+              <td>
+                <div class="perfil-usuario-tabla">
+                  <img th:src="'https://api.dicebear.com/7.x/avataaars/svg?seed=' + ${usuario.nombre}" alt="Avatar"
+                    class="avatar-tabla">
+                  <div class="info-usuario-tabla">
+                    <span class="nombre" th:text="${usuario.nombre}">Nombre</span>
+                    <span class="email" th:text="${usuario.email}">email@ejemplo.com</span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span th:text="${usuario.rolNombre}"
+                  th:class="${'tag-rol ' + (usuario.rolNombre == 'Owner' ? 'admin' : (usuario.rolNombre == 'Admin' ? 'admin' : 'miembro'))}">
+                  ROL
+                </span>
+              </td>
+              <td class="acciones-tabla">
+                <!-- Botón Editar: Deshabilitado para Admin si el objetivo es Owner -->
+                <button type="button" class="btn-icono editar" title="Editar" th:data-nombre="${usuario.nombre}"
+                  th:data-email="${usuario.email}" th:data-rol="${usuario.rolNombre}" onclick="abrirModalEditar(this)"
+                  th:disabled="${currentUserRole == 'Admin' and usuario.rolNombre == 'Owner'}"
+                  th:style="${currentUserRole == 'Admin' and usuario.rolNombre == 'Owner' ? 'opacity: 0.5; cursor: not-allowed;' : ''}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                    <path d="m15 5 4 4" />
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Crear Usuario -->
+  <div id="modalCrear" class="modal-superposicion">
+    <div class="modal-contenido">
+      <button type="button" class="btn-cerrar-modal"
+        onclick="document.getElementById('modalCrear').classList.remove('visible')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18" />
+          <path d="m6 6 18 18" />
+        </svg>
+      </button>
+      <h2>Nuevo Usuario</h2>
+      <form th:action="@{/usuarios}" method="post" th:object="${nuevoUsuario}" class="form-gestion-usuario">
+        <div class="grupo-form">
+          <label>Nombre</label>
+          <input type="text" name="nombre" class="input-texto" required>
+        </div>
+        <div class="grupo-form">
+          <label>Email</label>
+          <input type="email" name="email" class="input-texto" required>
+        </div>
+        <div class="grupo-form">
+          <label>Rol</label>
+          <select name="rol" id="selectRolCrear" class="select-rol">
+            <!-- Opciones se llenarán dinámicamente según el rol del usuario actual -->
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primario">Guardar Usuario</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Editar Usuario -->
+  <div id="modalEditar" class="modal-superposicion">
+    <div class="modal-contenido">
+      <button type="button" class="btn-cerrar-modal"
+        onclick="document.getElementById('modalEditar').classList.remove('visible')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18" />
+          <path d="m6 6 18 18" />
+        </svg>
+      </button>
+      <h2>Editar Usuario</h2>
+      <form th:action="@{/usuarios/actualizar}" method="post" class="form-gestion-usuario">
+        <input type="hidden" id="editEmailOriginal" name="emailOriginal">
+
+        <div class="grupo-form">
+          <label>Nombre</label>
+          <input type="text" id="editNombre" name="nombre" class="input-texto" required>
+        </div>
+        <div class="grupo-form">
+          <label>Email</label>
+          <input type="email" id="editEmail" name="email" class="input-texto" required>
+        </div>
+        <div class="grupo-form">
+          <label>Rol</label>
+          <select id="editRol" name="rol" class="select-rol">
+            <!-- Opciones se llenarán dinámicamente según el rol del usuario actual -->
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primario">Actualizar Usuario</button>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    const currentUserRole = /*[[${currentUserRole}]]*/ 'User';
+    /*]]>*/
+  </script>
+  <script th:src="@{/js/rbac.js}"></script>
+  <script th:src="@{/js/custom-alert.js}"></script>
+  <script>
+    function confirmarEliminacion() {
+      // Verificar si hay checkboxes seleccionados
+      const checkboxes = document.querySelectorAll('input[name="emails"]:checked');
+      if (checkboxes.length === 0) {
+        CustomAlert.show('Por favor, selecciona al menos un usuario para eliminar.');
+        return;
+      }
+
+      CustomAlert.confirm('¿Estás seguro de eliminar los usuarios seleccionados? Esta acción no se puede deshacer.', function () {
+        document.getElementById('formEliminar').submit();
+      });
+    }
+
+    function abrirModalEditar(btn) {
+      if (btn.disabled) return;
+
+      const nombre = btn.getAttribute('data-nombre');
+      const email = btn.getAttribute('data-email');
+      const rol = btn.getAttribute('data-rol');
+
+      document.getElementById('editEmailOriginal').value = email;
+      document.getElementById('editNombre').value = nombre;
+      document.getElementById('editEmail').value = email;
+
+      // Poblar opciones de rol según permisos
+      RBAC.populateRoleSelect('editRol', currentUserRole);
+
+      // Seleccionar el rol actual
+      const selectRol = document.getElementById('editRol');
+      // Esperar a que se pueble el select
+      setTimeout(() => {
+        for (let i = 0; i < selectRol.options.length; i++) {
+          if (selectRol.options[i].value === rol) {
+            selectRol.selectedIndex = i;
+            break;
+          }
+        }
+      }, 0);
+
+      document.getElementById('modalEditar').classList.add('visible');
+    }
+
+    // Inicializar select de roles al cargar la página
+    document.addEventListener('DOMContentLoaded', function () {
+      console.log('Inicializando RBAC para usuario:', currentUserRole);
+      if (typeof RBAC !== 'undefined') {
+        RBAC.populateRoleSelect('selectRolCrear', currentUserRole);
+      }
+    });
+  </script>
+</body>
+
+</html>
