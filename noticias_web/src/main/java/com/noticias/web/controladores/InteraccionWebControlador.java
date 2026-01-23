@@ -56,12 +56,18 @@ public class InteraccionWebControlador {
     }
 
     @GetMapping("/comentarios/noticia/{id}")
-    public ResponseEntity<List<ComentarioDTO>> listarComentarios(@PathVariable Integer id,
+    public ResponseEntity<?> listarComentarios(@PathVariable Integer id,
             jakarta.servlet.http.HttpSession session) {
-        com.noticias.web.dtos.UsuarioDTO usuario = (com.noticias.web.dtos.UsuarioDTO) session.getAttribute("usuario");
-        Integer usuarioId = usuario != null ? usuario.getId() : null;
-        List<ComentarioDTO> comentarios = apiCliente.listarComentariosPorNoticia(id, usuarioId);
-        return ResponseEntity.ok(comentarios);
+        try {
+            com.noticias.web.dtos.UsuarioDTO usuario = (com.noticias.web.dtos.UsuarioDTO) session
+                    .getAttribute("usuario");
+            Integer usuarioId = usuario != null ? usuario.getId() : null;
+            List<ComentarioDTO> comentarios = apiCliente.listarComentariosPorNoticia(id, usuarioId);
+            return ResponseEntity.ok(comentarios);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error al obtener comentarios: " + e.getMessage());
+        }
     }
 
     // Proxy para denuncias

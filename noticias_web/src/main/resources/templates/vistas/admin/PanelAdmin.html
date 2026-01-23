@@ -649,13 +649,16 @@
                 event.preventDefault();
                 const formData = new FormData(event.target);
                 try {
-                    const res = await fetch(`${contextPath}trabajador/noticias/borrar`, {
+                    let baseUrl = contextPath;
+                    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+
+                    const res = await fetch(`${baseUrl}/trabajador/noticias/borrar`, {
                         method: 'POST',
                         body: new URLSearchParams(formData)
                     });
                     if (res.ok) {
                         if (currentReportId) {
-                            await fetch(`${contextPath}admin/denuncias/${currentReportId}/resolver?estado=RESUELTA`, { method: 'POST' });
+                            await fetch(`${baseUrl}/admin/denuncias/${currentReportId}/resolver?estado=RESUELTA`, { method: 'POST' });
                         }
                         closeDeleteModal();
                         showFeedback('Eliminado', 'La noticia ha sido borrada.', 'success');
@@ -708,7 +711,9 @@
                 const userId = document.getElementById('vetoUserId').value;
                 const motivo = document.getElementById('vetoMotivo').value;
                 try {
-                    const res = await fetch(`${contextPath}admin/usuarios/${userId}/vetar?motivo=${encodeURIComponent(motivo)}`, { method: 'POST' });
+                    let baseUrl = contextPath;
+                    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                    const res = await fetch(`${baseUrl}/admin/usuarios/${userId}/vetar?motivo=${encodeURIComponent(motivo)}`, { method: 'POST' });
                     if (res.ok) {
                         closeVetoModal();
                         showFeedback('Usuario Vetado', 'El usuario ha sido deshabilitado.', 'success');
@@ -722,7 +727,9 @@
 
             async function desvetarUsuario(id) {
                 try {
-                    const res = await fetch(`${contextPath}admin/usuarios/${id}/desvetar`, { method: 'POST' });
+                    let baseUrl = contextPath;
+                    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                    const res = await fetch(`${baseUrl}/admin/usuarios/${id}/desvetar`, { method: 'POST' });
                     if (res.ok) {
                         showFeedback('Usuario Activado', 'El usuario vuelve a tener acceso.', 'success');
                         setTimeout(() => location.reload(), 1500);
@@ -734,7 +741,9 @@
 
             async function resolverDenuncia(id, estado) {
                 try {
-                    const res = await fetch(`${contextPath}admin/denuncias/${id}/resolver?estado=${estado}`, { method: 'POST' });
+                    let baseUrl = contextPath;
+                    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                    const res = await fetch(`${baseUrl}/admin/denuncias/${id}/resolver?estado=${estado}`, { method: 'POST' });
                     if (res.ok) {
                         showFeedback('Reporte Actualizado', 'El reporte ha sido marcado como ' + estado.toLowerCase() + '.', 'success');
                         setTimeout(() => location.reload(), 1500);
@@ -748,7 +757,9 @@
                 event.preventDefault();
                 const formData = new FormData(event.target);
                 try {
-                    const res = await fetch(`${contextPath}admin/sanciones/${id}/resolver`, {
+                    let baseUrl = contextPath;
+                    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                    const res = await fetch(`${baseUrl}/admin/sanciones/${id}/resolver`, {
                         method: 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         body: new URLSearchParams(formData)
@@ -767,7 +778,9 @@
 
             async function cambiarRol(id, rolId) {
                 try {
-                    const res = await fetch(`${contextPath}admin/usuarios/${id}/rol?rolId=${rolId}`, { method: 'POST' });
+                    let baseUrl = contextPath;
+                    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                    const res = await fetch(`${baseUrl}/admin/usuarios/${id}/rol?rolId=${rolId}`, { method: 'POST' });
                     if (res.ok) {
                         showFeedback('Rol Actualizado', 'El rol del usuario ha sido modificado.', 'success');
                         setTimeout(() => location.reload(), 1500);
@@ -781,7 +794,9 @@
             async function eliminarUsuario(id) {
                 if (!confirm('¿Estás seguro de que quieres eliminar este usuario permanentemente?')) return;
                 try {
-                    const res = await fetch(`${contextPath}admin/usuarios/${id}`, { method: 'DELETE' });
+                    let baseUrl = contextPath;
+                    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                    const res = await fetch(`${baseUrl}/admin/usuarios/${id}`, { method: 'DELETE' });
                     if (res.ok) {
                         showFeedback('Usuario Eliminado', 'El usuario ha sido borrado del sistema.', 'success');
                         setTimeout(() => location.reload(), 1500);

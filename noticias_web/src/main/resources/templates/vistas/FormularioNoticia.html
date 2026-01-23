@@ -59,20 +59,39 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label for="file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Imagen o
-                        Multimedia (Opcional)</label>
+                    <label for="file" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Imagen
+                        (Opcional)</label>
                     <div style="border: 2px dashed var(--border); padding: 2rem; text-align: center; border-radius: var(--radius); cursor: pointer;"
                         onclick="document.getElementById('file').click()">
-                        <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Haz clic para seleccionar un archivo
+                        <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Haz clic para seleccionar una imagen
                         </p>
-                        <input type="file" id="file" name="file" accept="image/*,video/*" style="display: none;"
+                        <p style="color: var(--text-muted); font-size: 0.875rem;">Formatos: JPEG, PNG, WebP, AVIF (máx.
+                            5MB)</p>
+                        <input type="file" id="file" name="file"
+                            accept="image/jpeg,image/jpg,image/png,image/webp,image/avif" style="display: none;"
                             onchange="previewImage(this)">
                         <div id="image-preview-container" style="margin-top: 1rem; display: none;">
                             <img id="image-preview" src="#" alt="Vista previa"
                                 style="max-width: 100%; max-height: 300px; border-radius: var(--radius); box-shadow: var(--shadow-sm);">
+                            <p id="file-info"
+                                style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-muted);"></p>
                         </div>
                         <p id="file-name" class="file-name"
                             style="margin-top: 0.5rem; font-weight: 600; color: var(--primary);"></p>
+                        <p id="file-error" style="margin-top: 0.5rem; color: #ef4444; font-weight: 600; display: none;">
+                        </p>
+
+                        <!-- Progress Bar -->
+                        <div id="upload-progress-container" style="display: none; margin-top: 1rem;">
+                            <div style="background: #e2e8f0; border-radius: 9999px; height: 8px; overflow: hidden;">
+                                <div id="upload-progress-bar"
+                                    style="background: linear-gradient(90deg, #3b82f6, #2563eb); height: 100%; width: 0%; transition: width 0.3s ease;">
+                                </div>
+                            </div>
+                            <p id="upload-progress-text"
+                                style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--primary); font-weight: 600;">
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -81,16 +100,60 @@
                         const previewContainer = document.getElementById('image-preview-container');
                         const previewImage = document.getElementById('image-preview');
                         const fileName = document.getElementById('file-name');
+                        const fileInfo = document.getElementById('file-info');
+                        const fileError = document.getElementById('file-error');
+
+                        // Reset error
+                        fileError.style.display = 'none';
+                        fileError.textContent = '';
 
                         if (input.files && input.files[0]) {
                             const file = input.files[0];
-                            fileName.textContent = file.name;
+                            const maxSize = 5 * 1024 * 1024; // 5MB
+                            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
 
+                            console.log('File selected:', file.name, 'Type:', file.type, 'Size:', file.size);
+
+                            // Validate file type
+                            if (!allowedTypes.includes(file.type)) {
+                                fileError.textContent = '❌ Formato no permitido. Solo JPEG, PNG, WebP o AVIF.';
+                                fileError.style.display = 'block';
+                                fileName.textContent = '';
+                                previewContainer.style.display = 'none';
+                                input.value = ''; // Clear input
+                                return;
+                            }
+
+                            // Validate file size
+                            if (file.size > maxSize) {
+                                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                                fileError.textContent = `❌ Archivo demasiado grande (${sizeMB}MB). Máximo 5MB.`;
+                                fileError.style.display = 'block';
+                                fileName.textContent = '';
+                                previewContainer.style.display = 'none';
+                                input.value = ''; // Clear input
+                                return;
+                            }
+
+                            // Display file info
+                            fileName.textContent = '✓ ' + file.name;
+                            const sizeKB = (file.size / 1024).toFixed(2);
+                            fileInfo.textContent = `Tamaño: ${sizeKB} KB | Tipo: ${file.type.split('/')[1].toUpperCase()}`;
+
+                            // Preview image
                             if (file.type.startsWith('image/')) {
                                 const reader = new FileReader();
                                 reader.onload = function (e) {
                                     previewImage.src = e.target.result;
                                     previewContainer.style.display = 'block';
+
+                                    // Get image dimensions
+                                    const img = new Image();
+                                    img.onload = function () {
+                                        fileInfo.textContent += ` | Dimensiones: ${this.width}x${this.height}px`;
+                                        console.log('Image dimensions:', this.width, 'x', this.height);
+                                    };
+                                    img.src = e.target.result;
                                 }
                                 reader.readAsDataURL(file);
                             } else {
@@ -98,6 +161,48 @@
                             }
                         }
                     }
+
+                    // Handle form submission with progress
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const form = document.querySelector('form[action*="publicar"]');
+                        if (!form) return;
+
+                        form.addEventListener('submit', function (e) {
+                            const fileInput = document.getElementById('file');
+                            const submitBtn = form.querySelector('button[type="submit"]');
+                            const progressContainer = document.getElementById('upload-progress-container');
+                            const progressBar = document.getElementById('upload-progress-bar');
+                            const progressText = document.getElementById('upload-progress-text');
+
+                            if (fileInput && fileInput.files && fileInput.files[0]) {
+                                console.log('Submitting form with file:', fileInput.files[0].name);
+
+                                // Show progress bar
+                                progressContainer.style.display = 'block';
+                                progressBar.style.width = '0%';
+                                progressText.textContent = 'Subiendo imagen...';
+
+                                // Disable submit button
+                                submitBtn.disabled = true;
+                                submitBtn.textContent = 'Subiendo...';
+
+                                // Simulate progress (since we can't track actual upload progress with form submission)
+                                let progress = 0;
+                                const interval = setInterval(() => {
+                                    progress += 10;
+                                    if (progress <= 90) {
+                                        progressBar.style.width = progress + '%';
+                                        progressText.textContent = `Subiendo imagen... ${progress}%`;
+                                    }
+                                }, 200);
+
+                                // Clear interval after 3 seconds (form should have submitted by then)
+                                setTimeout(() => clearInterval(interval), 3000);
+                            } else {
+                                console.log('Submitting form without file');
+                            }
+                        });
+                    });
                 </script>
 
                 <div class="form-group" style="margin-bottom: 2rem;">

@@ -125,20 +125,26 @@ public class NoticiaControlador {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Usuario vetado. No puedes publicar.");
             }
 
-            // 2. Moderación NSFW (Solo si hay archivo)
+            // 2. Validación y procesamiento de imagen
             String imagenUrl = null;
             if (file != null && !file.isEmpty()) {
+                // Validar tipo y tamaño (lanza IllegalArgumentException si falla)
+                almacenamientoServicio.validarTipoImagen(file);
+                almacenamientoServicio.validarTamañoArchivo(file);
+
+                // 3. Moderación NSFW
                 if (moderacionServicio.esContenidoNSFW(file)) {
                     moderacionServicio.vetarUsuarioAutomaticamente(autor,
                             "Intento de subir contenido +18 detectado por IA.");
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                             .body("Contenido inapropiado detectado. Has sido vetado por 7 días.");
                 }
-                // 3. Almacenar Archivo
+
+                // 4. Almacenar y optimizar archivo
                 imagenUrl = almacenamientoServicio.almacenar(file);
             }
 
-            // 4. Crear Noticia
+            // 5. Crear Noticia
             NoticiaEntidad noticia = new NoticiaEntidad();
             noticia.setTitulo(titulo);
             noticia.setSubtitulo(subtitulo);
@@ -146,15 +152,14 @@ public class NoticiaControlador {
             noticia.setImagenUrl(imagenUrl);
 
             // Determinar si es aportación de usuario (foro) o noticia oficial
-            // Privileged users (TRABAJADOR, ADMIN, OWNER) create official news
             String rolNombre = autor.getRol() != null ? autor.getRol().getNombre() : "";
             boolean esOficial = "TRABAJADOR".equalsIgnoreCase(rolNombre) ||
                     "ADMIN".equalsIgnoreCase(rolNombre) ||
                     "OWNER".equalsIgnoreCase(rolNombre);
-            noticia.setEsAportacionUsuario(!esOficial); // true for forum, false for official
+            noticia.setEsAportacionUsuario(!esOficial);
             noticia.setAutor(autor);
 
-            // Asignar categoría (simplificado, idealmente buscar entidad)
+            // Asignar categoría
             com.noticias.api.entidades.CategoriaEntidad cat = new com.noticias.api.entidades.CategoriaEntidad();
             cat.setId(categoriaId);
             noticia.setCategoria(cat);
@@ -163,9 +168,11 @@ public class NoticiaControlador {
             return ResponseEntity.status(HttpStatus.CREATED).body(creada);
 
         } catch (IllegalArgumentException e) {
+            // Errores de validación (tipo de archivo, tamaño, etc.)
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al publicar: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al publicar: " + e.getMessage());
         }
     }
 

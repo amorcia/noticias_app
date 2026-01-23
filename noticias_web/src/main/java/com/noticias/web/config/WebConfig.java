@@ -12,8 +12,8 @@ public class WebConfig implements WebMvcConfigurer {
         // Map /css/** to the static/css directory
         registry.addResourceHandler("/css/**")
                 .addResourceLocations("classpath:/static/css/");
-        // Map /uploads/** to the shared volume
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:/uploads/");
+
+        // Las imágenes ahora se sirven via ImagenProxyControlador
+        // que hace proxy a la API en lugar de servir archivos estáticos
     }
 }
