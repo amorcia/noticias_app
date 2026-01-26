@@ -82,6 +82,8 @@ public class TrabajadorControlador {
     public org.springframework.http.ResponseEntity<?> borrarNoticia(
             @org.springframework.web.bind.annotation.RequestParam String titulo,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String motivo,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String descripcion,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer eliminadorId,
             @org.springframework.web.bind.annotation.RequestHeader(value = "X-Requested-With", required = false) String requestedWith,
             HttpSession session,
             org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
@@ -107,13 +109,27 @@ public class TrabajadorControlador {
                     .body("No tienes permiso para borrar esta noticia");
         }
 
-        // Determinar motivo
-        String motivoFinal = motivo;
-        if (esAutor && (motivo == null || motivo.isBlank())) {
-            motivoFinal = "Eliminado por el propietario";
-        }
+        // Si es el autor eliminando su propia noticia, pasar null para no archivar
+        // Si es admin eliminando noticia de otro, validar y pasar motivo/descripción
+        String motivoFinal = null;
+        String descripcionFinal = null;
 
-        boolean exito = apiCliente.eliminarNoticiaPorTitulo(titulo, motivoFinal, usuario.getId());
+        if (!esAutor && esAdmin) {
+            // Es admin eliminando noticia de otro - requiere motivo y descripción
+            if (motivo == null || motivo.isBlank()) {
+                return org.springframework.http.ResponseEntity.status(400)
+                        .body("El motivo es obligatorio para eliminaciones administrativas");
+            }
+            if (descripcion == null || descripcion.isBlank()) {
+                return org.springframework.http.ResponseEntity.status(400)
+                        .body("La descripción es obligatoria para eliminaciones administrativas");
+            }
+            motivoFinal = motivo;
+            descripcionFinal = descripcion;
+        }
+        // Si esAutor, motivoFinal y descripcionFinal quedan como null
+
+        boolean exito = apiCliente.eliminarNoticiaPorTitulo(titulo, motivoFinal, descripcionFinal, usuario.getId());
 
         if (exito) {
             return org.springframework.http.ResponseEntity.ok("Noticia eliminada");

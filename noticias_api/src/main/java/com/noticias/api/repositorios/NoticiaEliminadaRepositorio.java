@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface NoticiaEliminadaRepositorio extends JpaRepository<NoticiaEliminadaEntidad, Integer> {
+public interface NoticiaEliminadaRepositorio extends JpaRepository<NoticiaEliminadaEntidad, Long> {
     List<NoticiaEliminadaEntidad> findByRolEliminadorIn(List<String> roles);
 }

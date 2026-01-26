@@ -219,21 +219,28 @@ public class NoticiaServicio {
     }
 
     @Transactional
-    public boolean eliminarNoticia(Integer id, String motivo, com.noticias.api.entidades.UsuarioEntidad eliminador) {
+    public boolean eliminarNoticia(Integer id, String motivo, String descripcion,
+            com.noticias.api.entidades.UsuarioEntidad eliminador) {
         if (id != null && noticiaRepositorio.existsById(id)) {
             NoticiaEntidad noticia = noticiaRepositorio.findById(id).orElse(null);
             if (noticia != null) {
-                // Archivar
-                String rol = eliminador != null && eliminador.getRol() != null ? eliminador.getRol().getNombre()
-                        : "DESCONOCIDO";
-                String eliminadoPor = eliminador != null ? eliminador.getEmail() : "Sistema";
-                String motivoFinal = motivo != null && !motivo.isBlank() ? motivo : "Sin motivo especificado";
+                // Solo archivar si es eliminación administrativa (eliminador diferente al
+                // autor)
+                boolean esEliminacionAdministrativa = eliminador != null
+                        && noticia.getAutor() != null
+                        && !eliminador.getId().equals(noticia.getAutor().getId());
 
-                com.noticias.api.entidades.NoticiaEliminadaEntidad eliminada = new com.noticias.api.entidades.NoticiaEliminadaEntidad(
-                        noticia, motivoFinal, eliminadoPor, rol);
-                noticiaEliminadaRepositorio.save(eliminada);
+                if (esEliminacionAdministrativa) {
+                    // Archivar la noticia eliminada
+                    String motivoFinal = motivo != null && !motivo.isBlank() ? motivo : "Sin motivo especificado";
+                    String descripcionFinal = descripcion != null && !descripcion.isBlank() ? descripcion : "";
 
-                // Eliminar
+                    com.noticias.api.entidades.NoticiaEliminadaEntidad eliminada = new com.noticias.api.entidades.NoticiaEliminadaEntidad(
+                            noticia, motivoFinal, descripcionFinal, eliminador);
+                    noticiaEliminadaRepositorio.save(eliminada);
+                }
+
+                // Eliminar noticia original (siempre)
                 noticiaRepositorio.deleteById(id);
                 return true;
             }
@@ -243,17 +250,22 @@ public class NoticiaServicio {
 
     @Transactional
     public boolean eliminarNoticia(Integer id) {
-        return eliminarNoticia(id, "Eliminación directa", null);
+        // Eliminación simple sin archivar (para propietarios)
+        if (id != null && noticiaRepositorio.existsById(id)) {
+            noticiaRepositorio.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     @Transactional
-    public boolean eliminarNoticiaPorTitulo(String titulo, String motivo,
+    public boolean eliminarNoticiaPorTitulo(String titulo, String motivo, String descripcion,
             com.noticias.api.entidades.UsuarioEntidad eliminador) {
         if (titulo == null || titulo.isBlank())
             return false;
         Optional<NoticiaEntidad> noticiaOpt = noticiaRepositorio.findByTitulo(titulo);
         if (noticiaOpt.isPresent()) {
-            return eliminarNoticia(noticiaOpt.get().getId(), motivo, eliminador);
+            return eliminarNoticia(noticiaOpt.get().getId(), motivo, descripcion, eliminador);
         }
         return false;
     }
@@ -272,6 +284,11 @@ public class NoticiaServicio {
         // But here we filter by WHO deleted it. If Admin deletes it -> Show. if
         // User(Owner) deletes it -> Hide.
         // We will filter by Roles that represent Administration acting on others.
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<NoticiaEliminadaEntidad> obtenerNoticiaEliminadaPorId(Long id) {
+        return noticiaEliminadaRepositorio.findById(id);
     }
 
     private NoticiaDTO convertirADTO(NoticiaEntidad entidad) {

@@ -520,6 +520,7 @@
                     <div id="borradas" class="tab-content" style="display: none;">
                         <div class="content-header">
                             <h2>Historial de Noticias Borradas</h2>
+                            <p class="text-muted">Noticias eliminadas por el equipo de administración</p>
                         </div>
                         <div class="table-container">
                             <table class="custom-table">
@@ -528,30 +529,52 @@
                                         <th>Fecha</th>
                                         <th>Noticia</th>
                                         <th>Autor Original</th>
-                                        <th>Eliminado Por</th>
                                         <th>Motivo</th>
+                                        <th>Descripción</th>
+                                        <th>Eliminado Por</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="borrada : ${noticiasEliminadas}">
+                                    <tr th:each="borrada : ${noticiasEliminadas}"
+                                        style="cursor: pointer; transition: background 0.2s;"
+                                        onmouseover="this.style.background='#f8fafc'"
+                                        onmouseout="this.style.background='white'">
                                         <td
                                             th:text="${#temporals.format(borrada.fechaEliminacion, 'dd/MM/yyyy HH:mm')}">
                                             Fecha</td>
                                         <td>
                                             <div style="font-weight: 600;" th:text="${borrada.titulo}">Título</div>
-                                            <div style="font-size: 0.8em; color: var(--text-muted);"
-                                                th:text="${borrada.categoriaNombre}">Categoría</div>
+                                            <div style="font-size: 0.8em; color: var(--text-muted);">
+                                                <span class="badge"
+                                                    th:style="'background:' + ${borrada.categoriaColor} + '; color: white; font-size: 0.7em;'"
+                                                    th:text="${borrada.categoriaNombre}">Categoría</span>
+                                            </div>
                                         </td>
-                                        <td th:text="${borrada.autorNombre}">Autor</td>
+                                        <td th:text="${borrada.autorOriginalNombre}">Autor</td>
                                         <td>
-                                            <div style="font-weight: 600;" th:text="${borrada.eliminadoPor}">Admin</div>
+                                            <span class="badge badge-danger" th:text="${borrada.motivo}">Motivo</span>
+                                        </td>
+                                        <td>
+                                            <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; color: var(--text-muted);"
+                                                th:text="${borrada.descripcion}">Descripción...</div>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight: 600;" th:text="${borrada.eliminadoPorNombre}">Admin
+                                            </div>
                                             <div class="badge badge-accent" style="font-size: 0.7em;"
                                                 th:text="${borrada.rolEliminador}">ROL</div>
                                         </td>
-                                        <td th:text="${borrada.motivo}">Motivo...</td>
+                                        <td>
+                                            <button class="btn btn-ghost btn-sm"
+                                                th:onclick="'verDetalleEliminada(' + ${borrada.id} + ')'"
+                                                style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                                <i data-lucide="eye" style="width: 14px;"></i> Ver Detalle
+                                            </button>
+                                        </td>
                                     </tr>
                                     <tr th:if="${noticiasEliminadas == null or noticiasEliminadas.empty}">
-                                        <td colspan="5"
+                                        <td colspan="7"
                                             style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay
                                             noticias borradas por administración.</td>
                                     </tr>
@@ -602,6 +625,30 @@
                             style="flex: 1; background-color: var(--danger);">Eliminar</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Modal: Detalle Noticia Eliminada -->
+        <div id="detalleEliminadaModal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                        Detalle de Noticia Eliminada
+                    </h3>
+                    <button onclick="closeDetalleEliminadaModal()" class="btn btn-ghost"
+                        style="padding: 0.5rem; width: auto; min-width: auto;">
+                        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                    </button>
+                </div>
+
+                <div id="detalleEliminadaContent">
+                    <!-- Content will be loaded dynamically -->
+                    <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <i data-lucide="loader"
+                            style="width: 48px; height: 48px; animation: spin 1s linear infinite;"></i>
+                        <p style="margin-top: 1rem;">Cargando...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -805,6 +852,167 @@
                         showFeedback('Error', error || 'No se pudo eliminar al usuario.', 'error');
                     }
                 } catch (e) { console.error(e); }
+            }
+
+            // Detalle Noticia Eliminada Modal
+            const detalleEliminadaModal = document.getElementById('detalleEliminadaModal');
+
+            async function verDetalleEliminada(id) {
+                detalleEliminadaModal.classList.add('open');
+                const contentDiv = document.getElementById('detalleEliminadaContent');
+
+                try {
+                    let baseUrl = contextPath;
+                    if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+                    const res = await fetch(`${baseUrl}/api/noticias/eliminadas/${id}`);
+
+                    if (!res.ok) {
+                        throw new Error('No se pudo cargar el detalle');
+                    }
+
+                    const noticia = await res.json();
+
+                    contentDiv.innerHTML = `
+                        <div style="display: grid; gap: 2rem;">
+                            <!-- Imagen -->
+                            ${noticia.imagenUrl ? `
+                                <div style="width: 100%; border-radius: 1rem; overflow: hidden; border: 1px solid var(--border);">
+                                    <img src="${noticia.imagenUrl}" alt="${noticia.titulo}" 
+                                        style="width: 100%; height: auto; display: block; max-height: 400px; object-fit: cover;">
+                                </div>
+                            ` : ''}
+                            
+                            <!-- Título y Categoría -->
+                            <div>
+                                <div style="margin-bottom: 0.5rem;">
+                                    <span class="badge" style="background: ${noticia.categoriaColor}; color: white;">
+                                        ${noticia.categoriaNombre}
+                                    </span>
+                                </div>
+                                <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
+                                    ${noticia.titulo}
+                                </h2>
+                                ${noticia.subtitulo ? `
+                                    <p style="font-size: 1.25rem; color: var(--text-muted); font-weight: 500;">
+                                        ${noticia.subtitulo}
+                                    </p>
+                                ` : ''}
+                            </div>
+                            
+                            <!-- Información del Autor Original -->
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #f8fafc; border-radius: 0.75rem; border: 1px solid var(--border);">
+                                <i data-lucide="user" style="width: 24px; height: 24px; color: var(--primary);"></i>
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-main);">Autor Original</div>
+                                    <div style="color: var(--text-muted); font-size: 0.9rem;">${noticia.autorOriginalNombre}</div>
+                                </div>
+                                <div style="margin-left: auto; text-align: right;">
+                                    <div style="font-size: 0.85rem; color: var(--text-muted);">Publicado</div>
+                                    <div style="font-weight: 600;">${new Date(noticia.fechaPublicacion).toLocaleDateString('es-ES')}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Contenido -->
+                            <div style="padding: 1.5rem; background: white; border-radius: 1rem; border: 1px solid var(--border);">
+                                <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">
+                                    <i data-lucide="file-text" style="width: 20px; height: 20px; display: inline; vertical-align: middle;"></i>
+                                    Contenido
+                                </h3>
+                                <div style="line-height: 1.8; color: var(--text-main); white-space: pre-wrap;">
+                                    ${noticia.contenido}
+                                </div>
+                            </div>
+                            
+                            <!-- Estadísticas -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                                <div style="padding: 1rem; background: #f0f9ff; border-radius: 0.75rem; text-align: center;">
+                                    <i data-lucide="thumbs-up" style="width: 24px; height: 24px; color: var(--success); margin-bottom: 0.5rem;"></i>
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--success);">${noticia.likes || 0}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted);">Me gusta</div>
+                                </div>
+                                <div style="padding: 1rem; background: #fef2f2; border-radius: 0.75rem; text-align: center;">
+                                    <i data-lucide="thumbs-down" style="width: 24px; height: 24px; color: var(--danger); margin-bottom: 0.5rem;"></i>
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--danger);">${noticia.dislikes || 0}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted);">No me gusta</div>
+                                </div>
+                                <div style="padding: 1rem; background: #f8fafc; border-radius: 0.75rem; text-align: center;">
+                                    <i data-lucide="eye" style="width: 24px; height: 24px; color: var(--primary); margin-bottom: 0.5rem;"></i>
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">${noticia.visitas || 0}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted);">Visitas</div>
+                                </div>
+                                <div style="padding: 1rem; background: #fefce8; border-radius: 0.75rem; text-align: center;">
+                                    <i data-lucide="message-circle" style="width: 24px; height: 24px; color: var(--accent); margin-bottom: 0.5rem;"></i>
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent);">${noticia.comentariosCount || 0}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted);">Comentarios</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Información de Eliminación -->
+                            <div style="padding: 1.5rem; background: #fef2f2; border-radius: 1rem; border: 2px solid var(--danger);">
+                                <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--danger);">
+                                    <i data-lucide="alert-triangle" style="width: 20px; height: 20px; display: inline; vertical-align: middle;"></i>
+                                    Información de Eliminación
+                                </h3>
+                                <div style="display: grid; gap: 1rem;">
+                                    <div style="display: grid; grid-template-columns: 150px 1fr; gap: 0.5rem;">
+                                        <div style="font-weight: 600; color: var(--text-main);">Eliminado por:</div>
+                                        <div style="color: var(--text-main);">
+                                            ${noticia.eliminadoPorNombre} 
+                                            <span class="badge badge-accent" style="font-size: 0.75rem; margin-left: 0.5rem;">
+                                                ${noticia.rolEliminador}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: 150px 1fr; gap: 0.5rem;">
+                                        <div style="font-weight: 600; color: var(--text-main);">Fecha:</div>
+                                        <div style="color: var(--text-main);">
+                                            ${new Date(noticia.fechaEliminacion).toLocaleString('es-ES')}
+                                        </div>
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: 150px 1fr; gap: 0.5rem;">
+                                        <div style="font-weight: 600; color: var(--text-main);">Motivo:</div>
+                                        <div>
+                                            <span class="badge badge-danger">${noticia.motivo}</span>
+                                        </div>
+                                    </div>
+                                    ${noticia.descripcion ? `
+                                        <div style="display: grid; grid-template-columns: 150px 1fr; gap: 0.5rem;">
+                                            <div style="font-weight: 600; color: var(--text-main);">Descripción:</div>
+                                            <div style="color: var(--text-main); line-height: 1.6; white-space: pre-wrap;">
+                                                ${noticia.descripcion}
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    ${noticia.esAportacionUsuario ? `
+                                        <div style="padding: 0.75rem; background: white; border-radius: 0.5rem; border-left: 3px solid var(--accent);">
+                                            <i data-lucide="info" style="width: 16px; height: 16px; display: inline; vertical-align: middle; color: var(--accent);"></i>
+                                            <span style="font-size: 0.9rem; color: var(--text-muted); margin-left: 0.5rem;">
+                                                Esta era una aportación de usuario
+                                            </span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    lucide.createIcons();
+
+                } catch (error) {
+                    console.error('Error loading deleted news detail:', error);
+                    contentDiv.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; color: var(--danger);">
+                            <i data-lucide="alert-circle" style="width: 48px; height: 48px; margin-bottom: 1rem;"></i>
+                            <p style="font-weight: 600; margin-bottom: 0.5rem;">Error al cargar el detalle</p>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">No se pudo obtener la información de la noticia eliminada.</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                }
+            }
+
+            function closeDetalleEliminadaModal() {
+                detalleEliminadaModal.classList.remove('open');
             }
 
             lucide.createIcons();

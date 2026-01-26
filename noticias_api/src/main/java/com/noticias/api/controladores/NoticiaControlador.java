@@ -204,6 +204,7 @@ public class NoticiaControlador {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Integer id,
             @RequestParam(required = false) String motivo,
+            @RequestParam(required = false) String descripcion,
             @RequestParam(required = false) Integer eliminadorId) {
 
         UsuarioEntidad eliminador = null;
@@ -211,7 +212,7 @@ public class NoticiaControlador {
             eliminador = usuarioRepositorio.findById(eliminadorId).orElse(null);
         }
 
-        if (noticiaServicio.eliminarNoticia(id, motivo, eliminador)) {
+        if (noticiaServicio.eliminarNoticia(id, motivo, descripcion, eliminador)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
@@ -220,6 +221,7 @@ public class NoticiaControlador {
     @DeleteMapping("/titulo")
     public ResponseEntity<Void> eliminarPorTitulo(@RequestParam String titulo,
             @RequestParam(required = false) String motivo,
+            @RequestParam(required = false) String descripcion,
             @RequestParam(required = false) Integer eliminadorId) {
 
         UsuarioEntidad eliminador = null;
@@ -227,7 +229,7 @@ public class NoticiaControlador {
             eliminador = usuarioRepositorio.findById(eliminadorId).orElse(null);
         }
 
-        if (noticiaServicio.eliminarNoticiaPorTitulo(titulo, motivo, eliminador)) {
+        if (noticiaServicio.eliminarNoticiaPorTitulo(titulo, motivo, descripcion, eliminador)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
@@ -236,6 +238,13 @@ public class NoticiaControlador {
     @GetMapping("/eliminadas/admin")
     public ResponseEntity<List<NoticiaEliminadaEntidad>> listarEliminadasAdmin() {
         return ResponseEntity.ok(noticiaServicio.listarNoticiasEliminadasPorAdmin());
+    }
+
+    @GetMapping("/eliminadas/{id}")
+    public ResponseEntity<NoticiaEliminadaEntidad> obtenerEliminadaPorId(@PathVariable Long id) {
+        return noticiaServicio.obtenerNoticiaEliminadaPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/check-titulo")

@@ -2,9 +2,11 @@
 DROP TABLE IF EXISTS noticia_etiquetas CASCADE;
 DROP TABLE IF EXISTS etiquetas CASCADE;
 DROP TABLE IF EXISTS comentarios CASCADE;
+DROP TABLE IF EXISTS noticias_eliminadas CASCADE;
 DROP TABLE IF EXISTS noticias CASCADE;
 DROP TABLE IF EXISTS categorias CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
+
 
 -- Tabla de Roles
 CREATE TABLE roles (
@@ -62,6 +64,33 @@ CREATE TABLE noticia_etiquetas (
     etiqueta_id INTEGER REFERENCES etiquetas(id) ON DELETE CASCADE,
     PRIMARY KEY (noticia_id, etiqueta_id)
 );
+
+-- Tabla de Noticias Eliminadas (Archivo completo)
+CREATE TABLE noticias_eliminadas (
+    id BIGSERIAL PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    subtitulo VARCHAR(255),
+    contenido TEXT NOT NULL,
+    imagen_url TEXT,
+    autor_original_id INTEGER,
+    autor_original_nombre VARCHAR(255),
+    categoria_id INTEGER,
+    categoria_nombre VARCHAR(100),
+    categoria_color VARCHAR(20),
+    fecha_publicacion TIMESTAMP,
+    likes INTEGER DEFAULT 0,
+    dislikes INTEGER DEFAULT 0,
+    visitas INTEGER DEFAULT 0,
+    comentarios_count INTEGER DEFAULT 0,
+    motivo VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    eliminado_por_id INTEGER,
+    eliminado_por_nombre VARCHAR(255),
+    rol_eliminador VARCHAR(50),
+    fecha_eliminacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    es_aportacion_usuario BOOLEAN DEFAULT FALSE
+);
+
 
 -- INSERTS INICIALES
 

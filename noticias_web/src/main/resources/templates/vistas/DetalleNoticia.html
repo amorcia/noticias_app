@@ -276,24 +276,77 @@
             </div>
         </div>
 
-        <!-- Delete Modal -->
+        <!-- Delete Modal (Role-based) -->
         <div id="deleteModal" class="modal-overlay">
             <div class="modal-content">
-                <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Eliminar Noticia</h3>
-                <p>¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer.</p>
+                <h3 id="deleteModalTitle" style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Eliminar
+                    Noticia</h3>
+                <p id="deleteModalMessage">¿Estás seguro de que quieres eliminar esta noticia?</p>
+
                 <form id="deleteForm">
                     <input type="hidden" name="titulo" id="deleteTitulo">
-                    <div class="form-group" style="margin-top: 1rem;" id="deleteMotivoGroup">
-                        <label class="form-label">Motivo</label>
-                        <input type="text" name="motivo" id="deleteMotivoInput" class="form-input"
-                            placeholder="Razón de eliminación...">
+                    <input type="hidden" id="esPropio">
+
+                    <!-- Formulario para Admin/Owner (solo si NO es propietario) -->
+                    <div id="adminDeleteForm" style="display: none;">
+                        <div class="form-group" style="margin-top: 1.5rem;">
+                            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                Motivo de eliminación *
+                            </label>
+                            <select id="deleteMotivoSelect" class="form-input"
+                                style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main);">
+                                <option value="">Selecciona un motivo</option>
+                                <option value="SPAM">Spam o contenido comercial</option>
+                                <option value="DESINFORMACION">Desinformación</option>
+                                <option value="ODIO">Lenguaje de odio o acoso</option>
+                                <option value="INAPROPIADO">Contenido inapropiado</option>
+                                <option value="DUPLICADO">Contenido duplicado</option>
+                                <option value="VIOLACION_NORMAS">Violación de normas</option>
+                                <option value="OTRO">Otro motivo</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                Descripción detallada *
+                            </label>
+                            <textarea id="deleteDescripcion" class="form-input" rows="4"
+                                placeholder="Describe en detalle el motivo de la eliminación..."
+                                style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); resize: vertical;"></textarea>
+                        </div>
                     </div>
+
                     <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                         <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
-                        <button type="submit" class="btn btn-primary"
-                            style="flex: 1; background-color: var(--danger);">Eliminar Definitivamente</button>
+                        <button type="submit" class="btn btn-primary" style="flex: 1; background-color: var(--danger);">
+                            <span id="deleteButtonText">Eliminar Definitivamente</span>
+                        </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal (segundo pop-up de confirmación) -->
+        <div id="confirmDeleteModal" class="modal-overlay">
+            <div class="modal-content" style="text-align: center;">
+                <div style="margin-bottom: 2rem; display: flex; justify-content: center;">
+                    <i data-lucide="alert-triangle" style="width: 64px; height: 64px; color: var(--danger);"></i>
+                </div>
+                <h3 style="margin-bottom: 0.75rem; font-size: 1.75rem; font-weight: 800; color: var(--text-main);">
+                    ¿Confirmar eliminación?
+                </h3>
+                <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; font-size: 1.1rem;">
+                    Esta acción no se puede deshacer. La noticia será eliminada permanentemente.
+                </p>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="closeConfirmDeleteModal()" class="btn btn-ghost" style="flex: 1;">
+                        Cancelar
+                    </button>
+                    <button onclick="executeDelete()" class="btn btn-primary"
+                        style="flex: 1; background-color: var(--danger);">
+                        Sí, eliminar
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -695,48 +748,115 @@
             }
         }
 
-        // Delete Logic AJAX
+        // Delete Logic AJAX (Role-based)
         const deleteModal = document.getElementById('deleteModal');
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        let pendingDeleteData = null;
+
+        function openDeleteModal(titulo, esPropio) {
+            document.getElementById('deleteTitulo').value = titulo;
+            document.getElementById('esPropio').value = esPropio;
+
+            const adminForm = document.getElementById('adminDeleteForm');
+            const deleteMessage = document.getElementById('deleteModalMessage');
+
+            if (esPropio === 'true' || esPropio === true) {
+                // Propietario: confirmación simple
+                adminForm.style.display = 'none';
+                deleteMessage.textContent = '¿Estás seguro de que quieres eliminar tu noticia? Esta acción no se puede deshacer.';
+            } else {
+                // Admin/Owner: requiere motivo y descripción
+                adminForm.style.display = 'block';
+                deleteMessage.textContent = 'Como administrador, debes proporcionar un motivo y descripción para esta eliminación.';
+
+                // Limpiar campos
+                document.getElementById('deleteMotivoSelect').value = '';
+                document.getElementById('deleteDescripcion').value = '';
+            }
+
+            deleteModal.classList.add('open');
+            lucide.createIcons();
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.remove('open');
+        }
+
+        function closeConfirmDeleteModal() {
+            confirmDeleteModal.classList.remove('open');
+            pendingDeleteData = null;
+        }
+
         async function handleDeletion(event) {
             event.preventDefault();
-            const formData = new FormData(event.target);
+
+            const titulo = document.getElementById('deleteTitulo').value;
+            const esPropio = document.getElementById('esPropio').value === 'true';
+
+            let motivo = 'Borrado por autor';
+            let descripcion = '';
+
+            if (!esPropio) {
+                // Validar campos de admin
+                const motivoSelect = document.getElementById('deleteMotivoSelect').value;
+                const descripcionText = document.getElementById('deleteDescripcion').value;
+
+                if (!motivoSelect || !motivoSelect.trim()) {
+                    showSuccess('Error', 'Debes seleccionar un motivo de eliminación', 'error');
+                    return;
+                }
+
+                if (!descripcionText || !descripcionText.trim()) {
+                    showSuccess('Error', 'Debes proporcionar una descripción detallada', 'error');
+                    return;
+                }
+
+                motivo = motivoSelect;
+                descripcion = descripcionText;
+            }
+
+            // Guardar datos para confirmación
+            pendingDeleteData = {
+                titulo: titulo,
+                motivo: motivo,
+                descripcion: descripcion
+            };
+
+            // Cerrar primer modal y abrir confirmación
+            closeDeleteModal();
+            confirmDeleteModal.classList.add('open');
+            lucide.createIcons();
+        }
+
+        async function executeDelete() {
+            if (!pendingDeleteData) return;
+
             try {
-                const res = await fetch(`${contextPath}trabajador/noticias/borrar`, {
-                    method: 'POST',
-                    body: new URLSearchParams(formData)
+                const params = new URLSearchParams({
+                    titulo: pendingDeleteData.titulo,
+                    motivo: pendingDeleteData.motivo,
+                    descripcion: pendingDeleteData.descripcion,
+                    eliminadorId: USUARIO_ID
                 });
+
+                const res = await fetch(`${contextPath}trabajador/noticias/borrar?${params}`, {
+                    method: 'POST'
+                });
+
                 if (res.ok) {
-                    closeDeleteModal();
-                    showSuccess('Eliminado', 'La noticia ha sido borrada.');
+                    closeConfirmDeleteModal();
+                    showSuccess('Eliminado', 'La noticia ha sido borrada exitosamente.');
                     setTimeout(() => location.href = contextPath, 1500);
                 } else {
-                    showSuccess('Error', 'No se pudo eliminar.', 'error');
+                    showSuccess('Error', 'No se pudo eliminar la noticia.', 'error');
                 }
             } catch (e) {
                 console.error(e);
                 showSuccess('Error', 'Error de conexión', 'error');
             }
         }
-        document.getElementById('deleteForm').addEventListener('submit', handleDeletion);
 
-        function openDeleteModal(titulo, esPropio) {
-            document.getElementById('deleteTitulo').value = titulo;
-            const group = document.getElementById('deleteMotivoGroup');
-            const input = document.getElementById('deleteMotivoInput');
-            if (esPropio) {
-                group.style.display = 'none';
-                input.required = false;
-                input.value = 'Borrado por autor';
-            } else {
-                group.style.display = 'block';
-                input.required = true;
-                input.value = '';
-            }
-            deleteModal.classList.add('open');
-        }
-        function closeDeleteModal() {
-            deleteModal.classList.remove('open');
-        }
+        document.getElementById('deleteForm').addEventListener('submit', handleDeletion);
 
         function showSuccess(title, msg, type = 'success') {
             const titleEl = document.getElementById('successTitle');

@@ -390,12 +390,14 @@ public class ApiNoticiasCliente {
         }
     }
 
-    public boolean eliminarNoticiaPorTitulo(String titulo, String motivo, Integer eliminadorId) {
+    public boolean eliminarNoticiaPorTitulo(String titulo, String motivo, String descripcion, Integer eliminadorId) {
         // Encode titulo
         String encodedTitulo = java.net.URLEncoder.encode(titulo, java.nio.charset.StandardCharsets.UTF_8);
         String url = apiUrl + "/noticias/titulo?titulo=" + encodedTitulo;
         if (motivo != null)
-            url += "&motivo=" + motivo;
+            url += "&motivo=" + java.net.URLEncoder.encode(motivo, java.nio.charset.StandardCharsets.UTF_8);
+        if (descripcion != null)
+            url += "&descripcion=" + java.net.URLEncoder.encode(descripcion, java.nio.charset.StandardCharsets.UTF_8);
         if (eliminadorId != null)
             url += "&eliminadorId=" + eliminadorId;
 
