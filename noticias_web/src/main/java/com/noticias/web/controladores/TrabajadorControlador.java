@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
@@ -35,9 +36,8 @@ public class TrabajadorControlador {
             return "redirect:/";
         }
 
-        // Cargar categorías handled by GlobalAdvice ("categorias")
-
         // model.addAttribute("categorias", ...); // Suministrado por GlobalAdvice
+        model.addAttribute("categorias", apiCliente.listarCategorias());
         model.addAttribute("noticia", new NoticiaDTO());
 
         return "vistas/FormularioNoticia";
@@ -80,7 +80,8 @@ public class TrabajadorControlador {
 
     @org.springframework.web.bind.annotation.PostMapping("/noticias/borrar")
     public org.springframework.http.ResponseEntity<?> borrarNoticia(
-            @org.springframework.web.bind.annotation.RequestParam String titulo,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer id,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String titulo,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String motivo,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String descripcion,
             @org.springframework.web.bind.annotation.RequestParam(required = false) Integer eliminadorId,
@@ -93,7 +94,13 @@ public class TrabajadorControlador {
         }
 
         var usuario = sesionServicio.obtenerUsuarioLogueado(session);
-        var noticia = apiCliente.buscarNoticiaPorTitulo(titulo);
+        NoticiaDTO noticia = null;
+
+        if (id != null) {
+            noticia = apiCliente.buscarNoticiaPorId(id);
+        } else if (titulo != null && !titulo.isBlank()) {
+            noticia = apiCliente.buscarNoticiaPorTitulo(titulo);
+        }
 
         if (noticia == null) {
             return org.springframework.http.ResponseEntity.status(404).body("Noticia no encontrada");
@@ -129,12 +136,68 @@ public class TrabajadorControlador {
         }
         // Si esAutor, motivoFinal y descripcionFinal quedan como null
 
-        boolean exito = apiCliente.eliminarNoticiaPorTitulo(titulo, motivoFinal, descripcionFinal, usuario.getId());
+        boolean exito = false;
+        if (id != null) {
+            exito = apiCliente.eliminarNoticia(id, motivoFinal, usuario.getId());
+        } else {
+            exito = apiCliente.eliminarNoticiaPorTitulo(titulo, motivoFinal, descripcionFinal, usuario.getId());
+        }
 
         if (exito) {
             return org.springframework.http.ResponseEntity.ok("Noticia eliminada");
         } else {
             return org.springframework.http.ResponseEntity.status(500).body("Error al eliminar la noticia");
         }
+    }
+
+    @GetMapping("/noticias/editar/{id}")
+    public String formularioEditarNoticia(@PathVariable Integer id, HttpSession session, Model model) {
+        if (!sesionServicio.validarSesion(session)) {
+            return "redirect:/auth/login";
+        }
+
+        NoticiaDTO noticia = apiCliente.buscarNoticiaPorId(id);
+        if (noticia == null) {
+            return "redirect:/";
+        }
+
+        var usuario = sesionServicio.obtenerUsuarioLogueado(session);
+        boolean esAutor = noticia.getAutorId() != null && noticia.getAutorId().equals(usuario.getId());
+        String rol = usuario.getRol();
+        boolean esAdmin = "ADMIN".equalsIgnoreCase(rol) || "OWNER".equalsIgnoreCase(rol);
+
+        if (!esAutor && !esAdmin) {
+            return "redirect:/";
+        }
+
+        model.addAttribute("categorias", apiCliente.listarCategorias());
+        model.addAttribute("noticia", noticia);
+        return "vistas/FormularioEdicion";
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/noticias/editar")
+    public String editarNoticia(
+            @org.springframework.web.bind.annotation.RequestParam("id") Integer id,
+            @org.springframework.web.bind.annotation.RequestParam("titulo") String titulo,
+            @org.springframework.web.bind.annotation.RequestParam("subtitulo") String subtitulo,
+            @org.springframework.web.bind.annotation.RequestParam("contenido") String contenido,
+            @org.springframework.web.bind.annotation.RequestParam("categoriaId") Integer categoriaId,
+            @org.springframework.web.bind.annotation.RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
+            HttpSession session,
+            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+
+        if (!sesionServicio.validarSesion(session)) {
+            return "redirect:/auth/login";
+        }
+
+        String error = apiCliente.editarNoticia(id, titulo, subtitulo, contenido, categoriaId, file);
+
+        if (error != null) {
+            redirectAttributes.addFlashAttribute("error", error);
+            return "redirect:/trabajador/noticias/editar/" + id;
+        }
+
+        redirectAttributes.addFlashAttribute("mensaje", "Noticia actualizada correctamente");
+        return "redirect:/noticia/" + id;
     }
 }

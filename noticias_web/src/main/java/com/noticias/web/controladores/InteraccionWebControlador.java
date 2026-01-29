@@ -1,6 +1,7 @@
 package com.noticias.web.controladores;
 
 import com.noticias.web.dtos.ComentarioDTO;
+import com.noticias.web.dtos.UsuarioDTO;
 import com.noticias.web.servicios.ApiNoticiasCliente;
 
 import org.springframework.http.ResponseEntity;
@@ -142,12 +143,15 @@ public class InteraccionWebControlador {
     @DeleteMapping("/comentarios/{id}")
     public ResponseEntity<?> eliminarComentario(@PathVariable Integer id, jakarta.servlet.http.HttpSession session) {
         try {
-            // Permission check could be done here or in apiCliente/API.
-            // For now, let's assume API handles it or simple check for logged user.
-            if (session.getAttribute("usuario") == null) {
+            UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
+            if (usuario == null) {
                 return ResponseEntity.status(401).body("No autenticado");
             }
-            boolean ok = apiCliente.eliminarComentario(id);
+
+            String rol = usuario.getRolNombre();
+            boolean esAdmin = "ADMIN".equalsIgnoreCase(rol) || "OWNER".equalsIgnoreCase(rol);
+
+            boolean ok = apiCliente.eliminarComentario(id, usuario.getId(), esAdmin);
             if (ok)
                 return ResponseEntity.ok().build();
             return ResponseEntity.status(500).body("Error al eliminar comentario");

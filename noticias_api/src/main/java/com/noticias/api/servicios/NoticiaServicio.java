@@ -93,7 +93,7 @@ public class NoticiaServicio {
     public Optional<NoticiaDTO> buscarPorTitulo(String titulo) {
         if (titulo == null || titulo.isBlank())
             return Optional.empty();
-        return noticiaRepositorio.findByTitulo(titulo).map(this::convertirADTO);
+        return noticiaRepositorio.findByTituloIgnoreCase(titulo).map(this::convertirADTO);
     }
 
     @Transactional
@@ -263,7 +263,7 @@ public class NoticiaServicio {
             com.noticias.api.entidades.UsuarioEntidad eliminador) {
         if (titulo == null || titulo.isBlank())
             return false;
-        Optional<NoticiaEntidad> noticiaOpt = noticiaRepositorio.findByTitulo(titulo);
+        Optional<NoticiaEntidad> noticiaOpt = noticiaRepositorio.findByTituloIgnoreCase(titulo);
         if (noticiaOpt.isPresent()) {
             return eliminarNoticia(noticiaOpt.get().getId(), motivo, descripcion, eliminador);
         }

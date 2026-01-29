@@ -18,6 +18,7 @@ com\noticias\web\servicios\ApiNoticiasCliente.class
 com\noticias\web\controladores\AuthControlador.class
 com\noticias\web\dtos\UsuarioActualizarDTO.class
 com\noticias\web\servicios\ApiNoticiasCliente$5.class
+com\noticias\web\servicios\ApiNoticiasCliente$21.class
 com\noticias\web\servicios\ApiNoticiasCliente$8.class
 com\noticias\web\dtos\ComentarioDTO$AutorDTO.class
 com\noticias\web\seguridad\SeguridadConfig.class

@@ -43,7 +43,18 @@ public class AuthServicio {
         }
 
         if (Boolean.TRUE.equals(usuario.getVetado())) {
-            throw new RuntimeException("Usuario vetado: " + usuario.getMotivoVeto());
+            String msg = "Tu cuenta ha sido suspendida.";
+            if (usuario.getVetadoHasta() != null) {
+                java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter
+                        .ofPattern("dd/MM/yyyy HH:mm");
+                msg += " Hasta: " + usuario.getVetadoHasta().format(formatter);
+            } else {
+                msg += " (Permanente)";
+            }
+            if (usuario.getMotivoVeto() != null && !usuario.getMotivoVeto().isEmpty()) {
+                msg += " Motivo: " + usuario.getMotivoVeto();
+            }
+            throw new RuntimeException(msg);
         }
 
         boolean coincide = passwordEncoder.matches(password, usuario.getPassword());
@@ -96,7 +107,7 @@ public class AuthServicio {
         nuevoUsuario.setEmail(email);
         nuevoUsuario.setMovil(movil);
         nuevoUsuario.setPassword(passwordEncoder.encode(password)); // Encriptar aquí
-        nuevoUsuario.setRolId(2); // USER por defecto (ID 2)
+        nuevoUsuario.setRolId(4); // USER por defecto (ID 4)
         nuevoUsuario.setActivo(false); // Requiere confirmación
         nuevoUsuario.setCodigoVerificacion(UUID.randomUUID().toString());
         // fechaCodigo removed

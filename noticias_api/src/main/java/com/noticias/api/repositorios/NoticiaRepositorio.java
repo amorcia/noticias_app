@@ -24,6 +24,12 @@ public interface NoticiaRepositorio extends JpaRepository<NoticiaEntidad, Intege
 
     Optional<NoticiaEntidad> findByTitulo(String titulo);
 
+    @Query("SELECT n FROM NoticiaEntidad n WHERE " +
+            "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(n.titulo), 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n') = "
+            +
+            "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(:titulo), 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 'ñ', 'n')")
+    Optional<NoticiaEntidad> findByTituloIgnoreCase(String titulo);
+
     @Query("SELECT n FROM NoticiaEntidad n JOIN n.categoria c WHERE c.nombre = :nombreCategoria")
     List<NoticiaEntidad> findByCategoriaNombre(String nombreCategoria);
 

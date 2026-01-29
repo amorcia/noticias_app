@@ -47,8 +47,41 @@ CREATE TABLE noticias (
 CREATE TABLE comentarios (
     id SERIAL PRIMARY KEY,
     contenido TEXT NOT NULL,
-    usuario_id INTEGER REFERENCES usuarios(id),
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
     noticia_id INTEGER REFERENCES noticias(id) ON DELETE CASCADE,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de Denuncias (Asegurar cascada)
+DROP TABLE IF EXISTS denuncias CASCADE;
+CREATE TABLE denuncias (
+    id SERIAL PRIMARY KEY,
+    noticia_id INTEGER REFERENCES noticias(id) ON DELETE CASCADE,
+    comentario_id INTEGER REFERENCES comentarios(id) ON DELETE CASCADE,
+    denunciante_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    motivo VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    estado VARCHAR(50) DEFAULT 'PENDIENTE',
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de Votos (Asegurar cascada)
+DROP TABLE IF EXISTS votos CASCADE;
+CREATE TABLE votos (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    noticia_id INTEGER REFERENCES noticias(id) ON DELETE CASCADE,
+    tipo VARCHAR(20) NOT NULL,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de Votos Comentarios (Asegurar cascada)
+DROP TABLE IF EXISTS votos_comentarios CASCADE;
+CREATE TABLE votos_comentarios (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    comentario_id INTEGER REFERENCES comentarios(id) ON DELETE CASCADE,
+    tipo VARCHAR(20) NOT NULL,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

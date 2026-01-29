@@ -67,9 +67,13 @@ public class ApiNoticiasCliente {
         return response.getBody();
     }
 
-    public boolean vetarUsuario(Integer id, String motivo) {
+    public boolean vetarUsuario(Integer id, String motivo, String duracion) {
         String url = apiUrl + "/usuarios/" + id + "/vetar";
-        Map<String, String> payload = Map.of("motivo", motivo);
+        Map<String, String> payload = new java.util.HashMap<>();
+        payload.put("motivo", motivo);
+        if (duracion != null)
+            payload.put("duracion", duracion);
+
         try {
             restTemplate.postForObject(url, payload, Map.class);
             return true;
@@ -475,12 +479,13 @@ public class ApiNoticiasCliente {
         restTemplate.postForObject(url, null, Void.class);
     }
 
-    public boolean eliminarComentario(Integer id) {
-        String url = apiUrl + "/interacciones/comentarios/" + id;
+    public boolean eliminarComentario(Integer id, Integer usuarioId, boolean esAdmin) {
+        String url = apiUrl + "/interacciones/comentarios/" + id + "?usuarioId=" + usuarioId + "&esAdmin=" + esAdmin;
         try {
             restTemplate.delete(url);
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -644,6 +649,41 @@ public class ApiNoticiasCliente {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public String editarNoticia(Integer id, String titulo, String subtitulo, String contenido, Integer categoriaId,
+            org.springframework.web.multipart.MultipartFile file) {
+        String url = apiUrl + "/noticias/" + id + "/editar";
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            org.springframework.util.MultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
+            body.add("titulo", titulo);
+            body.add("subtitulo", subtitulo);
+            body.add("contenido", contenido);
+            body.add("categoriaId", categoriaId);
+
+            if (file != null && !file.isEmpty()) {
+                body.add("file", new org.springframework.core.io.ByteArrayResource(file.getBytes()) {
+                    @Override
+                    public String getFilename() {
+                        return file.getOriginalFilename();
+                    }
+                });
+            }
+
+            HttpEntity<org.springframework.util.MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body,
+                    headers);
+
+            restTemplate.postForObject(url, requestEntity, String.class);
+            return null; // Éxito
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            return e.getResponseBodyAsString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return e.getMessage();
         }
     }
 }

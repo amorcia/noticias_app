@@ -185,6 +185,59 @@ public class NoticiaControlador {
         return ResponseEntity.notFound().build();
     }
 
+    @PostMapping(value = "/{id}/editar", consumes = { "multipart/form-data" })
+    public ResponseEntity<?> editarNoticia(
+            @PathVariable Integer id,
+            @RequestParam("titulo") String titulo,
+            @RequestParam("subtitulo") String subtitulo,
+            @RequestParam("contenido") String contenido,
+            @RequestParam("categoriaId") Integer categoriaId,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+
+        try {
+            // 1. Buscar noticia
+            NoticiaDTO noticiaExistente = noticiaServicio.buscarPorId(id).orElse(null);
+            if (noticiaExistente == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // 2. Procesar imagen nueva si existe
+            String imagenUrl = noticiaExistente.getImagenUrl();
+            if (file != null && !file.isEmpty()) {
+                almacenamientoServicio.validarTipoImagen(file);
+                almacenamientoServicio.validarTamañoArchivo(file);
+
+                // Moderación NSFW
+                if (moderacionServicio.esContenidoNSFW(file)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body("Contenido inapropiado detectado en la nueva imagen.");
+                }
+
+                imagenUrl = almacenamientoServicio.almacenar(file);
+            }
+
+            // 3. Preparar entidad para actualización
+            NoticiaEntidad noticiaUpdate = new NoticiaEntidad();
+            noticiaUpdate.setTitulo(titulo);
+            noticiaUpdate.setSubtitulo(subtitulo);
+            noticiaUpdate.setContenido(contenido);
+            noticiaUpdate.setImagenUrl(imagenUrl);
+
+            com.noticias.api.entidades.CategoriaEntidad cat = new com.noticias.api.entidades.CategoriaEntidad();
+            cat.setId(categoriaId);
+            noticiaUpdate.setCategoria(cat);
+
+            NoticiaDTO actualizada = noticiaServicio.actualizarNoticia(id, noticiaUpdate);
+            return ResponseEntity.ok(actualizada);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al editar: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/{id}/votar")
     public ResponseEntity<Void> votar(@PathVariable Integer id, @RequestParam Boolean like,
             @RequestParam Integer usuarioId) {

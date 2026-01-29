@@ -6,8 +6,8 @@
     --accent: #f59e0b;
     --danger: #ef4444;
     --success: #22c55e;
-    --bg: #f8fafc;
-    --background: #f8fafc;
+    --bg: #ffffff;
+    --background: #ffffff;
     --surface: #ffffff;
     --text-main: #0f172a;
     --text-muted: #64748b;
@@ -383,13 +383,15 @@ body.dark-mode .btn-ghost:hover {
 }
 
 .news-card {
-    background: var(--surface);
+    background: #f4f4f5;
+    /* Suave toque gris */
     border-radius: var(--radius);
     overflow: hidden;
     box-shadow: var(--shadow-md);
     transition: transform 0.2s, box-shadow 0.2s;
     display: flex;
     flex-direction: column;
+    border: 1px solid var(--border);
 }
 
 .news-card:hover {
@@ -564,7 +566,8 @@ body.dark-mode .btn-ghost:hover {
 
 /* Premium News Card (El Pais Style) */
 .news-card-premium {
-    background: var(--surface);
+    background: #f4f4f5;
+    /* Suave toque gris */
     border-radius: var(--radius);
     overflow: hidden;
     box-shadow: var(--shadow-md);

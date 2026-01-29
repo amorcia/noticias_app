@@ -2,6 +2,8 @@ package com.noticias.api.entidades;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "denuncias")
@@ -11,10 +13,12 @@ public class DenunciaEntidad {
     private Integer id;
 
     @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "noticia_id", nullable = true)
     private NoticiaEntidad noticia;
 
     @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "comentario_id", nullable = true)
     private ComentarioEntidad comentario;
 

@@ -29,8 +29,8 @@ public class UsuarioServicio {
         return apiCliente.buscarUsuarioPorEmail(email);
     }
 
-    public boolean vetarUsuario(Integer id, String motivo) {
-        return apiCliente.vetarUsuario(id, motivo);
+    public boolean vetarUsuario(Integer id, String motivo, String duracion) {
+        return apiCliente.vetarUsuario(id, motivo, duracion);
     }
 
     public boolean desvetarUsuario(Integer id) {

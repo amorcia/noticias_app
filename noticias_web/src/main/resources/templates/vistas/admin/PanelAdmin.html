@@ -307,6 +307,7 @@
                             <table class="custom-table">
                                 <thead>
                                     <tr>
+                                        <th>Avatar</th>
                                         <th>ID</th>
                                         <th>Nombre</th>
                                         <th>Email</th>
@@ -317,6 +318,17 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="u : ${usuarios}">
+                                        <td>
+                                            <div
+                                                style="width: 35px; height: 35px; border-radius: 50%; overflow: hidden; background: #f1f5f9; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center;">
+                                                <img th:if="${u.imagenUrl != null and !u.imagenUrl.isEmpty()}"
+                                                    th:src="${u.imagenUrl}"
+                                                    style="width: 100%; height: 100%; object-fit: cover;">
+                                                <i th:unless="${u.imagenUrl != null and !u.imagenUrl.isEmpty()}"
+                                                    data-lucide="user"
+                                                    style="width: 18px; color: var(--text-muted);"></i>
+                                            </div>
+                                        </td>
                                         <td th:text="${u.id}">1</td>
                                         <td th:text="${u.nombreCompleto}">Nombre</td>
                                         <td th:text="${u.email}">email@example.com</td>
@@ -439,11 +451,20 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="user : ${vetados}">
+                                    <tr th:each="user : ${vetados}"
+                                        style="cursor: pointer; transition: background 0.2s;"
+                                        onmouseover="this.style.background='#f8fafc'"
+                                        onmouseout="this.style.background='white'" th:data-id="${user.id}"
+                                        th:data-motivo="${user.motivoVeto}"
+                                        th:data-hasta="${#temporals.format(user.vetadoHasta, 'dd/MM/yyyy HH:mm')}"
+                                        onclick="openVetoDetailModal(this.getAttribute('data-id'), this.getAttribute('data-motivo'), this.getAttribute('data-hasta'))">
                                         <td th:text="${user.email}">user@test.com</td>
                                         <td th:text="${user.nombreCompleto}">User Name</td>
-                                        <td th:text="${user.vetadoHasta}">Permanente</td>
-                                        <td th:text="${user.motivoVeto}">Rules Violated</td>
+                                        <td th:text="${#temporals.format(user.vetadoHasta, 'dd/MM/yyyy HH:mm')}">
+                                            Permanente</td>
+                                        <td
+                                            th:text="${user.motivoVeto != null and user.motivoVeto.contains(' - ') ? #strings.substringBefore(user.motivoVeto, ' - ') : user.motivoVeto}">
+                                            Rules Violated</td>
                                     </tr>
                                     <tr th:if="${vetados == null or vetados.empty}">
                                         <td colspan="4"
@@ -589,21 +610,91 @@
         <!-- Veto Modal -->
         <div id="vetoModal" class="modal-overlay">
             <div class="modal-content">
-                <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Bannear Usuario</h3>
+                <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Vetar Usuario</h3>
                 <p>Indica el motivo del veto para este usuario.</p>
                 <form id="vetoForm">
                     <input type="hidden" name="id" id="vetoUserId">
+
                     <div class="form-group" style="margin-top: 1rem;">
-                        <label class="form-label">Motivo</label>
-                        <input type="text" name="motivo" id="vetoMotivo" class="form-input"
-                            placeholder="Razón del baneo..." required>
+                        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                            Motivo del Veto <span style="color: var(--danger);">*</span>
+                        </label>
+                        <select id="vetoMotivoSelect" name="motivoSelect" class="form-input" required
+                            style="width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid var(--border); border-radius: 0.5rem;">
+                            <option value="" disabled selected>Selecciona un motivo...</option>
+                            <option value="SPAM_MASIVO">Spam Masivo / Publicidad</option>
+                            <option value="CONTENIDO_OFENSIVO">Contenido Ofensivo / Insultos</option>
+                            <option value="NOTICIAS_FALSAS">Difusión de Noticias Falsas</option>
+                            <option value="SUPLANTACION">Suplantación de Identidad</option>
+                            <option value="OTRO">Otro</option>
+                        </select>
+
+                        <label class="form-label"
+                            style="display: block; margin-bottom: 0.5rem; margin-top: 1rem; font-weight: 600;">
+                            Duración del Veto <span style="color: var(--danger);">*</span>
+                        </label>
+                        <select id="vetoDuracion" name="duracion" class="form-input" required
+                            style="width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; border: 1px solid var(--border); border-radius: 0.5rem;">
+                            <option value="PERMANENTE">Permanente</option>
+                            <option value="24H">24 Horas</option>
+                            <option value="3D">3 Días</option>
+                            <option value="1W">1 Semana</option>
+                            <option value="1M">1 Mes</option>
+                        </select>
+                        </select>
                     </div>
+
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                            Descripción detallada <span style="color: var(--danger);">*</span>
+                        </label>
+                        <textarea name="descripcion" id="vetoDescripcion" class="form-input" rows="3" required
+                            placeholder="Explica por qué se veta a este usuario..."
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); resize: vertical; display: block;"></textarea>
+                    </div>
+
                     <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                         <button type="button" class="btn btn-ghost" onclick="closeVetoModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary"
-                            style="flex: 1; background-color: var(--danger);">Aplicar Veto</button>
+                            style="flex: 1; background-color: var(--danger);">Vetar Usuario</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Veto Detail Modal -->
+        <div id="vetoDetailModal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--text-main);">Detalle del Veto</h3>
+
+                <div style="margin-bottom: 1rem;">
+                    <label class="form-label" style="font-weight: 600;">Motivo</label>
+                    <p id="detailMotivo"
+                        style="padding: 0.5rem; background: var(--background); border-radius: 0.5rem; color: var(--text-main); font-weight: 500;">
+                        -</p>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label class="form-label" style="font-weight: 600;">Descripción</label>
+                    <p id="detailDescripcion"
+                        style="padding: 0.5rem; background: var(--background); border-radius: 0.5rem; color: var(--text-muted); min-height: 3rem;">
+                        -</p>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <label class="form-label" style="font-weight: 600;">Veto Hasta</label>
+                    <p id="detailHasta"
+                        style="padding: 0.5rem; background: var(--background); border-radius: 0.5rem; color: var(--danger); font-weight: 600;">
+                        -</p>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeVetoDetailModal()">Cerrar</button>
+                    <button id="desvetarBtn" type="button" class="btn btn-primary"
+                        style="flex: 1; background-color: var(--success); border: none;">
+                        <i data-lucide="unlock" style="width: 16px;"></i> Levantar Veto
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -774,23 +865,78 @@
             function closeVetoModal() {
                 vetoModal.classList.remove('open');
             }
-            async function handleVeto(e) {
-                e.preventDefault();
+
+            // Veto Detail Logic
+            const vetoDetailModal = document.getElementById('vetoDetailModal');
+
+            function openVetoDetailModal(id, motivoFull, hasta) {
+                // Parse Motivo
+                let reason = motivoFull;
+                let desc = 'No especificada';
+
+                if (motivoFull && motivoFull.includes(' - ')) {
+                    const parts = motivoFull.split(' - ');
+                    reason = parts[0];
+                    desc = parts.slice(1).join(' - ');
+                }
+
+                document.getElementById('detailMotivo').innerText = reason || 'Sin motivo';
+                document.getElementById('detailDescripcion').innerText = desc;
+                document.getElementById('detailHasta').innerText = hasta || 'Permanente';
+
+                const btn = document.getElementById('desvetarBtn');
+                btn.onclick = () => desvetarUsuario(id);
+
+                vetoDetailModal.classList.add('open');
+                lucide.createIcons();
+            }
+
+            function closeVetoDetailModal() {
+                vetoDetailModal.classList.remove('open');
+            }
+            async function handleVeto(event) {
+                event.preventDefault();
                 const userId = document.getElementById('vetoUserId').value;
-                const motivo = document.getElementById('vetoMotivo').value;
+                const motivoSelect = document.getElementById('vetoMotivoSelect').value;
+                const descripcion = document.getElementById('vetoDescripcion').value;
+                const duracion = document.getElementById('vetoDuracion').value;
+
+                if (!motivoSelect || (!descripcion && motivoSelect === 'OTRO')) {
+                    alert('Debes indicar un motivo y una descripción.');
+                    return;
+                }
+
+                // Si selecciona OTRO, la descripcion es obligatoria.
+                // Si no, es opcional pero se añade.
+
+                const motivoFinal = motivoSelect + (descripcion ? " - " + descripcion : "");
+                const params = new URLSearchParams();
+                params.append('motivo', motivoFinal);
+                params.append('duracion', duracion);
+
                 try {
                     let baseUrl = contextPath;
                     if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-                    const res = await fetch(`${baseUrl}/admin/usuarios/${userId}/vetar?motivo=${encodeURIComponent(motivo)}`, { method: 'POST' });
+
+                    /* Send as params since controller uses @RequestParam */
+                    const res = await fetch(`${baseUrl}/admin/usuarios/${userId}/vetar`, {
+                        method: 'POST',
+                        body: params
+                    });
+
                     if (res.ok) {
                         closeVetoModal();
-                        showFeedback('Usuario Vetado', 'El usuario ha sido deshabilitado.', 'success');
+                        showFeedback('Usuario Vetado', 'El usuario ha sido vetado correctamente.', 'success');
                         setTimeout(() => location.reload(), 1500);
                     } else {
                         showFeedback('Error', 'No se pudo vetar al usuario.', 'error');
                     }
-                } catch (e) { console.error(e); }
+                } catch (e) {
+                    console.error(e);
+                    showFeedback('Error', 'Error de conexión.', 'error');
+                }
             }
+
             document.getElementById('vetoForm').addEventListener('submit', handleVeto);
 
             async function desvetarUsuario(id) {

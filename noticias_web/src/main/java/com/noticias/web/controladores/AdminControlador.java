@@ -82,6 +82,28 @@ public class AdminControlador {
             List<Map<String, Object>> sanciones = apiCliente.listarSanciones();
             List<UsuarioDTO> vetados = apiCliente.listarVetados();
             List<com.noticias.web.dtos.NoticiaEliminadaDTO> noticiasEliminadas = apiCliente.listarNoticiasEliminadas();
+
+            if (noticiasEliminadas != null) {
+                for (com.noticias.web.dtos.NoticiaEliminadaDTO ne : noticiasEliminadas) {
+                    if (ne.getFechaEliminacion() == null)
+                        ne.setFechaEliminacion(java.time.LocalDateTime.now());
+                    if (ne.getTitulo() == null)
+                        ne.setTitulo("Sin título");
+                    if (ne.getMotivo() == null)
+                        ne.setMotivo("Desconocido");
+                    if (ne.getDescripcion() == null)
+                        ne.setDescripcion("No disponible");
+                    if (ne.getEliminadoPorNombre() == null)
+                        ne.setEliminadoPorNombre("Sistema");
+                    if (ne.getRolEliminador() == null)
+                        ne.setRolEliminador("ADMIN");
+                    if (ne.getCategoriaColor() == null)
+                        ne.setCategoriaColor("#888888");
+                    if (ne.getCategoriaNombre() == null)
+                        ne.setCategoriaNombre("Desconocida");
+                }
+            }
+
             List<DenunciaDTO> denuncias = apiCliente.listarDenuncias();
             Map<String, Object> stats = apiCliente.getAdminStats();
 
@@ -142,13 +164,14 @@ public class AdminControlador {
     @ResponseBody
     public org.springframework.http.ResponseEntity<?> vetarUsuario(@PathVariable Integer id,
             @RequestParam String motivo,
+            @RequestParam(required = false) String duracion,
             HttpSession session) {
         UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
         if (admin == null || (!"ADMIN".equalsIgnoreCase(admin.getRolNombre())
                 && !"OWNER".equalsIgnoreCase(admin.getRolNombre()))) {
             return org.springframework.http.ResponseEntity.status(403).body("No tienes permisos");
         }
-        boolean exito = apiCliente.vetarUsuario(id, motivo);
+        boolean exito = apiCliente.vetarUsuario(id, motivo, duracion);
         return exito ? org.springframework.http.ResponseEntity.ok().build()
                 : org.springframework.http.ResponseEntity.status(500).build();
     }

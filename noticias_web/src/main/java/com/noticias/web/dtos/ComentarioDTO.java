@@ -109,6 +109,7 @@ public class ComentarioDTO {
     public static class AutorDTO {
         private Integer id;
         private String nombreCompleto;
+        private String imagenUrl;
 
         public Integer getId() {
             return id;
@@ -125,5 +126,18 @@ public class ComentarioDTO {
         public void setNombreCompleto(String nombreCompleto) {
             this.nombreCompleto = nombreCompleto;
         }
+
+        public String getImagenUrl() {
+            return imagenUrl;
+        }
+
+        public void setImagenUrl(String imagenUrl) {
+            this.imagenUrl = imagenUrl;
+        }
+    }
+
+    // Convenience getter for the author's image URL
+    public String getUsuarioImagenUrl() {
+        return autor != null ? autor.getImagenUrl() : null;
     }
 }

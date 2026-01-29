@@ -99,7 +99,8 @@ public class UsuarioControlador {
     public ResponseEntity<Map<String, String>> vetarUsuario(@PathVariable Integer id,
             @RequestBody Map<String, String> payload) {
         String motivo = payload.get("motivo");
-        boolean vetado = usuarioServicio.vetarUsuario(id, motivo);
+        String duracion = payload.get("duracion");
+        boolean vetado = usuarioServicio.vetarUsuario(id, motivo, duracion);
         if (vetado) {
             return ResponseEntity.ok(Map.of("mensaje", "Usuario vetado exitosamente"));
         }

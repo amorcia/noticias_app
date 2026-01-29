@@ -168,8 +168,7 @@ public class UsuarioServicio {
     }
 
     @Transactional
-    public boolean vetarUsuario(Integer id, String motivo) {
-        // Update simple de campos de veto.
+    public boolean vetarUsuario(Integer id, String motivo, String duracion) {
         if (id == null)
             return false;
         return usuarioRepositorio.findById(id).map(usuario -> {
@@ -177,6 +176,32 @@ public class UsuarioServicio {
             usuario.setMotivoVeto(motivo);
             usuario.setFechaVeto(LocalDateTime.now());
             usuario.setActivo(false);
+
+            // Calcular fecha fin veto
+            LocalDateTime fin = null;
+            if (duracion != null && !duracion.equals("PERMANENTE")) {
+                LocalDateTime now = LocalDateTime.now();
+                switch (duracion) {
+                    case "24H":
+                        fin = now.plusDays(1);
+                        break;
+                    case "3D":
+                        fin = now.plusDays(3);
+                        break;
+                    case "1W":
+                        fin = now.plusWeeks(1);
+                        break;
+                    case "1M":
+                        fin = now.plusMonths(1);
+                        break;
+                    default:
+                        fin = null; // Permanente if invalid or unspecified
+                }
+            } else {
+                fin = null; // Permanente means null date (or we could use max date)
+            }
+            usuario.setVetadoHasta(fin);
+
             usuarioRepositorio.save(usuario);
             return true;
         }).orElse(false);

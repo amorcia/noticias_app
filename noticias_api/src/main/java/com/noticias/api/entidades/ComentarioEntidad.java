@@ -2,6 +2,8 @@ package com.noticias.api.entidades;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "comentarios")
@@ -12,6 +14,7 @@ public class ComentarioEntidad {
 
     @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "noticia_id", nullable = false)
     private NoticiaEntidad noticia;
 

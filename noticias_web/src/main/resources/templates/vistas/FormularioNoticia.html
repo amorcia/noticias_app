@@ -46,13 +46,8 @@
                         <th:block
                             th:if="${session.usuario != null and (#strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'TRABAJADOR'))}">
                             <optgroup label="📰 Categorías">
-                                <option value="5">Moviles</option>
-                                <option value="6">IA</option>
-                                <option value="7">Hardware</option>
-                                <option value="8">Futbol</option>
-                                <option value="9">Baloncesto</option>
-                                <option value="3">Politica</option>
-                                <option value="4">Cultura</option>
+                                <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}">
+                                </option>
                             </optgroup>
                         </th:block>
                     </select>
