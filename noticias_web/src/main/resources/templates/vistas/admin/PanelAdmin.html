@@ -615,10 +615,31 @@
                 <form id="deleteForm">
                     <input type="hidden" name="titulo" id="deleteTitulo">
                     <div class="form-group" style="margin-top: 1rem;">
-                        <label class="form-label">Motivo (Obligatorio para Admin)</label>
-                        <input type="text" id="deleteMotivoInput" name="motivo" class="form-input"
-                            placeholder="Razón de eliminación..." required>
+                        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                            Motivo de eliminación <span style="color: var(--danger);">*</span>
+                        </label>
+                        <select name="motivo" id="deleteMotivoInput" class="form-input" required
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main);">
+                            <option value="">Selecciona un motivo</option>
+                            <option value="SPAM">Spam o contenido comercial</option>
+                            <option value="DESINFORMACION">Desinformación</option>
+                            <option value="ODIO">Lenguaje de odio o acoso</option>
+                            <option value="INAPROPIADO">Contenido inapropiado</option>
+                            <option value="DUPLICADO">Contenido duplicado</option>
+                            <option value="VIOLACION_NORMAS">Violación de normas</option>
+                            <option value="OTRO">Otro motivo</option>
+                        </select>
                     </div>
+
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                            Descripción detallada <span style="color: var(--danger);">*</span>
+                        </label>
+                        <textarea name="descripcion" class="form-input" rows="3" required
+                            placeholder="Describe en detalle el motivo de la eliminación..."
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); resize: vertical; display: block;"></textarea>
+                    </div>
+
                     <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                         <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
                         <button type="submit" class="btn btn-primary"

@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,25 +40,68 @@ public class AdminControlador {
             return "redirect:/error/403";
         }
 
+        // Initialize lists with safe defaults
+        model.addAttribute("usuarios", List.of());
+        model.addAttribute("sanciones", List.of());
+        model.addAttribute("vetados", List.of());
+        model.addAttribute("noticiasEliminadas", List.of());
+        model.addAttribute("denuncias", List.of());
+
+        // Ensure stats has ALL keys required by chart.js
+        Map<String, Object> defaultStats = new HashMap<>();
+        defaultStats.put("totalUsuarios", 0);
+        defaultStats.put("usuariosVetados", 0);
+        defaultStats.put("porcentajeVetados", 0);
+        defaultStats.put("totalNoticias", 0);
+        defaultStats.put("totalSanciones", 0);
+        defaultStats.put("sancionesPendientes", 0);
+        model.addAttribute("stats", defaultStats);
+
         try {
+            System.out.println("🔍 AdminControlador: Cargando datos del panel...");
             List<UsuarioDTO> todosUsuarios = apiCliente.listarUsuarios();
+
+            if (todosUsuarios != null) {
+                for (UsuarioDTO u : todosUsuarios) {
+                    // Sanitize all display fields to prevent Thymeleaf errors
+                    if (u.getId() == null)
+                        System.out.println("⚠️ Usuario con ID null encontrado");
+                    if (u.getRolNombre() == null)
+                        u.setRolNombre("USER");
+                    if (u.getRolId() == null)
+                        u.setRolId(4);
+                    if (u.getNombreCompleto() == null)
+                        u.setNombreCompleto("Usuario Sin Nombre");
+                    if (u.getEmail() == null)
+                        u.setEmail("sin_email@sistema.local");
+                    if (u.getVetado() == null)
+                        u.setVetado(false);
+                }
+            }
+
             List<Map<String, Object>> sanciones = apiCliente.listarSanciones();
             List<UsuarioDTO> vetados = apiCliente.listarVetados();
             List<com.noticias.web.dtos.NoticiaEliminadaDTO> noticiasEliminadas = apiCliente.listarNoticiasEliminadas();
             List<DenunciaDTO> denuncias = apiCliente.listarDenuncias();
             Map<String, Object> stats = apiCliente.getAdminStats();
 
-            model.addAttribute("usuarios", todosUsuarios);
-            model.addAttribute("sanciones", sanciones);
-            model.addAttribute("vetados", vetados);
-            model.addAttribute("noticiasEliminadas", noticiasEliminadas);
-            model.addAttribute("denuncias", denuncias);
-            model.addAttribute("stats", stats);
+            model.addAttribute("usuarios", todosUsuarios != null ? todosUsuarios : List.of());
+            model.addAttribute("sanciones", sanciones != null ? sanciones : List.of());
+            model.addAttribute("vetados", vetados != null ? vetados : List.of());
+            model.addAttribute("noticiasEliminadas", noticiasEliminadas != null ? noticiasEliminadas : List.of());
+            model.addAttribute("denuncias", denuncias != null ? denuncias : List.of());
+
+            if (stats != null) {
+                // Merge with defaults to ensure no missing keys
+                Map<String, Object> safeStats = new HashMap<>(defaultStats);
+                safeStats.putAll(stats);
+                model.addAttribute("stats", safeStats);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
+            System.err.println("❌ Error en AdminControlador: " + e.getMessage());
             model.addAttribute("error", "Error al conectar con el servicio de administración. " + e.getMessage());
-            model.addAttribute("sanciones", List.of());
-            model.addAttribute("vetados", List.of());
         }
 
         return "vistas/admin/PanelAdmin";
