@@ -12,41 +12,42 @@ public class NoticiaEntidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "not_id")
     private Integer id;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "not_titulo", nullable = false, length = 255)
     private String titulo;
 
-    @Column(length = 255)
+    @Column(name = "not_subtitulo", length = 255)
     private String subtitulo;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "not_contenido", nullable = false, columnDefinition = "TEXT")
     private String contenido;
 
-    @Column(name = "imagen_url", columnDefinition = "TEXT", nullable = true)
+    @Column(name = "not_imagen_url", columnDefinition = "TEXT", nullable = true)
     private String imagenUrl;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "autor_id")
+    @JoinColumn(name = "usu_id")
     private UsuarioEntidad autor;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "categoria_id")
+    @JoinColumn(name = "cat_id")
     private CategoriaEntidad categoria;
 
-    @Column(name = "fecha_publicacion")
+    @Column(name = "not_fecha_publicacion")
     private LocalDateTime fechaPublicacion;
 
-    @Column(name = "es_aportacion_usuario", nullable = false, columnDefinition = "boolean default false")
+    @Column(name = "not_es_aportacion_usuario", nullable = false, columnDefinition = "boolean default false")
     private Boolean esAportacionUsuario = false;
 
-    @Column(nullable = false)
+    @Column(name = "not_likes", nullable = false)
     private Integer likes = 0;
 
-    @Column(nullable = false)
+    @Column(name = "not_dislikes", nullable = false)
     private Integer dislikes = 0;
 
-    @Column(name = "comentarios_count", nullable = false)
+    @Column(name = "not_comentarios_count", nullable = false)
     private Integer comentariosCount = 0;
 
     @Transient
@@ -54,10 +55,10 @@ public class NoticiaEntidad {
         return (double) (likes - dislikes) + (comentariosCount * 0.5);
     }
 
-    @Column(nullable = false)
+    @Column(name = "not_visitas", nullable = false)
     private Integer visitas = 0;
 
-    @Column(nullable = false)
+    @Column(name = "not_destacada", nullable = false)
     private Boolean destacada = false;
 
     public NoticiaEntidad() {

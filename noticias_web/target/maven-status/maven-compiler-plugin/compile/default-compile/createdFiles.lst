@@ -1,10 +1,11 @@
-com\noticias\web\controladores\GlobalExceptionHandler.class
+com\noticias\web\utilidades\AppLogger.class
 com\noticias\web\servicios\AuthServicio.class
 com\noticias\web\seguridad\ForceResetFilter.class
 com\noticias\web\servicios\ApiNoticiasCliente$18.class
 com\noticias\web\servicios\ApiNoticiasCliente$2.class
 com\noticias\web\servicios\ApiNoticiasCliente$15.class
 com\noticias\web\controladores\GlobalDataAdvice.class
+com\noticias\web\excepciones\GlobalExceptionHandler.class
 com\noticias\web\servicios\ApiNoticiasCliente$12.class
 com\noticias\web\servicios\ApiNoticiasCliente$9.class
 com\noticias\web\config\WebConfig.class

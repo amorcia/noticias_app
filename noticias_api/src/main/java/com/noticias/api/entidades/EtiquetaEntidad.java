@@ -11,9 +11,10 @@ public class EtiquetaEntidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "etq_id")
     private Integer id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "etq_nombre", nullable = false, unique = true, length = 50)
     private String nombre;
 
     public EtiquetaEntidad() {

@@ -11,21 +11,22 @@ public class VotoEntidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "vot_id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @JoinColumn(name = "usu_id", nullable = false)
     private UsuarioEntidad usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "noticia_id", nullable = false)
+    @JoinColumn(name = "not_id", nullable = false)
     private NoticiaEntidad noticia;
 
-    @Column(nullable = false)
+    @Column(name = "vot_tipo", nullable = false)
     private String tipo; // "LIKE", "DISLIKE"
 
-    @Column(nullable = false)
+    @Column(name = "vot_fecha", nullable = false)
     private LocalDateTime fecha;
 
     public VotoEntidad() {

@@ -3,6 +3,7 @@ C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\m
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\servicios\InteraccionServicio.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\repositorios\SancionRepositorio.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\controladores\UsuarioControlador.java
+C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\excepciones\GlobalExceptionHandler.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\servicios\AlmacenamientoServicio.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\VotoEntidad.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\ComentarioEntidad.java
@@ -22,6 +23,7 @@ C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\m
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\servicios\NsfwServicio.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\servicios\DenunciaServicio.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\CategoriaEntidad.java
+C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\util\AppLogger.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\NoticiasApiApplication.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\repositorios\VotoRepositorio.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\NoticiaEntidad.java

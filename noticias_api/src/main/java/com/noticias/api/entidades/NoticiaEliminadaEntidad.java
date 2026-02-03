@@ -12,68 +12,72 @@ public class NoticiaEliminadaEntidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "nel_id")
     private Long id;
 
     // Datos completos de la noticia original
-    @Column(nullable = false, length = 255)
+    @Column(name = "nel_titulo", nullable = false, length = 255)
     private String titulo;
 
-    @Column(length = 255)
+    @Column(name = "nel_subtitulo", length = 255)
     private String subtitulo;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "nel_contenido", nullable = false, columnDefinition = "TEXT")
     private String contenido;
 
-    @Column(name = "imagen_url", columnDefinition = "TEXT")
+    @Column(name = "nel_imagen_url", columnDefinition = "TEXT")
     private String imagenUrl;
 
     // Información del autor original
-    @Column(name = "autor_original_id")
+    @Column(name = "nel_autor_original_id")
     private Integer autorOriginalId;
 
-    @Column(name = "autor_original_nombre")
+    @Column(name = "nel_autor_original_nombre")
     private String autorOriginalNombre;
 
     // Información de categoría
-    @Column(name = "categoria_id")
+    @Column(name = "nel_categoria_id")
     private Integer categoriaId;
 
-    @Column(name = "categoria_nombre")
+    @Column(name = "nel_categoria_nombre")
     private String categoriaNombre;
 
-    @Column(name = "categoria_color")
+    @Column(name = "nel_categoria_color")
     private String categoriaColor;
 
     // Estadísticas de la noticia
+    @Column(name = "nel_likes")
     private Integer likes = 0;
+    @Column(name = "nel_dislikes")
     private Integer dislikes = 0;
+    @Column(name = "nel_visitas")
     private Integer visitas = 0;
-    @Column(name = "comentarios_count")
+    @Column(name = "nel_comentarios_count")
     private Integer comentariosCount = 0;
 
-    @Column(name = "fecha_publicacion_original")
+    @Column(name = "nel_fecha_publicacion_original")
     private LocalDateTime fechaPublicacionOriginal;
 
     // Información de eliminación
-    @Column(nullable = false)
+    @Column(name = "nel_motivo", nullable = false)
     private String motivo;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "nel_descripcion", columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(name = "eliminado_por_id")
+    @Column(name = "nel_eliminado_por_id")
     private Integer eliminadoPorId;
 
-    @Column(name = "eliminado_por_nombre")
+    @Column(name = "nel_eliminado_por_nombre")
     private String eliminadoPorNombre;
 
-    @Column(name = "rol_eliminador")
+    @Column(name = "nel_rol_eliminador")
     private String rolEliminador;
 
-    @Column(name = "fecha_eliminacion")
+    @Column(name = "nel_fecha_eliminacion")
     private LocalDateTime fechaEliminacion;
 
-    @Column(name = "es_aportacion_usuario")
+    @Column(name = "nel_es_aportacion_usuario")
     private Boolean esAportacionUsuario = false;
 
     public NoticiaEliminadaEntidad() {

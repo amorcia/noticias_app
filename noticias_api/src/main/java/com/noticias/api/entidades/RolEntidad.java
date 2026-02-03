@@ -11,11 +11,13 @@ public class RolEntidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "rol_id")
     private Integer id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "rol_nombre", nullable = false, unique = true)
     private String nombre; // ADMIN, OWNER, USER, etc.
 
+    @Column(name = "rol_descripcion")
     private String descripcion;
 
     public RolEntidad() {

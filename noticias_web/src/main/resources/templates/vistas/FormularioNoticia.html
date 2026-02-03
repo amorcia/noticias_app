@@ -43,13 +43,10 @@
                         <option value="" disabled selected>Selecciona una categoría</option>
 
                         <!-- CATEGORIES -->
-                        <th:block
-                            th:if="${session.usuario != null and (#strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'TRABAJADOR'))}">
-                            <optgroup label="📰 Categorías">
-                                <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}">
-                                </option>
-                            </optgroup>
-                        </th:block>
+                        <optgroup label="Selecciona una Categoría">
+                            <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}">
+                            </option>
+                        </optgroup>
                     </select>
                 </div>
 

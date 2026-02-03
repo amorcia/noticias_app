@@ -10,31 +10,33 @@ import org.hibernate.annotations.OnDeleteAction;
 public class DenunciaEntidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "den_id")
     private Integer id;
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "noticia_id", nullable = true)
+    @JoinColumn(name = "not_id", nullable = true)
     private NoticiaEntidad noticia;
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "comentario_id", nullable = true)
+    @JoinColumn(name = "com_id", nullable = true)
     private ComentarioEntidad comentario;
 
     @ManyToOne
     @JoinColumn(name = "denunciante_id", nullable = false)
     private UsuarioEntidad denunciante;
 
-    @Column(nullable = false)
+    @Column(name = "den_motivo", nullable = false)
     private String motivo;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "den_descripcion", columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(nullable = false)
+    @Column(name = "den_estado", nullable = false)
     private String estado = "PENDIENTE";
 
+    @Column(name = "den_fecha")
     private LocalDateTime fecha = LocalDateTime.now();
 
     public DenunciaEntidad() {

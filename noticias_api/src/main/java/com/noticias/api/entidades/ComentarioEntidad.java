@@ -10,25 +10,26 @@ import org.hibernate.annotations.OnDeleteAction;
 public class ComentarioEntidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "com_id")
     private Integer id;
 
     @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "noticia_id", nullable = false)
+    @JoinColumn(name = "not_id", nullable = false)
     private NoticiaEntidad noticia;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @JoinColumn(name = "usu_id", nullable = false)
     private UsuarioEntidad autor;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "com_contenido", nullable = false, columnDefinition = "TEXT")
     private String contenido;
 
-    @Column(nullable = false)
+    @Column(name = "com_likes", nullable = false)
     private Integer likes = 0;
 
-    @Column(nullable = false)
+    @Column(name = "com_dislikes", nullable = false)
     private Integer dislikes = 0;
 
     @jakarta.persistence.Transient
@@ -43,13 +44,14 @@ public class ComentarioEntidad {
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "padre_id")
+    @JoinColumn(name = "com_padre_id")
     @com.fasterxml.jackson.annotation.JsonIgnore
     private ComentarioEntidad padre;
 
     @OneToMany(mappedBy = "padre", cascade = CascadeType.ALL)
     private java.util.List<ComentarioEntidad> respuestas = new java.util.ArrayList<>();
 
+    @Column(name = "com_fecha")
     private LocalDateTime fecha = LocalDateTime.now();
 
     public ComentarioEntidad() {

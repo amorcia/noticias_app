@@ -14,52 +14,54 @@ public class UsuarioEntidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "usu_id")
     private Integer id;
 
-    @Column(name = "nombre_completo", nullable = false)
+    @Column(name = "usu_nombre_completo", nullable = false)
     private String nombreCompleto;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "usu_email", nullable = false, unique = true)
     private String email;
 
+    @Column(name = "usu_movil")
     private String movil;
 
-    @Column(nullable = false)
+    @Column(name = "usu_password", nullable = false)
     private String password; // hash bcrypt
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id")
     private RolEntidad rol;
 
-    @Column(nullable = false)
+    @Column(name = "usu_activo", nullable = false)
     private Boolean activo = true;
 
-    @Column(name = "codigo_verificacion", length = 255)
+    @Column(name = "usu_codigo_verificacion", length = 255)
     private String codigoVerificacion;
 
-    @Column(name = "token_session", length = 512)
+    @Column(name = "usu_token_session", length = 512)
     private String tokenSession;
 
     // Campos para el sistema de Veto/Ban
-    @Column(nullable = false)
+    @Column(name = "usu_vetado", nullable = false)
     private Boolean vetado = false;
 
-    @Column(name = "motivo_veto", columnDefinition = "TEXT")
+    @Column(name = "usu_motivo_veto", columnDefinition = "TEXT")
     private String motivoVeto;
 
-    @Column(name = "fecha_veto")
+    @Column(name = "usu_fecha_veto")
     private LocalDateTime fechaVeto;
 
-    @Column(name = "vetado_hasta")
+    @Column(name = "usu_vetado_hasta")
     private LocalDateTime vetadoHasta;
 
-    @Column(name = "secret_key_2fa")
+    @Column(name = "usu_secret_key_2fa")
     private String secretKey2FA;
 
-    @Column(name = "imagen_url")
+    @Column(name = "usu_imagen_url")
     private String imagenUrl;
 
-    @Column(name = "email_pendiente")
+    @Column(name = "usu_email_pendiente")
     private String emailPendiente;
 
     public UsuarioEntidad() {

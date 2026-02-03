@@ -182,8 +182,24 @@ public class UsuarioDTO {
     @com.fasterxml.jackson.annotation.JsonProperty("rol")
     private void unpackRol(java.util.Map<String, Object> rol) {
         if (rol != null) {
-            this.rolNombre = (String) rol.get("nombre");
+            // Try standard 'nombre' first
+            if (rol.containsKey("nombre")) {
+                this.rolNombre = (String) rol.get("nombre");
+            }
+            // Try DB column style 'rol_nombre'
+            else if (rol.containsKey("rol_nombre")) {
+                this.rolNombre = (String) rol.get("rol_nombre");
+            }
+            // Try CamelCase 'rolNombre'
+            else if (rol.containsKey("rolNombre")) {
+                this.rolNombre = (String) rol.get("rolNombre");
+            }
+
+            // Unpack ID
             Object idObj = rol.get("id");
+            if (idObj == null)
+                idObj = rol.get("rol_id"); // Try DB column style
+
             if (idObj instanceof Integer) {
                 this.rolId = (Integer) idObj;
             }

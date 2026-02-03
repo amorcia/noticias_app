@@ -23,6 +23,27 @@ public class AuthControlador {
         this.authServicio = authServicio;
     }
 
+    // Endpoint de depuración para verificar el estado de la sesión y el rol
+    @GetMapping("/debug/me")
+    @ResponseBody
+    public java.util.Map<String, Object> debugSession(HttpSession session) {
+        UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
+        java.util.Map<String, Object> info = new java.util.HashMap<>();
+        if (usuario != null) {
+            info.put("id", usuario.getId());
+            info.put("email", usuario.getEmail());
+            info.put("rolId", usuario.getRolId());
+            info.put("rolNombre", usuario.getRolNombre()); // This is what Thymeleaf checks
+            info.put("permissions", "Simulated Check: " +
+                    ("ADMIN".equalsIgnoreCase(usuario.getRolNombre())
+                            || "OWNER".equalsIgnoreCase(usuario.getRolNombre())
+                            || "TRABAJADOR".equalsIgnoreCase(usuario.getRolNombre())));
+        } else {
+            info.put("status", "No user in session");
+        }
+        return info;
+    }
+
     // ... (rest of methods)
 
     @PostMapping("/perfil/imagen/eliminar")

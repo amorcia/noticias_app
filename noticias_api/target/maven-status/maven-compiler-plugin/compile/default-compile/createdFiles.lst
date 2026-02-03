@@ -1,6 +1,7 @@
 com\noticias\api\controladores\UsuarioControlador.class
 com\noticias\api\repositorios\SancionRepositorio.class
 com\noticias\api\servicios\ModeracionServicio$1.class
+com\noticias\api\excepciones\GlobalExceptionHandler.class
 com\noticias\api\servicios\NsfwServicio$1.class
 com\noticias\api\entidades\NoticiaEliminadaEntidad.class
 com\noticias\api\servicios\AlmacenamientoServicio.class
@@ -11,6 +12,7 @@ com\noticias\api\entidades\ComentarioEntidad.class
 com\noticias\api\repositorios\DenunciaRepositorio.class
 com\noticias\api\repositorios\NoticiaEliminadaRepositorio.class
 com\noticias\api\servicios\ModeracionServicio.class
+com\noticias\api\util\AppLogger.class
 com\noticias\api\entidades\CategoriaEntidad.class
 com\noticias\api\entidades\VotoEntidad.class
 com\noticias\api\repositorios\UsuarioRepositorio.class

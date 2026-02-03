@@ -9,35 +9,36 @@ public class SancionEntidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "san_id")
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
+    @JoinColumn(name = "usu_id", nullable = false)
     private UsuarioEntidad usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id")
     private UsuarioEntidad admin;
 
-    @Column(nullable = false)
+    @Column(name = "san_tipo", nullable = false)
     private String tipo; // "TEMPORAL", "PERMANENTE"
 
-    @Column(nullable = false)
+    @Column(name = "san_estado", nullable = false)
     private String estado; // "PENDIENTE", "RESUELTO"
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "san_motivo", columnDefinition = "TEXT")
     private String motivo;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "san_apelacion", columnDefinition = "TEXT")
     private String apelacion;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "san_resolucion", columnDefinition = "TEXT")
     private String resolucion;
 
-    @Column(name = "fecha_inicio", nullable = false)
+    @Column(name = "san_fecha_inicio", nullable = false)
     private LocalDateTime fechaInicio;
 
-    @Column(name = "fecha_fin")
+    @Column(name = "san_fecha_fin")
     private LocalDateTime fechaFin;
 
     public SancionEntidad() {

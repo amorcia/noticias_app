@@ -14,19 +14,20 @@ public class CategoriaEntidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "cat_id")
     private Integer id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "cat_nombre", nullable = false, unique = true, length = 50)
     private String nombre;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "cat_descripcion", columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(length = 20)
+    @Column(name = "cat_color", length = 20)
     private String color;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
+    @JoinColumn(name = "cat_parent_id")
     @JsonIgnore // Evitar serialización circular
     private CategoriaEntidad parent;
 

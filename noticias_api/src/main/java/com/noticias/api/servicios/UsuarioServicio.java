@@ -44,6 +44,14 @@ public class UsuarioServicio {
         // Logica simplificada: solo guardar.
         // La asignación de roles especiales o encriptación debe venir resuelta o
         // manejada por quien llama (Web o Initializer).
+
+        // Asegurar valores por defecto para evitar errores de restricción NOT NULL
+        if (usuario.getVetado() == null) {
+            usuario.setVetado(false);
+        }
+        if (usuario.getActivo() == null) {
+            usuario.setActivo(true); // O false, dependiendo de la logica, pero DB suele requerir valor
+        }
         return usuarioRepositorio.save(usuario);
     }
 
