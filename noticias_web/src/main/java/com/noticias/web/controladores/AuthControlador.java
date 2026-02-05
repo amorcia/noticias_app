@@ -46,6 +46,13 @@ public class AuthControlador {
 
     // ... (rest of methods)
 
+    /**
+     * @author amorcia
+     *         METODO - Elimina la foto de perfil del usuario actual
+     * @param session            Sesión HTTP actual
+     * @param redirectAttributes Atributos para redirección (mensajes flash)
+     * @return Redirección a perfil o login
+     */
     @PostMapping("/perfil/imagen/eliminar")
     public String eliminarAvatar(HttpSession session, RedirectAttributes redirectAttributes) {
         UsuarioDTO dto = (UsuarioDTO) session.getAttribute("usuario");
@@ -65,6 +72,14 @@ public class AuthControlador {
         return "redirect:/perfil";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra la página de inicio de sesión
+     * @param redirect URL opcional para redireccionar después del login
+     * @param session  Sesión HTTP
+     * @param model    Modelo para la vista
+     * @return Nombre de la vista de login o redirección si ya está logueado
+     */
     @GetMapping("/login")
     public String loginPage(@RequestParam(required = false) String redirect, HttpSession session, Model model) {
         if (session.getAttribute("token") != null) {
@@ -76,6 +91,16 @@ public class AuthControlador {
         return "vistas/Login";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Procesa el inicio de sesión del usuario
+     * @param email    Email del usuario
+     * @param password Contraseña
+     * @param redirect URL de redirección opcional
+     * @param session  Sesión HTTP
+     * @param model    Modelo para la vista
+     * @return Vista o redirección según el resultado
+     */
     @PostMapping("/login")
     public String login(@RequestParam String email,
             @RequestParam String password,
@@ -84,34 +109,26 @@ public class AuthControlador {
             Model model) {
         try {
             LoginRespuestaDTO res = authServicio.autenticar(email, password);
-            // Fetch full user to get secretKey2FA and avoid Type Mismatch
             UsuarioDTO usuario = authServicio.buscarUsuarioPorEmail(email);
-            // Update token in the fetched DTO just in case, though autenticar updates it in
-            // DB
             usuario.setTokenSession(res.getToken());
 
-            // 2FA Check for ADMIN, OWNER, or TRABAJADOR
+            // 2FA Check for privileged roles
             boolean isPrivileged = "ADMIN".equalsIgnoreCase(usuario.getRolNombre())
                     || "OWNER".equalsIgnoreCase(usuario.getRolNombre())
                     || "TRABAJADOR".equalsIgnoreCase(usuario.getRolNombre());
 
-            if (isPrivileged) {
-                // Store temp session for 2FA verification if enabled
-                if (usuario.getSecretKey2FA() != null && !usuario.getSecretKey2FA().isEmpty()) {
-                    session.setAttribute("temp_2fa_user", usuario);
-                    session.setAttribute("temp_2fa_token", res.getToken());
-                    return "redirect:/auth/2fa/verify";
-                }
-                // If 2FA not enabled, proceed to normal login (Optional 2FA)
+            if (isPrivileged && usuario.getSecretKey2FA() != null && !usuario.getSecretKey2FA().isEmpty()) {
+                session.setAttribute("temp_2fa_user", usuario);
+                session.setAttribute("temp_2fa_token", res.getToken());
+                return "redirect:/auth/2fa/verify";
             }
 
-            // Normal Login Flow (Non-Privileged)
             completeLogin(session, usuario, res.getToken());
 
             if (redirect != null && !redirect.isEmpty()) {
                 return "redirect:" + redirect;
             }
-            return "redirect:/"; // Default redirect
+            return "redirect:/";
         } catch (Exception ex) {
             model.addAttribute("error", ex.getMessage());
             if (redirect != null) {
@@ -121,14 +138,23 @@ public class AuthControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Helper para completar el login y establecer sesión
+     */
     private void completeLogin(HttpSession session, UsuarioDTO usuario, String token) {
         session.setAttribute("token", token);
         session.setAttribute("usuario", usuario);
-        // Clean temp 2fa
         session.removeAttribute("temp_2fa_user");
         session.removeAttribute("temp_2fa_token");
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra la página de registro
+     * @param session Sesión HTTP
+     * @return Vista de registro o redirección
+     */
     @GetMapping("/registro")
     public String registroPage(HttpSession session) {
         if (session.getAttribute("token") != null) {
@@ -137,6 +163,42 @@ public class AuthControlador {
         return "vistas/Registro";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Helper para validar datos de registro
+     * @return Mensaje de error o null si es válido
+     */
+    private String validarDatosRegistro(String password, String confirmPassword, String movil) {
+        if (!password.equals(confirmPassword))
+            return "Las contraseñas no coinciden";
+        if (movil == null || movil.trim().isEmpty())
+            return "El número de móvil es obligatorio";
+        if (!movil.matches("[0-9]{9}"))
+            return "El móvil debe tener exactamente 9 dígitos";
+        if (password.length() < 6)
+            return "La contraseña debe tener al menos 6 caracteres";
+        if (!password.matches(".*[A-Z].*"))
+            return "La contraseña debe contener al menos una letra mayúscula";
+        if (!password.matches(".*[a-z].*"))
+            return "La contraseña debe contener al menos una letra minúscula";
+        if (!password.matches(".*[0-9].*"))
+            return "La contraseña debe contener al menos un número";
+        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*"))
+            return "La contraseña debe contener al menos un carácter especial (!@#$%^&*)";
+        return null;
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Procesa el registro de un nuevo usuario
+     * @param nombreCompleto  Nombre completo
+     * @param email           Email
+     * @param movil           Teléfono móvil
+     * @param password        Contraseña
+     * @param confirmPassword Confirmación de contraseña
+     * @param model           Modelo para la vista
+     * @return Vista de éxito (login) o registro con error
+     */
     @PostMapping("/registro")
     public String registro(@RequestParam String nombreCompleto,
             @RequestParam String email,
@@ -145,8 +207,9 @@ public class AuthControlador {
             @RequestParam String confirmPassword,
             Model model) {
         try {
-            if (!password.equals(confirmPassword)) {
-                model.addAttribute("error", "Las contraseñas no coinciden");
+            String errorValidacion = validarDatosRegistro(password, confirmPassword, movil);
+            if (errorValidacion != null) {
+                model.addAttribute("error", errorValidacion);
                 return "vistas/Registro";
             }
 
@@ -159,6 +222,14 @@ public class AuthControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Confirma el email del usuario mediante token (código de 6
+     *         dígitos)
+     * @param token Token/Código de verificación
+     * @param model Modelo para la vista
+     * @return Vista de login con mensaje de éxito o error
+     */
     @GetMapping("/confirmar")
     public String confirmarEmail(@RequestParam String token, Model model) {
         try {
@@ -176,11 +247,23 @@ public class AuthControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra el formulario para recuperar contraseña
+     * @return Vista recuperar email
+     */
     @GetMapping("/olvidar")
     public String olvidarPage() {
         return "vistas/RecuperarEmail";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Procesa la solicitud de recuperación de contraseña
+     * @param email Email del usuario
+     * @param model Modelo
+     * @return Redirección a verificación de código o error
+     */
     @PostMapping("/olvidar")
     public String olvidar(@RequestParam String email, Model model) {
         try {
@@ -192,22 +275,31 @@ public class AuthControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra página para verificar código de recuperación
+     * @param email Email del usuario
+     * @param model Modelo
+     */
     @GetMapping("/verificar-codigo")
     public String verificarCodigoPage(@RequestParam String email, Model model) {
         model.addAttribute("email", email);
         return "vistas/RecuperarCodigo";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Verifica el código de recuperación ingresado
+     * @param email  Email
+     * @param codigo Código de 6 dígitos
+     * @param model  Modelo
+     * @return Redirección a reset password si es válido
+     */
     @PostMapping("/verificar-codigo")
     public String verificarCodigo(@RequestParam String email, @RequestParam String codigo, Model model) {
         try {
-            // Verificar código contra el backend
-            // NOTA: Necesitamos añadir este metodo a AuthServicio y API
-            // Por ahora, asumimos que AuthServicio lo tiene (lo añadimos en el replace
-            // anterior)
             boolean valido = authServicio.verificarCodigo(email, codigo);
             if (valido) {
-                // Redirigir a reset con el código como token
                 return "redirect:/auth/reset-password?token=" + codigo;
             } else {
                 model.addAttribute("error", "Código incorrecto o expirado");
@@ -221,12 +313,27 @@ public class AuthControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra formulario para establecer nueva contraseña
+     * @param token Código (usado como token)
+     * @param model Modelo
+     */
     @GetMapping("/reset-password")
     public String resetPasswordPage(@RequestParam String token, Model model) {
-        model.addAttribute("token", token); // El token es el código
+        model.addAttribute("token", token);
         return "vistas/RecuperarReset";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Procesa el cambio de contraseña
+     * @param token           Código/Token
+     * @param newPassword     Nueva contraseña
+     * @param confirmPassword Confirmación
+     * @param model           Modelo
+     * @return Redirección a login si éxito
+     */
     @PostMapping("/reset-password")
     public String processResetPassword(@RequestParam String token,
             @RequestParam String newPassword,
@@ -255,11 +362,14 @@ public class AuthControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Configuración de 2FA (GET)
+     */
     @GetMapping("/2fa/setup")
     public String setup2faPage(HttpSession session, Model model) {
         UsuarioDTO user = (UsuarioDTO) session.getAttribute("temp_2fa_user");
         if (user == null) {
-            // Try to get fully logged in user (Re-configuration from Profile)
             user = (UsuarioDTO) session.getAttribute("usuario");
         }
 
@@ -273,14 +383,8 @@ public class AuthControlador {
 
         session.setAttribute("temp_2fa_secret", secret);
 
-        // Generate QR URL (Using simple chart api or custom)
-        // Format: otpauth://totp/NoticiasApp:userEmail?secret=SECRET&issuer=NoticiasApp
         String otpAuthUrl = "otpauth://totp/NoticiasApp:" + user.getEmail() + "?secret=" + secret
                 + "&issuer=NoticiasApp";
-        // QR Generator is separate, but we can use quickchart.io for simplicity
-        // client-side or generate here
-        // Or using Google Chart API (Deprecated but works) or a library.
-        // For simplicity, let's use a public QR API.
         String qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="
                 + java.net.URLEncoder.encode(otpAuthUrl, java.nio.charset.StandardCharsets.UTF_8);
 
@@ -288,6 +392,10 @@ public class AuthControlador {
         return "vistas/2fa-setup";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Procesa configuración de 2FA (POST) verificando código
+     */
     @PostMapping("/2fa/setup")
     public String setup2faPost(@RequestParam("code") int code, HttpSession session, Model model) {
         UsuarioDTO user = (UsuarioDTO) session.getAttribute("temp_2fa_user");
@@ -307,26 +415,18 @@ public class AuthControlador {
 
         com.warrenstrange.googleauth.GoogleAuthenticator gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
         if (gAuth.authorize(secret, code)) {
-            // Save secret to DB
-            UsuarioDTO updateDto = new UsuarioDTO();
-            updateDto.setSecretKey2FA(secret);
-
             authServicio.activar2FA(user.getId(), secret);
 
             if (isTempUser) {
-                // Login user
                 completeLogin(session, user, token);
                 return "redirect:/";
             } else {
-                // Already logged in, just update session and redirect to profile
                 user.setSecretKey2FA(secret);
                 session.setAttribute("usuario", user);
                 return "redirect:/perfil";
             }
         } else {
             model.addAttribute("error", "Código incorrecto");
-            // Re-render setup page with NEW secret? Or same? Better same.
-            // We need to re-generate QR url though.
             String otpAuthUrl = "otpauth://totp/NoticiasApp:" + user.getEmail() + "?secret=" + secret
                     + "&issuer=NoticiasApp";
             String qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="
@@ -336,6 +436,10 @@ public class AuthControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Página de verificación 2FA (Login)
+     */
     @GetMapping("/2fa/verify")
     public String verify2faPage(HttpSession session) {
         if (session.getAttribute("temp_2fa_user") == null) {
@@ -344,6 +448,10 @@ public class AuthControlador {
         return "vistas/2fa-verify";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Procesa verificación 2FA (Login)
+     */
     @PostMapping("/2fa/verify")
     public String verify2faPost(@RequestParam("code") int code, HttpSession session, Model model) {
         UsuarioDTO user = (UsuarioDTO) session.getAttribute("temp_2fa_user");
@@ -353,7 +461,6 @@ public class AuthControlador {
             return "redirect:/auth/login";
         }
 
-        // Rate Limiting
         Integer attempts = (Integer) session.getAttribute("2fa_attempts");
         if (attempts == null)
             attempts = 0;
@@ -380,6 +487,10 @@ public class AuthControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Desactiva 2FA
+     */
     @PostMapping("/2fa/disable")
     public String disable2fa(HttpSession session, RedirectAttributes redirectAttributes) {
         UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
@@ -392,6 +503,10 @@ public class AuthControlador {
         return "redirect:/perfil";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Cierra la sesión
+     */
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
@@ -406,6 +521,10 @@ public class AuthControlador {
         return "redirect:/";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Actualiza perfil de usuario
+     */
     @PostMapping("/perfil/actualizar")
     public String actualizarPerfil(@RequestParam String nombreCompleto, @RequestParam String email,
             HttpSession session, RedirectAttributes redirectAttributes) {
@@ -414,14 +533,11 @@ public class AuthControlador {
             try {
                 String result = authServicio.actualizarPerfil(usuario.getId(), nombreCompleto, email,
                         usuario.getEmail());
-
-                // Always update name in session
                 usuario.setNombreCompleto(nombreCompleto);
 
                 if ("VERIFY".equals(result)) {
                     redirectAttributes.addFlashAttribute("mensaje",
                             "Perfil actualizado. Se ha enviado un correo a tu nuevo email para confirmarlo.");
-                    // Do NOT update email in session yet
                 } else {
                     redirectAttributes.addFlashAttribute("mensaje", "Perfil actualizado correctamente.");
                     usuario.setEmail(email);
@@ -434,6 +550,10 @@ public class AuthControlador {
         return "redirect:/perfil";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Sube imagen de perfil
+     */
     @PostMapping("/perfil/imagen")
     public String subirAvatar(@RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             HttpSession session) {

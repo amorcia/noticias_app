@@ -2,10 +2,10 @@ package com.noticias.web.controladores;
 
 import com.noticias.web.dtos.*;
 import com.noticias.web.servicios.ApiNoticiasCliente;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @Controller
@@ -17,6 +17,10 @@ public class InicioControlador {
         this.apiCliente = apiCliente;
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra la página de inicio con las noticias populares
+     */
     @GetMapping("/")
     public String inicio(Model model) {
         try {
@@ -30,6 +34,10 @@ public class InicioControlador {
         return "vistas/Inicio";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra noticias de una categoría específica con filtros
+     */
     @GetMapping("/categoria/{nombre}")
     public String categoria(@PathVariable String nombre,
             @RequestParam(required = false) String filtro,
@@ -67,6 +75,10 @@ public class InicioControlador {
         return "vistas/Categoria";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra el foro de una categoría
+     */
     @GetMapping("/foro/{nombre}")
     public String foro(@PathVariable String nombre, Model model) {
         try {
@@ -81,6 +93,10 @@ public class InicioControlador {
 
     // ... vuestrasNoticias omitted for brevity, assuming similar safety/mock
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra el detalle de una noticia
+     */
     @GetMapping("/noticia/{id}")
     public String verNoticia(@PathVariable Integer id, Model model) {
         try {
@@ -95,10 +111,14 @@ public class InicioControlador {
         return "vistas/DetalleNoticia";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Vota una noticia (AJAX)
+     */
     @PostMapping("/noticia/{id}/votar")
     @ResponseBody
     public String votarNoticia(@PathVariable Integer id, @RequestParam String tipo,
-            jakarta.servlet.http.HttpSession session) {
+            HttpSession session) {
         try {
             UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
             if (usuario == null) {
@@ -112,13 +132,21 @@ public class InicioControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra página de ajustes
+     */
     @GetMapping("/ajustes")
     public String ajustes() {
         return "vistas/Ajustes";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra página de 'Vuestras Noticias'
+     */
     @GetMapping("/vuestras-noticias")
-    public String vuestrasNoticias(jakarta.servlet.http.HttpSession session, Model model) {
+    public String vuestrasNoticias(HttpSession session, Model model) {
         try {
             UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
             model.addAttribute("isLoggedIn", usuario != null);
@@ -130,8 +158,12 @@ public class InicioControlador {
         return "vistas/VuestrasNoticias";
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Muestra perfil del usuario
+     */
     @GetMapping("/perfil")
-    public String perfil(jakarta.servlet.http.HttpSession session, Model model) {
+    public String perfil(HttpSession session, Model model) {
         UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
         if (usuario == null) {
             return "redirect:/auth/login";

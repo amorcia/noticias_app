@@ -4,6 +4,7 @@ import com.noticias.web.dtos.ComentarioDTO;
 import com.noticias.web.dtos.UsuarioDTO;
 import com.noticias.web.servicios.ApiNoticiasCliente;
 
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -19,6 +20,10 @@ public class InteraccionWebControlador {
         this.apiCliente = apiCliente;
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Publica un comentario en una noticia
+     */
     @PostMapping("/comentarios")
     public ResponseEntity<?> publicarComentario(@RequestBody Map<String, Object> payload) {
         try {
@@ -56,9 +61,12 @@ public class InteraccionWebControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Lista comentarios de una noticia
+     */
     @GetMapping("/comentarios/noticia/{id}")
-    public ResponseEntity<?> listarComentarios(@PathVariable Integer id,
-            jakarta.servlet.http.HttpSession session) {
+    public ResponseEntity<?> listarComentarios(@PathVariable Integer id, HttpSession session) {
         try {
             com.noticias.web.dtos.UsuarioDTO usuario = (com.noticias.web.dtos.UsuarioDTO) session
                     .getAttribute("usuario");
@@ -71,7 +79,10 @@ public class InteraccionWebControlador {
         }
     }
 
-    // Proxy para denuncias
+    /**
+     * @author amorcia
+     *         METODO - Envía una denuncia sobre noticia o comentario
+     */
     @PostMapping("/denuncias")
     public ResponseEntity<?> enviarDenuncia(@RequestBody Map<String, Object> payload) {
         try {
@@ -95,9 +106,13 @@ public class InteraccionWebControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Vota un comentario
+     */
     @PostMapping("/comentarios/{id}/votar")
     public ResponseEntity<?> votarComentario(@PathVariable Integer id, @RequestParam("tipo") String tipo,
-            jakarta.servlet.http.HttpSession session) {
+            HttpSession session) {
         try {
             com.noticias.web.dtos.UsuarioDTO usuario = (com.noticias.web.dtos.UsuarioDTO) session
                     .getAttribute("usuario");
@@ -112,9 +127,12 @@ public class InteraccionWebControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Obtiene el voto del usuario actual en una noticia
+     */
     @GetMapping("/noticia/{id}/voto")
-    public ResponseEntity<Map<String, String>> obtenerVotoUsuario(@PathVariable Integer id,
-            jakarta.servlet.http.HttpSession session) {
+    public ResponseEntity<Map<String, String>> obtenerVotoUsuario(@PathVariable Integer id, HttpSession session) {
         com.noticias.web.dtos.UsuarioDTO usuario = (com.noticias.web.dtos.UsuarioDTO) session.getAttribute("usuario");
         if (usuario == null) {
             return ResponseEntity.ok(Map.of("voto", "NONE"));
@@ -123,9 +141,13 @@ public class InteraccionWebControlador {
         return ResponseEntity.ok(Map.of("voto", voto != null ? voto : "NONE"));
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Vota una noticia (Proxy alternativo)
+     */
     @PostMapping("/noticia/{id}/votar")
     public ResponseEntity<?> votarNoticia(@PathVariable Integer id, @RequestParam("tipo") String tipo,
-            jakarta.servlet.http.HttpSession session) {
+            HttpSession session) {
         try {
             com.noticias.web.dtos.UsuarioDTO usuario = (com.noticias.web.dtos.UsuarioDTO) session
                     .getAttribute("usuario");
@@ -140,8 +162,12 @@ public class InteraccionWebControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Elimina un comentario
+     */
     @DeleteMapping("/comentarios/{id}")
-    public ResponseEntity<?> eliminarComentario(@PathVariable Integer id, jakarta.servlet.http.HttpSession session) {
+    public ResponseEntity<?> eliminarComentario(@PathVariable Integer id, HttpSession session) {
         try {
             UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
             if (usuario == null) {

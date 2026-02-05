@@ -48,16 +48,26 @@ public class NoticiaControlador {
         return ResponseEntity.ok(noticiaServicio.listarDestacadas());
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Lista noticias populares (más visitadas)
+     * @return ResponseEntity con lista de noticias populares
+     */
     @GetMapping("/populares")
     public ResponseEntity<List<NoticiaDTO>> listarPopulares() {
         return ResponseEntity.ok(noticiaServicio.listarPopulares());
     }
 
-    @GetMapping("/categoria/{categoriaId}")
-    public ResponseEntity<List<NoticiaDTO>> listarPorCategoria(@PathVariable Integer categoriaId) {
-        return ResponseEntity.ok(noticiaServicio.listarPorCategoria(categoriaId));
-    }
-
+    /**
+     * @author amorcia
+     *         METODO - Filtra noticias por categoría y criterios opcionales (texto,
+     *         fecha)
+     * @param categoriaId ID de la categoría
+     * @param filtro      Texto a buscar en título/contenido (opcional)
+     * @param mes         Mes de publicación (opcional)
+     * @param anio        Año de publicación (opcional)
+     * @return ResponseEntity con lista de noticias filtradas
+     */
     @GetMapping("/categoria/{categoriaId}/filtrar")
     public ResponseEntity<List<NoticiaDTO>> listarPorCategoriaFiltrado(
             @PathVariable Integer categoriaId,
@@ -67,16 +77,35 @@ public class NoticiaControlador {
         return ResponseEntity.ok(noticiaServicio.listarPorCategoriaFiltrado(categoriaId, filtro, mes, anio));
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Lista noticias por nombre de categoría
+     * @param nombre Nombre de la categoría
+     * @return ResponseEntity con lista de noticias
+     */
     @GetMapping("/categoria/nombre/{nombre}")
     public ResponseEntity<List<NoticiaDTO>> listarPorCategoriaNombre(@PathVariable String nombre) {
         return ResponseEntity.ok(noticiaServicio.listarPorCategoriaNombre(nombre));
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Lista noticias tipo foro (aportaciones de usuarios) de una
+     *         categoría
+     * @param nombre Nombre de la categoría
+     * @return ResponseEntity con lista de noticias del foro
+     */
     @GetMapping("/categoria/nombre/{nombre}/foro")
     public ResponseEntity<List<NoticiaDTO>> listarPorCategoriaForo(@PathVariable String nombre) {
         return ResponseEntity.ok(noticiaServicio.listarPorCategoriaNombreYTipo(nombre, true));
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Lista noticias de un autor específico
+     * @param autorId ID del autor
+     * @return ResponseEntity con lista de noticias
+     */
     @GetMapping("/autor/{autorId}")
     public ResponseEntity<List<NoticiaDTO>> listarPorAutor(@PathVariable Integer autorId) {
         return ResponseEntity.ok(noticiaServicio.listarPorAutor(autorId));
@@ -91,6 +120,12 @@ public class NoticiaControlador {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Busca una noticia por su título exacto
+     * @param titulo Título a buscar
+     * @return ResponseEntity con la noticia o 404
+     */
     @GetMapping("/titulo")
     public ResponseEntity<NoticiaDTO> buscarPorTitulo(@RequestParam String titulo) {
         return noticiaServicio.buscarPorTitulo(titulo)
@@ -98,12 +133,56 @@ public class NoticiaControlador {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Crea una noticia directamente (uso interno/admin)
+     * @param noticia Entidad noticia
+     * @return ResponseEntity con noticia creada
+     */
     @PostMapping
     public ResponseEntity<NoticiaDTO> crear(@RequestBody NoticiaEntidad noticia) {
         NoticiaDTO creada = noticiaServicio.crearNoticia(noticia);
         return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Helper para procesar imagen (validación, moderación,
+     *         almacenamiento)
+     * @param file  Archivo de imagen
+     * @param autor Autor (para vetar si es NSFW)
+     * @return URL de la imagen o mensaje de error si comienza con "ERROR:"
+     * @throws Exception Si hay error de IO
+     */
+    private String procesarImagen(MultipartFile file, UsuarioEntidad autor) throws Exception {
+        if (file == null || file.isEmpty())
+            return null;
+
+        almacenamientoServicio.validarTipoImagen(file);
+        almacenamientoServicio.validarTamañoArchivo(file);
+
+        if (moderacionServicio.esContenidoNSFW(file)) {
+            if (autor != null) {
+                moderacionServicio.vetarUsuarioAutomaticamente(autor,
+                        "Intento de subir contenido +18 detectado por IA.");
+            }
+            return "ERROR: Contenido inapropiado detectado.";
+        }
+        return almacenamientoServicio.almacenar(file);
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Publica una noticia desde el formulario de usuario con
+     *         validaciones y subida de imagen
+     * @param titulo      Título de la noticia
+     * @param subtitulo   Subtítulo
+     * @param contenido   Contenido HTML/Texto
+     * @param categoriaId ID de la categoría
+     * @param autorId     ID del autor
+     * @param file        Archivo de imagen (opcional)
+     * @return ResponseEntity con resultado
+     */
     @PostMapping(value = "/publicar", consumes = { "multipart/form-data" })
     public ResponseEntity<?> publicarNoticiaUsuario(
             @RequestParam("titulo") String titulo,
@@ -114,44 +193,28 @@ public class NoticiaControlador {
             @RequestParam(value = "file", required = false) MultipartFile file) {
 
         try {
-            // 1. Verificar Usuario
-            if (autorId == null) {
+            if (autorId == null)
                 return ResponseEntity.badRequest().body("ID de autor es obligatorio");
-            }
-            com.noticias.api.entidades.UsuarioEntidad autor = usuarioRepositorio.findById(autorId)
+
+            UsuarioEntidad autor = usuarioRepositorio.findById(autorId)
                     .orElseThrow(() -> new RuntimeException("Autor no encontrado"));
 
             if (moderacionServicio.estaVetado(autor)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Usuario vetado. No puedes publicar.");
             }
 
-            // 2. Validación y procesamiento de imagen
-            String imagenUrl = null;
-            if (file != null && !file.isEmpty()) {
-                // Validar tipo y tamaño (lanza IllegalArgumentException si falla)
-                almacenamientoServicio.validarTipoImagen(file);
-                almacenamientoServicio.validarTamañoArchivo(file);
-
-                // 3. Moderación NSFW
-                if (moderacionServicio.esContenidoNSFW(file)) {
-                    moderacionServicio.vetarUsuarioAutomaticamente(autor,
-                            "Intento de subir contenido +18 detectado por IA.");
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                            .body("Contenido inapropiado detectado. Has sido vetado por 7 días.");
-                }
-
-                // 4. Almacenar y optimizar archivo
-                imagenUrl = almacenamientoServicio.almacenar(file);
+            String imagenUrlResult = procesarImagen(file, autor);
+            if (imagenUrlResult != null && imagenUrlResult.startsWith("ERROR:")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(imagenUrlResult.substring(7));
             }
+            String imagenUrl = imagenUrlResult;
 
-            // 5. Crear Noticia
             NoticiaEntidad noticia = new NoticiaEntidad();
             noticia.setTitulo(titulo);
             noticia.setSubtitulo(subtitulo);
             noticia.setContenido(contenido);
             noticia.setImagenUrl(imagenUrl);
 
-            // Determinar si es aportación de usuario (foro) o noticia oficial
             String rolNombre = autor.getRol() != null ? autor.getRol().getNombre() : "";
             boolean esOficial = "TRABAJADOR".equalsIgnoreCase(rolNombre) ||
                     "ADMIN".equalsIgnoreCase(rolNombre) ||
@@ -159,7 +222,6 @@ public class NoticiaControlador {
             noticia.setEsAportacionUsuario(!esOficial);
             noticia.setAutor(autor);
 
-            // Asignar categoría
             com.noticias.api.entidades.CategoriaEntidad cat = new com.noticias.api.entidades.CategoriaEntidad();
             cat.setId(categoriaId);
             noticia.setCategoria(cat);
@@ -168,7 +230,6 @@ public class NoticiaControlador {
             return ResponseEntity.status(HttpStatus.CREATED).body(creada);
 
         } catch (IllegalArgumentException e) {
-            // Errores de validación (tipo de archivo, tamaño, etc.)
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -176,6 +237,13 @@ public class NoticiaControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Actualiza una noticia existente
+     * @param id      ID de la noticia
+     * @param noticia Datos actualizados
+     * @return ResponseEntity con noticia actualizada
+     */
     @PutMapping("/{id}")
     public ResponseEntity<NoticiaDTO> actualizar(@PathVariable Integer id, @RequestBody NoticiaEntidad noticia) {
         NoticiaDTO actualizada = noticiaServicio.actualizarNoticia(id, noticia);
@@ -185,6 +253,17 @@ public class NoticiaControlador {
         return ResponseEntity.notFound().build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Edita una noticia con soporte para nueva imagen
+     * @param id          ID de la noticia
+     * @param titulo      Nuevo título
+     * @param subtitulo   Nuevo subtítulo
+     * @param contenido   Nuevo contenido
+     * @param categoriaId Nueva categoría
+     * @param file        Nueva imagen (opcional)
+     * @return ResponseEntity con noticia editada
+     */
     @PostMapping(value = "/{id}/editar", consumes = { "multipart/form-data" })
     public ResponseEntity<?> editarNoticia(
             @PathVariable Integer id,
@@ -195,28 +274,18 @@ public class NoticiaControlador {
             @RequestParam(value = "file", required = false) MultipartFile file) {
 
         try {
-            // 1. Buscar noticia
             NoticiaDTO noticiaExistente = noticiaServicio.buscarPorId(id).orElse(null);
-            if (noticiaExistente == null) {
+            if (noticiaExistente == null)
                 return ResponseEntity.notFound().build();
+
+            String imagenUrlResult = procesarImagen(file, null); // No author check on edit for now or pass context if
+                                                                 // needed
+            if (imagenUrlResult != null && imagenUrlResult.startsWith("ERROR:")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(imagenUrlResult.substring(7));
             }
+            // Keep old image if new one is not provided, else use new one
+            String imagenUrl = (imagenUrlResult != null) ? imagenUrlResult : noticiaExistente.getImagenUrl();
 
-            // 2. Procesar imagen nueva si existe
-            String imagenUrl = noticiaExistente.getImagenUrl();
-            if (file != null && !file.isEmpty()) {
-                almacenamientoServicio.validarTipoImagen(file);
-                almacenamientoServicio.validarTamañoArchivo(file);
-
-                // Moderación NSFW
-                if (moderacionServicio.esContenidoNSFW(file)) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                            .body("Contenido inapropiado detectado en la nueva imagen.");
-                }
-
-                imagenUrl = almacenamientoServicio.almacenar(file);
-            }
-
-            // 3. Preparar entidad para actualización
             NoticiaEntidad noticiaUpdate = new NoticiaEntidad();
             noticiaUpdate.setTitulo(titulo);
             noticiaUpdate.setSubtitulo(subtitulo);
@@ -238,6 +307,14 @@ public class NoticiaControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Registra un voto (like/dislike) en una noticia
+     * @param id        ID de la noticia
+     * @param like      true para like, false para dislike
+     * @param usuarioId ID del usuario
+     * @return ResponseEntity vacío con 200 si éxito, 404 si no existe
+     */
     @PostMapping("/{id}/votar")
     public ResponseEntity<Void> votar(@PathVariable Integer id, @RequestParam Boolean like,
             @RequestParam Integer usuarioId) {
@@ -247,6 +324,13 @@ public class NoticiaControlador {
         return ResponseEntity.notFound().build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Obtiene el tipo de voto de un usuario en una noticia
+     * @param id        ID de la noticia
+     * @param usuarioId ID del usuario
+     * @return ResponseEntity con tipo ("LIKE", "DISLIKE", "NONE")
+     */
     @GetMapping("/{id}/voto")
     public ResponseEntity<java.util.Map<String, String>> obtenerVoto(@PathVariable Integer id,
             @RequestParam Integer usuarioId) {
@@ -255,7 +339,12 @@ public class NoticiaControlador {
     }
 
     /**
-     * Elimina noticia con confirmación de título (para propietarios)
+     * @author amorcia
+     *         METODO - Elimina noticia con confirmación estricta de título (para
+     *         propietarios)
+     * @param id      ID de la noticia
+     * @param payload Mapa con título de confirmación y usuarioId
+     * @return ResponseEntity con mensaje de éxito o error
      */
     @PostMapping("/{id}/eliminar-con-confirmacion")
     public ResponseEntity<java.util.Map<String, String>> eliminarConConfirmacionTitulo(
@@ -270,13 +359,11 @@ public class NoticiaControlador {
                         .body(java.util.Map.of("error", "Título de confirmación y usuarioId son requeridos"));
             }
 
-            // Verificar que sea el propietario
             if (!noticiaServicio.esPropietario(id, usuarioId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(java.util.Map.of("error", "Solo el propietario puede eliminar esta noticia"));
             }
 
-            // Eliminar con confirmación de título
             boolean eliminado = noticiaServicio.eliminarConConfirmacionTitulo(tituloConfirmacion, id, usuarioId);
             if (eliminado) {
                 return ResponseEntity.ok(java.util.Map.of("mensaje", "Noticia eliminada exitosamente"));
@@ -291,7 +378,12 @@ public class NoticiaControlador {
     }
 
     /**
-     * Elimina noticia con justificación (para staff)
+     * @author amorcia
+     *         METODO - Elimina noticia con justificación (para staff
+     *         administrativo)
+     * @param id      ID de la noticia
+     * @param payload Mapa con motivo, descripción y eliminadorId
+     * @return ResponseEntity con mensaje de éxito o error
      */
     @PostMapping("/{id}/eliminar-con-justificacion")
     public ResponseEntity<java.util.Map<String, String>> eliminarConJustificacion(
@@ -307,14 +399,12 @@ public class NoticiaControlador {
                         .body(java.util.Map.of("error", "Motivo y eliminadorId son requeridos"));
             }
 
-            // Obtener eliminador
             UsuarioEntidad eliminador = usuarioRepositorio.findById(eliminadorId).orElse(null);
             if (eliminador == null) {
                 return ResponseEntity.badRequest()
                         .body(java.util.Map.of("error", "Eliminador no encontrado"));
             }
 
-            // Eliminar con justificación
             boolean eliminado = noticiaServicio.eliminarConJustificacion(id, motivo, descripcion, eliminador);
             if (eliminado) {
                 return ResponseEntity.ok(java.util.Map.of("mensaje", "Noticia eliminada exitosamente"));
@@ -329,7 +419,10 @@ public class NoticiaControlador {
     }
 
     /**
-     * @deprecated Usar eliminarConConfirmacionTitulo o eliminarConJustificacion
+     * @author amorcia
+     *         METODO - Método deprecado para eliminar. Usar versiones con
+     *         justificación/confirmación.
+     * @deprecated
      */
     @Deprecated
     @DeleteMapping("/{id}")
@@ -337,40 +430,51 @@ public class NoticiaControlador {
             @RequestParam(required = false) String motivo,
             @RequestParam(required = false) String descripcion,
             @RequestParam(required = false) Integer eliminadorId) {
-
         UsuarioEntidad eliminador = null;
         if (eliminadorId != null) {
             eliminador = usuarioRepositorio.findById(eliminadorId).orElse(null);
         }
-
         if (noticiaServicio.eliminarNoticia(id, motivo, descripcion, eliminador)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Elimina noticia por título (deprecado/interno)
+     */
     @DeleteMapping("/titulo")
     public ResponseEntity<Void> eliminarPorTitulo(@RequestParam String titulo,
             @RequestParam(required = false) String motivo,
             @RequestParam(required = false) String descripcion,
             @RequestParam(required = false) Integer eliminadorId) {
-
         UsuarioEntidad eliminador = null;
         if (eliminadorId != null) {
             eliminador = usuarioRepositorio.findById(eliminadorId).orElse(null);
         }
-
         if (noticiaServicio.eliminarNoticiaPorTitulo(titulo, motivo, descripcion, eliminador)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Lista las noticias eliminadas (solo admin)
+     * @return ResponseEntity con lista de noticias eliminadas
+     */
     @GetMapping("/eliminadas/admin")
     public ResponseEntity<List<NoticiaEliminadaEntidad>> listarEliminadasAdmin() {
         return ResponseEntity.ok(noticiaServicio.listarNoticiasEliminadasPorAdmin());
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Obtiene detalles de una noticia eliminada
+     * @param id ID de la noticia eliminada
+     * @return ResponseEntity con detalles
+     */
     @GetMapping("/eliminadas/{id}")
     public ResponseEntity<NoticiaEliminadaEntidad> obtenerEliminadaPorId(@PathVariable Long id) {
         return noticiaServicio.obtenerNoticiaEliminadaPorId(id)
@@ -378,6 +482,12 @@ public class NoticiaControlador {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Verifica si existe una noticia con un título específico
+     * @param titulo Título a verificar
+     * @return ResponseEntity con booleano (true si existe)
+     */
     @GetMapping("/check-titulo")
     public ResponseEntity<Boolean> verificarTitulo(@RequestParam String titulo) {
         return ResponseEntity.ok(noticiaServicio.existePorTitulo(titulo));

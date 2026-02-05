@@ -26,32 +26,116 @@ public class AdminControlador {
     @Autowired
     private com.noticias.web.servicios.ExportacionServicio exportacionServicio;
 
+    /**
+     * @author amorcia
+     *         METODO - Helper para calcular nivel jerárquico del rol
+     */
+    private Integer calcularNivel(String rol) {
+        if (rol == null)
+            return 4;
+        String r = rol.toUpperCase();
+        if (r.contains("OWNER"))
+            return 1;
+        if (r.contains("ADMIN"))
+            return 2;
+        if (r.contains("TRABAJADOR"))
+            return 3;
+        return 4;
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Helper para validar jerarquía entre usuarios
+     * @return true si el actor tiene mayor rango (menor nivel) que el objetivo
+     */
+    private boolean validarJerarquiaSuperior(UsuarioDTO actor, UsuarioDTO objetivo) {
+        if (actor.getRolNivel() == null)
+            actor.setRolNivel(calcularNivel(actor.getRolNombre()));
+        if (objetivo.getRolNivel() == null)
+            objetivo.setRolNivel(calcularNivel(objetivo.getRolNombre()));
+        return actor.getRolNivel() < objetivo.getRolNivel();
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Helper para sanitizar lista de usuarios para la vista
+     */
+    private void sanitizarUsuarios(List<UsuarioDTO> usuarios) {
+        if (usuarios == null)
+            return;
+        for (UsuarioDTO u : usuarios) {
+            if (u.getRolNombre() == null)
+                u.setRolNombre("USER");
+            if (u.getRolId() == null)
+                u.setRolId(4);
+            u.setRolNivel(calcularNivel(u.getRolNombre()));
+            if (u.getNombreCompleto() == null || u.getNombreCompleto().trim().isEmpty())
+                u.setNombreCompleto("Usuario Sin Nombre");
+            if (u.getEmail() == null || u.getEmail().trim().isEmpty())
+                u.setEmail("sin_email@sistema.local");
+            if (u.getVetado() == null)
+                u.setVetado(false);
+            if (u.getMovil() == null || u.getMovil().trim().isEmpty())
+                u.setMovil("N/A");
+            if (u.getImagenUrl() == null)
+                u.setImagenUrl("");
+        }
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Helper para sanitizar noticias eliminadas para la vista
+     */
+    private void sanitizarNoticiasEliminadas(List<com.noticias.web.dtos.NoticiaEliminadaDTO> noticias) {
+        if (noticias == null)
+            return;
+        for (com.noticias.web.dtos.NoticiaEliminadaDTO ne : noticias) {
+            if (ne.getFechaEliminacion() == null)
+                ne.setFechaEliminacion(java.time.LocalDateTime.now());
+            if (ne.getTitulo() == null)
+                ne.setTitulo("Sin título");
+            if (ne.getMotivo() == null)
+                ne.setMotivo("Desconocido");
+            if (ne.getDescripcion() == null)
+                ne.setDescripcion("No disponible");
+            if (ne.getEliminadoPorNombre() == null)
+                ne.setEliminadoPorNombre("Sistema");
+            if (ne.getRolEliminador() == null)
+                ne.setRolEliminador("ADMIN");
+            if (ne.getCategoriaColor() == null)
+                ne.setCategoriaColor("#888888");
+            if (ne.getCategoriaNombre() == null)
+                ne.setCategoriaNombre("Desconocida");
+        }
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Muestra el panel de administración con estadísticas y listas
+     * @param model   Modelo
+     * @param session Sesión
+     * @return Vista del panel
+     */
     @GetMapping("/panel")
     public String panel(Model model, HttpSession session) {
         UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
-
-        // 1. No logueado -> Login
-        if (usuario == null) {
+        if (usuario == null)
             return "redirect:/auth/login";
-        }
 
-        // 2. Logueado pero sin permisos -> 403
         String rol = usuario.getRolNombre();
         boolean esAdmin = "ADMIN".equalsIgnoreCase(rol) || "OWNER".equalsIgnoreCase(rol)
                 || "Admin".equalsIgnoreCase(rol) || "Owner".equalsIgnoreCase(rol);
 
-        if (!esAdmin) {
+        if (!esAdmin)
             return "redirect:/error/403";
-        }
 
-        // Initialize lists with safe defaults
+        // Defaults
         model.addAttribute("usuarios", List.of());
         model.addAttribute("sanciones", List.of());
         model.addAttribute("vetados", List.of());
         model.addAttribute("noticiasEliminadas", List.of());
         model.addAttribute("denuncias", List.of());
 
-        // Ensure stats has ALL keys required by chart.js
         Map<String, Object> defaultStats = new HashMap<>();
         defaultStats.put("totalUsuarios", 0);
         defaultStats.put("usuariosVetados", 0);
@@ -62,59 +146,20 @@ public class AdminControlador {
         model.addAttribute("stats", defaultStats);
 
         try {
-            System.out.println("🔍 AdminControlador: Cargando datos del panel...");
-
-            // Asegurar que el usuario en sesión tiene su nivel
-            if (usuario.getRolNivel() == null) {
+            if (usuario.getRolNivel() == null)
                 usuario.setRolNivel(calcularNivel(usuario.getRolNombre()));
-            }
 
             List<UsuarioDTO> todosUsuarios = apiCliente.listarUsuarios();
-
-            if (todosUsuarios != null) {
-                for (UsuarioDTO u : todosUsuarios) {
-                    // Sanitize all display fields to prevent Thymeleaf errors
-                    if (u.getRolNombre() == null)
-                        u.setRolNombre("USER");
-                    if (u.getRolId() == null)
-                        u.setRolId(4);
-
-                    // Asignar nivel jerárquico
-                    u.setRolNivel(calcularNivel(u.getRolNombre()));
-
-                    if (u.getNombreCompleto() == null)
-                        u.setNombreCompleto("Usuario Sin Nombre");
-                    if (u.getEmail() == null)
-                        u.setEmail("sin_email@sistema.local");
-                    if (u.getVetado() == null)
-                        u.setVetado(false);
-                }
-            }
+            sanitizarUsuarios(todosUsuarios);
 
             List<Map<String, Object>> sanciones = apiCliente.listarSanciones();
-            List<UsuarioDTO> vetados = apiCliente.listarVetados();
-            List<com.noticias.web.dtos.NoticiaEliminadaDTO> noticiasEliminadas = apiCliente.listarNoticiasEliminadas();
+            List<UsuarioDTO> vetados = apiCliente.listarVetados(); // Vetados son usuarios, ya sanitizados si vienen de
+                                                                   // listarUsuarios? No, distinct list.
+            if (vetados != null)
+                sanitizarUsuarios(vetados); // Ensure vetados are sanitized too
 
-            if (noticiasEliminadas != null) {
-                for (com.noticias.web.dtos.NoticiaEliminadaDTO ne : noticiasEliminadas) {
-                    if (ne.getFechaEliminacion() == null)
-                        ne.setFechaEliminacion(java.time.LocalDateTime.now());
-                    if (ne.getTitulo() == null)
-                        ne.setTitulo("Sin título");
-                    if (ne.getMotivo() == null)
-                        ne.setMotivo("Desconocido");
-                    if (ne.getDescripcion() == null)
-                        ne.setDescripcion("No disponible");
-                    if (ne.getEliminadoPorNombre() == null)
-                        ne.setEliminadoPorNombre("Sistema");
-                    if (ne.getRolEliminador() == null)
-                        ne.setRolEliminador("ADMIN");
-                    if (ne.getCategoriaColor() == null)
-                        ne.setCategoriaColor("#888888");
-                    if (ne.getCategoriaNombre() == null)
-                        ne.setCategoriaNombre("Desconocida");
-                }
-            }
+            List<com.noticias.web.dtos.NoticiaEliminadaDTO> noticiasEliminadas = apiCliente.listarNoticiasEliminadas();
+            sanitizarNoticiasEliminadas(noticiasEliminadas);
 
             List<DenunciaDTO> denuncias = apiCliente.listarDenuncias();
             Map<String, Object> stats = apiCliente.getAdminStats();
@@ -126,7 +171,6 @@ public class AdminControlador {
             model.addAttribute("denuncias", denuncias != null ? denuncias : List.of());
 
             if (stats != null) {
-                // Merge with defaults to ensure no missing keys
                 Map<String, Object> safeStats = new HashMap<>(defaultStats);
                 safeStats.putAll(stats);
                 model.addAttribute("stats", safeStats);
@@ -141,19 +185,10 @@ public class AdminControlador {
         return "vistas/admin/PanelAdmin";
     }
 
-    private Integer calcularNivel(String rol) {
-        if (rol == null)
-            return 4;
-        String r = rol.toUpperCase();
-        if (r.contains("OWNER"))
-            return 1;
-        if (r.contains("ADMIN"))
-            return 2;
-        if (r.contains("TRABAJADOR"))
-            return 3;
-        return 4;
-    }
-
+    /**
+     * @author amorcia
+     *         METODO - Resuelve una sanción aplicada
+     */
     @PostMapping("/sanciones/{id}/resolver")
     public ResponseEntity<?> resolverSancion(@PathVariable Integer id,
             @RequestParam String resolucion,
@@ -185,6 +220,10 @@ public class AdminControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Veta a un usuario (prohibe acceso)
+     */
     @PostMapping("/usuarios/{id}/vetar")
     @ResponseBody
     public org.springframework.http.ResponseEntity<?> vetarUsuario(@PathVariable Integer id,
@@ -195,17 +234,11 @@ public class AdminControlador {
         if (admin == null)
             return ResponseEntity.status(401).build();
 
-        // Cargar niveles si no están
-        if (admin.getRolNivel() == null)
-            admin.setRolNivel(calcularNivel(admin.getRolNombre()));
-
         UsuarioDTO target = apiCliente.buscarUsuarioPorId(id);
         if (target == null)
             return ResponseEntity.notFound().build();
-        target.setRolNivel(calcularNivel(target.getRolNombre()));
 
-        // Validar jerarquía: actor nivel debe ser MENOR (mejor) que objetivo
-        if (admin.getRolNivel() >= target.getRolNivel()) {
+        if (!validarJerarquiaSuperior(admin, target)) {
             return org.springframework.http.ResponseEntity.status(403)
                     .body("No tienes permisos para vetar a este usuario (Mismo nivel o superior)");
         }
@@ -215,6 +248,10 @@ public class AdminControlador {
                 : org.springframework.http.ResponseEntity.status(500).build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Levanta el veto de un usuario
+     */
     @PostMapping("/usuarios/{id}/desvetar")
     @ResponseBody
     public org.springframework.http.ResponseEntity<?> desvetarUsuario(@PathVariable Integer id, HttpSession session) {
@@ -222,15 +259,11 @@ public class AdminControlador {
         if (admin == null)
             return ResponseEntity.status(401).build();
 
-        if (admin.getRolNivel() == null)
-            admin.setRolNivel(calcularNivel(admin.getRolNombre()));
-
         UsuarioDTO target = apiCliente.buscarUsuarioPorId(id);
         if (target == null)
             return ResponseEntity.notFound().build();
-        target.setRolNivel(calcularNivel(target.getRolNombre()));
 
-        if (admin.getRolNivel() >= target.getRolNivel()) {
+        if (!validarJerarquiaSuperior(admin, target)) {
             return org.springframework.http.ResponseEntity.status(403).body("No tienes permisos sobre este usuario");
         }
 
@@ -239,6 +272,10 @@ public class AdminControlador {
                 : org.springframework.http.ResponseEntity.status(500).build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Resuelve una denuncia
+     */
     @PostMapping("/denuncias/{id}/resolver")
     @ResponseBody
     public org.springframework.http.ResponseEntity<?> resolverDenuncia(@PathVariable Integer id,
@@ -253,6 +290,10 @@ public class AdminControlador {
                 : ResponseEntity.status(500).build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Cambia el rol de un usuario
+     */
     @PostMapping("/usuarios/{id}/rol")
     @ResponseBody
     public ResponseEntity<?> cambiarRol(@PathVariable Integer id, @RequestParam Integer rolId, HttpSession session) {
@@ -260,23 +301,14 @@ public class AdminControlador {
         if (admin == null)
             return ResponseEntity.status(401).build();
 
-        if (admin.getRolNivel() == null)
-            admin.setRolNivel(calcularNivel(admin.getRolNombre()));
-
         UsuarioDTO target = apiCliente.buscarUsuarioPorId(id);
         if (target == null)
             return ResponseEntity.notFound().build();
-        target.setRolNivel(calcularNivel(target.getRolNombre()));
 
-        // Solo se puede cambiar rol si actorNivel < targetNivelActual
-        if (admin.getRolNivel() >= target.getRolNivel()) {
+        if (!validarJerarquiaSuperior(admin, target)) {
             return ResponseEntity.status(403).body("No tienes permisos para modificar este usuario");
         }
 
-        // Además, el nuevo rol no puede ser superior o igual al del actor
-        // jerarquía: 1:OWNER, 2:ADMIN, 3:TRABAJADOR, 4:USER
-        // (rolId: 1:Owner, 2:Admin, 3:Trabajador, 4:User) -> Mismo mapeo que nivel
-        // usualmente
         if (admin.getRolNivel() >= rolId) {
             return ResponseEntity.status(403).body("No puedes asignar un rol igual o superior al tuyo");
         }
@@ -291,12 +323,20 @@ public class AdminControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Elimina usuario de forma permanente (placeholder)
+     */
     @DeleteMapping("/usuarios/{id}")
     @ResponseBody
     public ResponseEntity<?> eliminarUsuario(@PathVariable Integer id, HttpSession session) {
         return ResponseEntity.status(405).body("Use POST /eliminar-con-justificacion");
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Elimina usuario con motivo y descripción
+     */
     @PostMapping("/usuarios/{id}/eliminar-con-justificacion")
     @ResponseBody
     public ResponseEntity<?> eliminarUsuarioConJustificacion(@PathVariable Integer id,
@@ -307,15 +347,11 @@ public class AdminControlador {
         if (admin == null)
             return ResponseEntity.status(401).build();
 
-        if (admin.getRolNivel() == null)
-            admin.setRolNivel(calcularNivel(admin.getRolNombre()));
-
         UsuarioDTO target = apiCliente.buscarUsuarioPorId(id);
         if (target == null)
             return ResponseEntity.notFound().build();
-        target.setRolNivel(calcularNivel(target.getRolNombre()));
 
-        if (admin.getRolNivel() >= target.getRolNivel()) {
+        if (!validarJerarquiaSuperior(admin, target)) {
             return ResponseEntity.status(403).body("No tienes permisos para eliminar a este usuario");
         }
 
@@ -327,6 +363,10 @@ public class AdminControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Genera y descarga reporte en PDF
+     */
     @GetMapping("/exportar-pdf")
     public ResponseEntity<byte[]> exportarPdf(HttpSession session) {
         UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");

@@ -10,7 +10,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controlador REST para gestión de usuarios.
+ * @author amorcia
+ *         CLASE - Controlador REST para la gestión completa de usuarios del
+ *         sistema.
+ *         Proporciona endpoints para CRUD de usuarios, autenticación,
+ *         recuperación de contraseña,
+ *         gestión de vetados y operaciones de sesión. Incluye protección
+ *         especial para el usuario OWNER.
  */
 @RestController
 @RequestMapping("/usuarios")
@@ -21,6 +27,13 @@ public class UsuarioControlador {
     private final com.noticias.api.servicios.AlmacenamientoServicio almacenamientoServicio;
     private final com.noticias.api.servicios.PrivilegiosServicio privilegiosServicio;
 
+    /**
+     * @author amorcia
+     *         METODO - Constructor del controlador con inyección de dependencias
+     * @param usuarioServicio        Servicio de lógica de negocio de usuarios
+     * @param almacenamientoServicio Servicio para gestión de archivos e imágenes
+     * @param privilegiosServicio    Servicio para verificación de permisos
+     */
     public UsuarioControlador(UsuarioServicio usuarioServicio,
             com.noticias.api.servicios.AlmacenamientoServicio almacenamientoServicio,
             com.noticias.api.servicios.PrivilegiosServicio privilegiosServicio) {
@@ -29,11 +42,37 @@ public class UsuarioControlador {
         this.privilegiosServicio = privilegiosServicio;
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Verifica si un usuario es OWNER y retorna respuesta de error
+     *         si lo es
+     * @param id ID del usuario a verificar
+     * @return ResponseEntity con error 403 si es OWNER, null si no lo es
+     */
+    private ResponseEntity<?> checkOwnerImmutability(Integer id) {
+        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
+        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return null;
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Obtiene la lista completa de todos los usuarios del sistema
+     * @return ResponseEntity con lista de usuarios
+     */
     @GetMapping
     public ResponseEntity<List<UsuarioEntidad>> listarTodos() {
         return ResponseEntity.ok(usuarioServicio.listarTodos());
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Busca un usuario específico por su ID
+     * @param id ID del usuario a buscar
+     * @return ResponseEntity con el usuario encontrado o 404 si no existe
+     */
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioEntidad> buscarPorId(@PathVariable Integer id) {
         return usuarioServicio.buscarPorId(id)
@@ -41,6 +80,12 @@ public class UsuarioControlador {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Busca un usuario por su dirección de correo electrónico
+     * @param email Email del usuario a buscar
+     * @return ResponseEntity con el usuario encontrado o 404 si no existe
+     */
     @GetMapping("/email/{email}")
     public ResponseEntity<UsuarioEntidad> buscarPorEmail(@PathVariable String email) {
         return usuarioServicio.buscarPorEmail(email)
@@ -48,6 +93,12 @@ public class UsuarioControlador {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Crea un nuevo usuario en el sistema
+     * @param usuario Entidad del usuario a crear
+     * @return ResponseEntity con el usuario creado (201) o error (400)
+     */
     @PostMapping
     public ResponseEntity<UsuarioEntidad> crear(@RequestBody UsuarioEntidad usuario) {
         try {
@@ -58,13 +109,20 @@ public class UsuarioControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Actualiza los datos de un usuario existente. OWNER no puede
+     *         ser modificado.
+     * @param id      ID del usuario a actualizar
+     * @param usuario Datos actualizados del usuario
+     * @return ResponseEntity con usuario actualizado, 403 si es OWNER, o 404 si no
+     *         existe
+     */
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioEntidad> actualizar(@PathVariable Integer id, @RequestBody UsuarioEntidad usuario) {
-        // CRITICAL: OWNER Immutability Check
-        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
-        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        ResponseEntity<?> ownerCheck = checkOwnerImmutability(id);
+        if (ownerCheck != null)
+            return (ResponseEntity<UsuarioEntidad>) ownerCheck;
 
         UsuarioEntidad actualizado = usuarioServicio.actualizarUsuario(id, usuario);
         if (actualizado != null) {
@@ -73,6 +131,13 @@ public class UsuarioControlador {
         return ResponseEntity.notFound().build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Confirma el email de un usuario mediante token de
+     *         verificación
+     * @param payload Mapa con el token de confirmación
+     * @return ResponseEntity con mensaje de éxito o error
+     */
     @PostMapping("/confirmar-email")
     public ResponseEntity<Map<String, String>> confirmarEmail(@RequestBody Map<String, String> payload) {
         String token = payload.get("token");
@@ -83,6 +148,12 @@ public class UsuarioControlador {
         return ResponseEntity.badRequest().body(Map.of("error", "Token inválido o expirado"));
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Genera un token de recuperación de contraseña para un email
+     * @param payload Mapa con el email del usuario
+     * @return ResponseEntity con token generado o error si email no existe
+     */
     @PostMapping("/recuperar-password")
     public ResponseEntity<Map<String, String>> recuperarPassword(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");
@@ -93,6 +164,13 @@ public class UsuarioControlador {
         return ResponseEntity.badRequest().body(Map.of("error", "Email no encontrado"));
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Restablece la contraseña de un usuario usando un token
+     *         válido
+     * @param payload Mapa con token y nuevaPassword
+     * @return ResponseEntity con mensaje de éxito o error
+     */
     @PostMapping("/restablecer-password")
     public ResponseEntity<Map<String, String>> restablecerPassword(@RequestBody Map<String, String> payload) {
         String token = payload.get("token");
@@ -104,12 +182,19 @@ public class UsuarioControlador {
         return ResponseEntity.badRequest().body(Map.of("error", "Token inválido o expirado"));
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Veta (banea) a un usuario del sistema. OWNER no puede ser
+     *         vetado.
+     * @param id      ID del usuario a vetar
+     * @param payload Mapa con motivo y duración del veto
+     * @return ResponseEntity con mensaje de éxito, 403 si es OWNER, o error
+     */
     @PostMapping("/{id}/vetar")
     public ResponseEntity<Map<String, String>> vetarUsuario(@PathVariable Integer id,
             @RequestBody Map<String, String> payload) {
-        // CRITICAL: OWNER Immutability Check
-        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
-        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
+        ResponseEntity<?> ownerCheck = checkOwnerImmutability(id);
+        if (ownerCheck != null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Cannot vet OWNER"));
         }
 
@@ -122,6 +207,12 @@ public class UsuarioControlador {
         return ResponseEntity.badRequest().body(Map.of("error", "No se pudo vetar el usuario"));
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Quita el veto (desbanea) a un usuario previamente vetado
+     * @param id ID del usuario a desvetar
+     * @return ResponseEntity con mensaje de éxito o error
+     */
     @PostMapping("/{id}/desvetar")
     public ResponseEntity<Map<String, String>> desvetarUsuario(@PathVariable Integer id) {
         boolean desvetado = usuarioServicio.desvetarUsuario(id);
@@ -131,6 +222,12 @@ public class UsuarioControlador {
         return ResponseEntity.badRequest().body(Map.of("error", "No se pudo desvetar el usuario"));
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Cierra la sesión activa de un usuario
+     * @param id ID del usuario cuya sesión se cerrará
+     * @return ResponseEntity vacío con 200 si éxito, 400 si error
+     */
     @PostMapping("/{id}/logout")
     public ResponseEntity<Void> cerrarSesion(@PathVariable Integer id) {
         if (usuarioServicio.cerrarSesion(id)) {
@@ -139,10 +236,17 @@ public class UsuarioControlador {
         return ResponseEntity.badRequest().build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Actualiza el token de sesión de un usuario. Permitido para
+     *         todos incluyendo OWNER.
+     * @param id      ID del usuario
+     * @param payload Mapa con el nuevo token
+     * @return ResponseEntity vacío con 200 si éxito, 400 si error
+     */
     @PostMapping("/{id}/session-token")
     public ResponseEntity<Void> actualizarTokenSesion(@PathVariable Integer id,
             @RequestBody Map<String, String> payload) {
-        // Direct session management allowed for all users including OWNER
         String token = payload.get("token");
         if (usuarioServicio.actualizarTokenSesion(id, token)) {
             return ResponseEntity.ok().build();
@@ -151,21 +255,24 @@ public class UsuarioControlador {
     }
 
     /**
-     * Elimina usuario con justificación (solo OWNER)
+     * @author amorcia
+     *         METODO - Elimina un usuario con justificación detallada. OWNER no
+     *         puede ser eliminado.
+     * @param id      ID del usuario a eliminar
+     * @param payload Mapa con motivo, descripción y eliminadorId
+     * @return ResponseEntity con mensaje de éxito, 403 si es OWNER, o error
      */
     @PostMapping("/{id}/eliminar-con-justificacion")
     public ResponseEntity<Map<String, String>> eliminarConJustificacion(
             @PathVariable Integer id,
             @RequestBody Map<String, Object> payload) {
         try {
-            // Extraer datos del payload
             String motivo = (String) payload.get("motivo");
             String descripcion = (String) payload.get("descripcion");
             Integer eliminadorId = (Integer) payload.get("eliminadorId");
 
-            // CRITICAL: OWNER Immutability Check
-            UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
-            if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
+            ResponseEntity<?> ownerCheck = checkOwnerImmutability(id);
+            if (ownerCheck != null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Cannot delete OWNER"));
             }
 
@@ -206,16 +313,20 @@ public class UsuarioControlador {
     }
 
     /**
-     * @deprecated Usar eliminarConJustificacion
+     * @author amorcia
+     *         METODO - Método deprecado para eliminar usuario sin justificación.
+     *         OWNER no puede ser eliminado.
+     * @deprecated Usar eliminarConJustificacion en su lugar
+     * @param id ID del usuario a eliminar
+     * @return ResponseEntity vacío con 204 si éxito, 403 si es OWNER, o 404 si no
+     *         existe
      */
     @Deprecated
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
-        // CRITICAL: OWNER Immutability Check
-        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
-        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        ResponseEntity<?> ownerCheck = checkOwnerImmutability(id);
+        if (ownerCheck != null)
+            return (ResponseEntity<Void>) ownerCheck;
 
         if (usuarioServicio.eliminarUsuario(id)) {
             return ResponseEntity.noContent().build();
@@ -223,6 +334,13 @@ public class UsuarioControlador {
         return ResponseEntity.notFound().build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Desactiva la autenticación de dos factores (2FA) para un
+     *         usuario
+     * @param id ID del usuario
+     * @return ResponseEntity vacío con 200 si éxito, 400 si error
+     */
     @PostMapping("/{id}/disable-2fa")
     public ResponseEntity<Void> desactivar2FA(@PathVariable Integer id) {
         if (usuarioServicio.desactivar2FA(id)) {
@@ -231,12 +349,19 @@ public class UsuarioControlador {
         return ResponseEntity.badRequest().build();
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Sube una imagen de perfil para un usuario. OWNER no puede
+     *         modificar su imagen.
+     * @param id   ID del usuario
+     * @param file Archivo de imagen a subir
+     * @return ResponseEntity con URL de la imagen subida, 403 si es OWNER, o error
+     */
     @PostMapping("/{id}/imagen")
     public ResponseEntity<Map<String, String>> subirImagen(@PathVariable Integer id,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
-        // CRITICAL: OWNER Immutability Check
-        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
-        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
+        ResponseEntity<?> ownerCheck = checkOwnerImmutability(id);
+        if (ownerCheck != null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Cannot modify OWNER image"));
         }
 
@@ -252,25 +377,21 @@ public class UsuarioControlador {
         }
     }
 
+    /**
+     * @author amorcia
+     *         METODO - Elimina la imagen de perfil de un usuario. OWNER no puede
+     *         modificar su imagen.
+     * @param id ID del usuario
+     * @return ResponseEntity vacío con 204 si éxito, 403 si es OWNER, o 400 si
+     *         error
+     */
     @DeleteMapping("/{id}/imagen")
     public ResponseEntity<Void> eliminarImagen(@PathVariable Integer id) {
-        // CRITICAL: OWNER Immutability Check
-        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
-        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        ResponseEntity<?> ownerCheck = checkOwnerImmutability(id);
+        if (ownerCheck != null)
+            return (ResponseEntity<Void>) ownerCheck;
 
         try {
-            UsuarioEntidad u = new UsuarioEntidad();
-            u.setImagenUrl("");
-            // Pass empty string (or special marker) or handle null in service.
-            // Service expects null to skip update.
-            // Let's modify service to handle empty string explicitly if needed, or pass
-            // special logic.
-            // Actually, let's just make service update null if we pass null?
-            // But service null-checks to avoid overwriting with null.
-
-            // Direct approach: find and save.
             usuarioServicio.eliminarImagen(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {

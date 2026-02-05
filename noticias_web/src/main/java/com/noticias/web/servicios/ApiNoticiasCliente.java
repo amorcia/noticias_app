@@ -406,6 +406,36 @@ public class ApiNoticiasCliente {
         }
     }
 
+    public boolean eliminarNoticiaConConfirmacion(Integer id, String titulo, Integer usuarioId) {
+        String url = apiUrl + "/noticias/" + id + "/eliminar-con-confirmacion";
+        Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("tituloConfirmacion", titulo);
+        payload.put("usuarioId", usuarioId);
+
+        try {
+            restTemplate.postForObject(url, payload, Map.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean eliminarNoticiaConJustificacion(Integer id, String motivo, String descripcion,
+            Integer eliminadorId) {
+        String url = apiUrl + "/noticias/" + id + "/eliminar-con-justificacion";
+        Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("motivo", motivo);
+        payload.put("descripcion", descripcion);
+        payload.put("eliminadorId", eliminadorId);
+
+        try {
+            restTemplate.postForObject(url, payload, Map.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public boolean eliminarNoticiaPorTitulo(String titulo, String motivo, String descripcion, Integer eliminadorId) {
         // Encode titulo
         String encodedTitulo = java.net.URLEncoder.encode(titulo, java.nio.charset.StandardCharsets.UTF_8);
