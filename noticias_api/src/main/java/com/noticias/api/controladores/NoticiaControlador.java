@@ -254,6 +254,84 @@ public class NoticiaControlador {
         return ResponseEntity.ok(java.util.Map.of("tipo", tipo != null ? tipo : "NONE"));
     }
 
+    /**
+     * Elimina noticia con confirmación de título (para propietarios)
+     */
+    @PostMapping("/{id}/eliminar-con-confirmacion")
+    public ResponseEntity<java.util.Map<String, String>> eliminarConConfirmacionTitulo(
+            @PathVariable Integer id,
+            @RequestBody java.util.Map<String, Object> payload) {
+        try {
+            String tituloConfirmacion = (String) payload.get("tituloConfirmacion");
+            Integer usuarioId = (Integer) payload.get("usuarioId");
+
+            if (tituloConfirmacion == null || tituloConfirmacion.isBlank() || usuarioId == null) {
+                return ResponseEntity.badRequest()
+                        .body(java.util.Map.of("error", "Título de confirmación y usuarioId son requeridos"));
+            }
+
+            // Verificar que sea el propietario
+            if (!noticiaServicio.esPropietario(id, usuarioId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(java.util.Map.of("error", "Solo el propietario puede eliminar esta noticia"));
+            }
+
+            // Eliminar con confirmación de título
+            boolean eliminado = noticiaServicio.eliminarConConfirmacionTitulo(tituloConfirmacion, id, usuarioId);
+            if (eliminado) {
+                return ResponseEntity.ok(java.util.Map.of("mensaje", "Noticia eliminada exitosamente"));
+            }
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", "El título no coincide o la noticia no existe"));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Error al eliminar noticia: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Elimina noticia con justificación (para staff)
+     */
+    @PostMapping("/{id}/eliminar-con-justificacion")
+    public ResponseEntity<java.util.Map<String, String>> eliminarConJustificacion(
+            @PathVariable Integer id,
+            @RequestBody java.util.Map<String, Object> payload) {
+        try {
+            String motivo = (String) payload.get("motivo");
+            String descripcion = (String) payload.get("descripcion");
+            Integer eliminadorId = (Integer) payload.get("eliminadorId");
+
+            if (motivo == null || motivo.isBlank() || eliminadorId == null) {
+                return ResponseEntity.badRequest()
+                        .body(java.util.Map.of("error", "Motivo y eliminadorId son requeridos"));
+            }
+
+            // Obtener eliminador
+            UsuarioEntidad eliminador = usuarioRepositorio.findById(eliminadorId).orElse(null);
+            if (eliminador == null) {
+                return ResponseEntity.badRequest()
+                        .body(java.util.Map.of("error", "Eliminador no encontrado"));
+            }
+
+            // Eliminar con justificación
+            boolean eliminado = noticiaServicio.eliminarConJustificacion(id, motivo, descripcion, eliminador);
+            if (eliminado) {
+                return ResponseEntity.ok(java.util.Map.of("mensaje", "Noticia eliminada exitosamente"));
+            }
+            return ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", "No se pudo eliminar la noticia"));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Error al eliminar noticia: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * @deprecated Usar eliminarConConfirmacionTitulo o eliminarConJustificacion
+     */
+    @Deprecated
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Integer id,
             @RequestParam(required = false) String motivo,

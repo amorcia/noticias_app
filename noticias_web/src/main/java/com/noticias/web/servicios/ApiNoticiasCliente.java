@@ -148,6 +148,18 @@ public class ApiNoticiasCliente {
         }
     }
 
+    public boolean actualizarTokenSesion(Integer id, String token) {
+        String url = apiUrl + "/usuarios/" + id + "/session-token";
+        Map<String, String> payload = new java.util.HashMap<>();
+        payload.put("token", token);
+        try {
+            restTemplate.postForObject(url, payload, Void.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     // ==================== CATEGORÍAS ====================
 
     public List<CategoriaDTO> listarCategorias() {
@@ -645,6 +657,23 @@ public class ApiNoticiasCliente {
         String url = apiUrl + "/usuarios/" + id;
         try {
             restTemplate.delete(url);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean eliminarUsuarioConJustificacion(Integer id, String motivo, String descripcion,
+            Integer eliminadorId) {
+        String url = apiUrl + "/usuarios/" + id + "/eliminar-con-justificacion";
+        Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("motivo", motivo);
+        payload.put("descripcion", descripcion);
+        payload.put("eliminadorId", eliminadorId);
+
+        try {
+            restTemplate.postForObject(url, payload, Void.class);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

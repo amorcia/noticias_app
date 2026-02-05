@@ -1,0 +1,44 @@
+Implementation Plan - Fixing Deletion UX and Storage
+The goal is to resolve issues with news and user deletion, ensuring a better user experience and proper archival of deleted content.
+
+User Review Required
+IMPORTANT
+
+The news deletion logic is being switched to use dedicated endpoints (eliminar-con-confirmacion and eliminar-con-justificacion) to ensure data is properly archived and validated.
+
+Proposed Changes
+News Deletion UX (noticias_web)
+[MODIFY] 
+DetalleNoticia.html
+Fix the visibility toggle between ownerDeleteForm and adminDeleteForm.
+Ensure the title confirmation input is properly reset and validated.
+Clarify generic messages in the modal.
+[MODIFY] 
+PanelAdmin.html
+Update deleteUserModal to display "Eliminar Usuario: [email]" in the header.
+Modify 
+openDeleteUserModal
+ to accept the user's email.
+Ensure news deletion from the reports tab passes the descripcion field.
+News Deletion Storage (noticias_web & noticias_api)
+[MODIFY] 
+ApiNoticiasCliente.java
+Add/Update 
+eliminarNoticia
+ to include descripcion.
+Implement proxy methods for the new API endpoints (eliminar-con-confirmacion and eliminar-con-justificacion).
+[MODIFY] 
+TrabajadorControlador.java
+Update /noticias/borrar to use the updated API client methods and pass all necessary metadata.
+[MODIFY] 
+NoticiaServicio.java
+Ensure 
+eliminarConJustificacion
+ correctly archives news regardless of the eliminator's role (as long as it's a staff role).
+Verification Plan
+Automated Tests
+Manual verification of deletion flows in the browser.
+Manual Verification
+News Owner Deletion: Go to a news article you own, click delete, verify you must type the title, and it disappears.
+Admin News Deletion: As admin, delete a news article you don't own, provide reason/description, verify it appears in "Noticias Borradas".
+User Deletion: In the admin panel, click delete user, verify the modal shows "Eliminar Usuario" and the email.

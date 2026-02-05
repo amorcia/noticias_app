@@ -1,7 +1,11 @@
 package com.noticias.api.servicios;
 
 import com.noticias.api.entidades.UsuarioEntidad;
+import com.noticias.api.entidades.UsuarioEliminadoEntidad;
 import com.noticias.api.repositorios.UsuarioRepositorio;
+import com.noticias.api.repositorios.UsuarioEliminadoRepositorio;
+import com.noticias.api.repositorios.NoticiaRepositorio;
+import com.noticias.api.repositorios.ComentarioRepositorio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +24,18 @@ import java.util.Optional;
 public class UsuarioServicio {
 
     private final UsuarioRepositorio usuarioRepositorio;
+    private final UsuarioEliminadoRepositorio usuarioEliminadoRepositorio;
+    private final NoticiaRepositorio noticiaRepositorio;
+    private final ComentarioRepositorio comentarioRepositorio;
 
-    public UsuarioServicio(UsuarioRepositorio usuarioRepositorio) {
+    public UsuarioServicio(UsuarioRepositorio usuarioRepositorio,
+            UsuarioEliminadoRepositorio usuarioEliminadoRepositorio,
+            NoticiaRepositorio noticiaRepositorio,
+            ComentarioRepositorio comentarioRepositorio) {
         this.usuarioRepositorio = usuarioRepositorio;
+        this.usuarioEliminadoRepositorio = usuarioEliminadoRepositorio;
+        this.noticiaRepositorio = noticiaRepositorio;
+        this.comentarioRepositorio = comentarioRepositorio;
     }
 
     public List<UsuarioEntidad> listarTodos() {
@@ -229,15 +242,44 @@ public class UsuarioServicio {
         }).orElse(false);
     }
 
+    /**
+     * Elimina usuario con justificación y cascada
+     * Solo OWNER puede eliminar usuarios
+     */
+    @Transactional
+    public boolean eliminarUsuarioConJustificacion(Integer usuarioId, String motivo, String descripcion,
+            UsuarioEntidad eliminador) {
+        if (usuarioId == null || motivo == null || motivo.isBlank() || eliminador == null) {
+            return false;
+        }
+
+        return usuarioRepositorio.findById(usuarioId).map(usuario -> {
+            // Guardar en histórico antes de eliminar
+            UsuarioEliminadoEntidad eliminado = new UsuarioEliminadoEntidad(
+                    usuario, motivo.trim(), descripcion != null ? descripcion.trim() : "", eliminador);
+            usuarioEliminadoRepositorio.save(eliminado);
+
+            // Eliminar en cascada: primero comentarios, luego noticias, finalmente usuario
+            // Los comentarios del usuario
+            comentarioRepositorio.deleteByAutorId(usuarioId);
+
+            // Las noticias del usuario (sin archivar, es eliminación en cascada)
+            noticiaRepositorio.deleteByAutorId(usuarioId);
+
+            // Finalmente el usuario
+            usuarioRepositorio.deleteById(usuarioId);
+
+            return true;
+        }).orElse(false);
+    }
+
+    /**
+     * @deprecated Usar eliminarUsuarioConJustificacion
+     */
+    @Deprecated
     @Transactional
     public boolean eliminarUsuario(Integer id) {
         if (id != null && usuarioRepositorio.existsById(id)) {
-            // Eliminamos la lógica de "Protección Owner" aquí si queremos ser FULL DUMB,
-            // pero es una restricción de integridad importante.
-            // El usuario dijo "API solo Queries y DB".
-            // Voy a eliminar la logica de Negocio Explicita de "antoniowebserver"
-            // y dejar que la DB o el Web controlen permisos.
-            // Si el Web tiene proteccion, no llegará aquí.
             usuarioRepositorio.deleteById(id);
             return true;
         }
@@ -261,6 +303,17 @@ public class UsuarioServicio {
             return false;
         return usuarioRepositorio.findById(id).map(usuario -> {
             usuario.setSecretKey2FA(null);
+            usuarioRepositorio.save(usuario);
+            return true;
+        }).orElse(false);
+    }
+
+    @Transactional
+    public boolean actualizarTokenSesion(Integer id, String token) {
+        if (id == null)
+            return false;
+        return usuarioRepositorio.findById(id).map(usuario -> {
+            usuario.setTokenSession(token);
             usuarioRepositorio.save(usuario);
             return true;
         }).orElse(false);

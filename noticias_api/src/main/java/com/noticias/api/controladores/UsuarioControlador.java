@@ -19,11 +19,14 @@ public class UsuarioControlador {
 
     private final UsuarioServicio usuarioServicio;
     private final com.noticias.api.servicios.AlmacenamientoServicio almacenamientoServicio;
+    private final com.noticias.api.servicios.PrivilegiosServicio privilegiosServicio;
 
     public UsuarioControlador(UsuarioServicio usuarioServicio,
-            com.noticias.api.servicios.AlmacenamientoServicio almacenamientoServicio) {
+            com.noticias.api.servicios.AlmacenamientoServicio almacenamientoServicio,
+            com.noticias.api.servicios.PrivilegiosServicio privilegiosServicio) {
         this.usuarioServicio = usuarioServicio;
         this.almacenamientoServicio = almacenamientoServicio;
+        this.privilegiosServicio = privilegiosServicio;
     }
 
     @GetMapping
@@ -57,6 +60,12 @@ public class UsuarioControlador {
 
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioEntidad> actualizar(@PathVariable Integer id, @RequestBody UsuarioEntidad usuario) {
+        // CRITICAL: OWNER Immutability Check
+        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
+        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         UsuarioEntidad actualizado = usuarioServicio.actualizarUsuario(id, usuario);
         if (actualizado != null) {
             return ResponseEntity.ok(actualizado);
@@ -98,6 +107,12 @@ public class UsuarioControlador {
     @PostMapping("/{id}/vetar")
     public ResponseEntity<Map<String, String>> vetarUsuario(@PathVariable Integer id,
             @RequestBody Map<String, String> payload) {
+        // CRITICAL: OWNER Immutability Check
+        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
+        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Cannot vet OWNER"));
+        }
+
         String motivo = payload.get("motivo");
         String duracion = payload.get("duracion");
         boolean vetado = usuarioServicio.vetarUsuario(id, motivo, duracion);
@@ -124,8 +139,84 @@ public class UsuarioControlador {
         return ResponseEntity.badRequest().build();
     }
 
+    @PostMapping("/{id}/session-token")
+    public ResponseEntity<Void> actualizarTokenSesion(@PathVariable Integer id,
+            @RequestBody Map<String, String> payload) {
+        // Direct session management allowed for all users including OWNER
+        String token = payload.get("token");
+        if (usuarioServicio.actualizarTokenSesion(id, token)) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
+    /**
+     * Elimina usuario con justificación (solo OWNER)
+     */
+    @PostMapping("/{id}/eliminar-con-justificacion")
+    public ResponseEntity<Map<String, String>> eliminarConJustificacion(
+            @PathVariable Integer id,
+            @RequestBody Map<String, Object> payload) {
+        try {
+            // Extraer datos del payload
+            String motivo = (String) payload.get("motivo");
+            String descripcion = (String) payload.get("descripcion");
+            Integer eliminadorId = (Integer) payload.get("eliminadorId");
+
+            // CRITICAL: OWNER Immutability Check
+            UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
+            if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Cannot delete OWNER"));
+            }
+
+            if (motivo == null || motivo.isBlank() || eliminadorId == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Motivo y eliminadorId son requeridos"));
+            }
+
+            // Obtener usuario eliminador
+            UsuarioEntidad eliminador = usuarioServicio.buscarPorId(eliminadorId).orElse(null);
+            if (eliminador == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Eliminador no encontrado"));
+            }
+
+            // Obtener usuario objetivo
+            UsuarioEntidad objetivo = usuarioServicio.buscarPorId(id).orElse(null);
+            if (objetivo == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Validar privilegios
+            if (!privilegiosServicio.puedeEliminarUsuario(eliminador, objetivo)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "No tienes permisos para eliminar este usuario"));
+            }
+
+            // Eliminar con justificación
+            boolean eliminado = usuarioServicio.eliminarUsuarioConJustificacion(id, motivo, descripcion, eliminador);
+            if (eliminado) {
+                return ResponseEntity.ok(Map.of("mensaje", "Usuario eliminado exitosamente"));
+            }
+            return ResponseEntity.badRequest().body(Map.of("error", "No se pudo eliminar el usuario"));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al eliminar usuario: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * @deprecated Usar eliminarConJustificacion
+     */
+    @Deprecated
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        // CRITICAL: OWNER Immutability Check
+        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
+        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         if (usuarioServicio.eliminarUsuario(id)) {
             return ResponseEntity.noContent().build();
         }
@@ -143,6 +234,12 @@ public class UsuarioControlador {
     @PostMapping("/{id}/imagen")
     public ResponseEntity<Map<String, String>> subirImagen(@PathVariable Integer id,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        // CRITICAL: OWNER Immutability Check
+        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
+        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Cannot modify OWNER image"));
+        }
+
         try {
             String url = almacenamientoServicio.almacenar(file);
             UsuarioEntidad u = new UsuarioEntidad();
@@ -157,6 +254,12 @@ public class UsuarioControlador {
 
     @DeleteMapping("/{id}/imagen")
     public ResponseEntity<Void> eliminarImagen(@PathVariable Integer id) {
+        // CRITICAL: OWNER Immutability Check
+        UsuarioEntidad target = usuarioServicio.buscarPorId(id).orElse(null);
+        if (target != null && target.getRol() != null && "OWNER".equalsIgnoreCase(target.getRol().getNombre())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         try {
             UsuarioEntidad u = new UsuarioEntidad();
             u.setImagenUrl("");

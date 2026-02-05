@@ -296,6 +296,19 @@
                     <input type="hidden" name="titulo" id="deleteTitulo">
                     <input type="hidden" id="esPropio">
 
+                    <!-- Formulario para Propietario -->
+                    <div id="ownerDeleteForm" style="display: none;">
+                        <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                            Para confirmar la eliminación, por favor escribe el título exacto de la noticia:
+                            <br><strong><span id="tituloConfirmacionDisplay"></span></strong>
+                        </p>
+                        <div class="form-group">
+                            <input type="text" id="confirmTituloInput" class="form-input"
+                                placeholder="Escribe el título aquí..."
+                                style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main);">
+                        </div>
+                    </div>
+
                     <!-- Formulario para Admin/Owner (solo si NO es propietario) -->
                     <div id="adminDeleteForm" style="display: none;">
                         <div class="form-group" style="margin-top: 1.5rem;">
@@ -327,7 +340,8 @@
 
                     <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                         <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" style="flex: 1; background-color: var(--danger);">
+                        <button type="submit" id="deleteSubmitBtn" class="btn btn-primary"
+                            style="flex: 1; background-color: var(--danger);">
                             <span id="deleteButtonText">Eliminar Definitivamente</span>
                         </button>
                     </div>
@@ -774,13 +788,40 @@
             const deleteMessage = document.getElementById('deleteModalMessage');
 
             if (esPropio === 'true' || esPropio === true) {
-                // Propietario: confirmación simple
+                // Propietario: confirmación TEXTUAL
                 adminForm.style.display = 'none';
-                deleteMessage.textContent = '¿Estás seguro de que quieres eliminar tu noticia? Esta acción no se puede deshacer.';
+                document.getElementById('ownerDeleteForm').style.display = 'block';
+
+                deleteMessage.style.display = 'none'; // Hide generic message
+                document.getElementById('tituloConfirmacionDisplay').textContent = titulo;
+
+                // Disable button initially
+                const btn = document.getElementById('deleteSubmitBtn');
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+
+                // Realtime validation
+                const input = document.getElementById('confirmTituloInput');
+                input.value = ''; // Reset
+                input.onkeyup = function () {
+                    const match = this.value.trim().toLowerCase() === titulo.trim().toLowerCase();
+                    btn.disabled = !match;
+                    btn.style.opacity = match ? '1' : '0.5';
+                    btn.style.cursor = match ? 'pointer' : 'not-allowed';
+                };
+
             } else {
                 // Admin/Owner: requiere motivo y descripción
+                document.getElementById('ownerDeleteForm').style.display = 'none';
                 adminForm.style.display = 'block';
+                deleteMessage.style.display = 'block';
                 deleteMessage.textContent = 'Como administrador, debes proporcionar un motivo y descripción para esta eliminación.';
+
+                const btn = document.getElementById('deleteSubmitBtn');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
 
                 // Limpiar campos
                 document.getElementById('deleteMotivoSelect').value = '';
@@ -806,10 +847,16 @@
             const titulo = document.getElementById('deleteTitulo').value;
             const esPropio = document.getElementById('esPropio').value === 'true';
 
-            let motivo = 'Borrado por autor';
+            let motivo = '';
             let descripcion = '';
 
-            if (!esPropio) {
+            if (esPropio) {
+                const tituloInput = document.getElementById('confirmTituloInput').value;
+                if (!tituloInput || tituloInput.trim().toLowerCase() !== titulo.trim().toLowerCase()) {
+                    showSuccess('Error', 'El título no coincide. No se puede eliminar.', 'error');
+                    return;
+                }
+            } else {
                 // Validar campos de admin
                 const motivoSelect = document.getElementById('deleteMotivoSelect').value;
                 const descripcionText = document.getElementById('deleteDescripcion').value;
@@ -823,7 +870,6 @@
                     showSuccess('Error', 'Debes proporcionar una descripción detallada', 'error');
                     return;
                 }
-
                 motivo = motivoSelect;
                 descripcion = descripcionText;
             }
@@ -833,7 +879,8 @@
                 id: document.getElementById('deleteId').value,
                 titulo: titulo,
                 motivo: motivo,
-                descripcion: descripcion
+                descripcion: descripcion,
+                esPropio: esPropio
             };
 
             // Cerrar primer modal y abrir confirmación
@@ -846,26 +893,52 @@
             if (!pendingDeleteData) return;
 
             try {
-                const params = new URLSearchParams({
-                    id: pendingDeleteData.id,
-                    titulo: pendingDeleteData.titulo,
-                    motivo: pendingDeleteData.motivo,
-                    descripcion: pendingDeleteData.descripcion,
-                    eliminadorId: USUARIO_ID
-                });
+                let url;
+                let payload;
 
-                const res = await fetch(`${contextPath}trabajador/noticias/borrar?${params}`, {
-                    method: 'POST'
-                });
+                if (pendingDeleteData.esPropio) {
+                    // Endpoint Propietario
+                    url = `${contextPath}noticias/${pendingDeleteData.id}/eliminar-con-confirmacion`;
+                    const formData = new FormData();
+                    formData.append('titulo', pendingDeleteData.titulo);
 
-                if (res.ok) {
-                    closeConfirmDeleteModal();
-                    showSuccess('Eliminado', 'La noticia ha sido borrada exitosamente.');
-                    setTimeout(() => location.href = contextPath, 1500);
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (res.ok) {
+                        closeConfirmDeleteModal();
+                        showSuccess('Eliminado', 'La noticia ha sido borrada exitosamente.');
+                        setTimeout(() => location.href = contextPath, 1500);
+                    } else {
+                        const errorMsg = await res.text();
+                        showSuccess('Error', errorMsg || 'No se pudo eliminar la noticia.', 'error');
+                    }
+
                 } else {
-                    const errorMsg = await res.text();
-                    showSuccess('Error', errorMsg || 'No se pudo eliminar la noticia.', 'error');
+                    // Endpoint Staff (Admin/Owner)
+                    url = `${contextPath}noticias/${pendingDeleteData.id}/eliminar-con-justificacion`;
+                    const formData = new FormData();
+                    formData.append('motivo', pendingDeleteData.motivo);
+                    formData.append('descripcion', pendingDeleteData.descripcion);
+                    formData.append('eliminadorId', USUARIO_ID);
+
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (res.ok) {
+                        closeConfirmDeleteModal();
+                        showSuccess('Eliminado', 'La noticia ha sido eliminada y archivada.');
+                        setTimeout(() => location.href = contextPath, 1500);
+                    } else {
+                        const errorMsg = await res.text();
+                        showSuccess('Error', errorMsg || 'No se pudo eliminar la noticia.', 'error');
+                    }
                 }
+
             } catch (e) {
                 console.error(e);
                 showSuccess('Error', 'Error de conexión', 'error');

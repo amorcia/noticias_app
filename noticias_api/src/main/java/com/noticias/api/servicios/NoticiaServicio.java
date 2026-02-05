@@ -218,6 +218,74 @@ public class NoticiaServicio {
         return true;
     }
 
+    /**
+     * Verifica si un usuario es propietario de una noticia
+     */
+    public boolean esPropietario(Integer noticiaId, Integer usuarioId) {
+        if (noticiaId == null || usuarioId == null) {
+            return false;
+        }
+        return noticiaRepositorio.findById(noticiaId)
+                .map(noticia -> noticia.getAutor() != null && noticia.getAutor().getId().equals(usuarioId))
+                .orElse(false);
+    }
+
+    /**
+     * Elimina noticia con confirmación de título (case-insensitive)
+     * Para propietarios de la noticia
+     */
+    @Transactional
+    public boolean eliminarConConfirmacionTitulo(String tituloConfirmacion, Integer noticiaId, Integer usuarioId) {
+        if (tituloConfirmacion == null || noticiaId == null || usuarioId == null) {
+            return false;
+        }
+
+        return noticiaRepositorio.findById(noticiaId).map(noticia -> {
+            // Verificar que sea el propietario
+            if (noticia.getAutor() == null || !noticia.getAutor().getId().equals(usuarioId)) {
+                return false;
+            }
+
+            // Verificar título (case-insensitive)
+            if (!noticia.getTitulo().equalsIgnoreCase(tituloConfirmacion.trim())) {
+                return false;
+            }
+
+            // Eliminar sin archivar (es el propietario)
+            noticiaRepositorio.deleteById(noticiaId);
+            return true;
+        }).orElse(false);
+    }
+
+    /**
+     * Elimina noticia con justificación (para staff)
+     */
+    @Transactional
+    public boolean eliminarConJustificacion(Integer noticiaId, String motivo, String descripcion,
+            com.noticias.api.entidades.UsuarioEntidad eliminador) {
+        if (noticiaId == null || motivo == null || motivo.isBlank() || eliminador == null) {
+            return false;
+        }
+
+        return noticiaRepositorio.findById(noticiaId).map(noticia -> {
+            // Archivar la noticia eliminada con motivo y descripción
+            String motivoFinal = motivo.trim();
+            String descripcionFinal = descripcion != null ? descripcion.trim() : "";
+
+            NoticiaEliminadaEntidad eliminada = new NoticiaEliminadaEntidad(
+                    noticia, motivoFinal, descripcionFinal, eliminador);
+            noticiaEliminadaRepositorio.save(eliminada);
+
+            // Eliminar noticia original
+            noticiaRepositorio.deleteById(noticiaId);
+            return true;
+        }).orElse(false);
+    }
+
+    /**
+     * @deprecated Usar eliminarConConfirmacionTitulo o eliminarConJustificacion
+     */
+    @Deprecated
     @Transactional
     public boolean eliminarNoticia(Integer id, String motivo, String descripcion,
             com.noticias.api.entidades.UsuarioEntidad eliminador) {

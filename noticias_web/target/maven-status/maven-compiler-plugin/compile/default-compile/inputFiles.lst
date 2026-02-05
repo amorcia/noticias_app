@@ -1,6 +1,7 @@
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\DenunciaDTO.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\seguridad\JwtFiltro.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\seguridad\SeguridadConfig.java
+C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\servicios\LoggingServicio.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\servicios\EmailServicio.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\NoticiaDTO.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\seguridad\CorsConfig.java
@@ -11,6 +12,7 @@ C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\m
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\controladores\InteraccionWebControlador.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\seguridad\CustomUserDetailsService.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\servicios\AuthServicio.java
+C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\interceptores\LoggingInterceptor.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\controladores\ErrorControlador.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\controladores\AuthControlador.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\UsuarioRespuestaDTO.java
@@ -21,6 +23,7 @@ C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\m
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\servicios\ApiNoticiasCliente.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\controladores\TrabajadorControlador.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\NoticiasWebApplication.java
+C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\servicios\ExportacionServicio.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\controladores\AdminControlador.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\config\WebConfig.java
 C:\Users\Csi2_Antonio\Documents\DWS\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\ComentarioDTO.java

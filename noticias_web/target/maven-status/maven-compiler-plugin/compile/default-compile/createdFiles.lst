@@ -2,6 +2,7 @@ com\noticias\web\utilidades\AppLogger.class
 com\noticias\web\servicios\AuthServicio.class
 com\noticias\web\seguridad\ForceResetFilter.class
 com\noticias\web\servicios\ApiNoticiasCliente$18.class
+com\noticias\web\servicios\ExportacionServicio.class
 com\noticias\web\servicios\ApiNoticiasCliente$2.class
 com\noticias\web\servicios\ApiNoticiasCliente$15.class
 com\noticias\web\controladores\GlobalDataAdvice.class
@@ -25,6 +26,7 @@ com\noticias\web\dtos\ComentarioDTO$AutorDTO.class
 com\noticias\web\seguridad\SeguridadConfig.class
 com\noticias\web\servicios\SesionServicio.class
 com\noticias\web\dtos\LoginPeticionDTO.class
+com\noticias\web\servicios\LoggingServicio.class
 com\noticias\web\servicios\ApiNoticiasCliente$16.class
 com\noticias\web\servicios\ApiNoticiasCliente$13.class
 com\noticias\web\servicios\ApiNoticiasCliente$7.class
@@ -34,6 +36,7 @@ com\noticias\web\seguridad\CustomAuthenticationSuccessHandler.class
 com\noticias\web\servicios\ApiNoticiasCliente$10.class
 com\noticias\web\servicios\ApiNoticiasCliente$20.class
 com\noticias\web\servicios\UsuarioServicio.class
+com\noticias\web\interceptores\LoggingInterceptor.class
 com\noticias\web\servicios\ApiNoticiasCliente$17.class
 com\noticias\web\dtos\UsuarioRespuestaDTO.class
 com\noticias\web\dtos\UsuarioApiDTO.class

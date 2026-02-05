@@ -12,4 +12,6 @@ public interface ComentarioRepositorio extends JpaRepository<ComentarioEntidad, 
     List<ComentarioEntidad> findByNoticiaIdAndPadreIsNullOrderByFechaDesc(Integer noticiaId);
 
     long countByNoticiaId(Integer noticiaId);
+
+    void deleteByAutorId(Integer autorId);
 }

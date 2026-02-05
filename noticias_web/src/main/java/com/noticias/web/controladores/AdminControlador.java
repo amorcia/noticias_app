@@ -14,6 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.MediaType;
 
 @Controller
 @RequestMapping("/admin")
@@ -21,6 +22,9 @@ public class AdminControlador {
 
     @Autowired
     private ApiNoticiasCliente apiCliente;
+
+    @Autowired
+    private com.noticias.web.servicios.ExportacionServicio exportacionServicio;
 
     @GetMapping("/panel")
     public String panel(Model model, HttpSession session) {
@@ -59,17 +63,25 @@ public class AdminControlador {
 
         try {
             System.out.println("🔍 AdminControlador: Cargando datos del panel...");
+
+            // Asegurar que el usuario en sesión tiene su nivel
+            if (usuario.getRolNivel() == null) {
+                usuario.setRolNivel(calcularNivel(usuario.getRolNombre()));
+            }
+
             List<UsuarioDTO> todosUsuarios = apiCliente.listarUsuarios();
 
             if (todosUsuarios != null) {
                 for (UsuarioDTO u : todosUsuarios) {
                     // Sanitize all display fields to prevent Thymeleaf errors
-                    if (u.getId() == null)
-                        System.out.println("⚠️ Usuario con ID null encontrado");
                     if (u.getRolNombre() == null)
                         u.setRolNombre("USER");
                     if (u.getRolId() == null)
                         u.setRolId(4);
+
+                    // Asignar nivel jerárquico
+                    u.setRolNivel(calcularNivel(u.getRolNombre()));
+
                     if (u.getNombreCompleto() == null)
                         u.setNombreCompleto("Usuario Sin Nombre");
                     if (u.getEmail() == null)
@@ -129,6 +141,19 @@ public class AdminControlador {
         return "vistas/admin/PanelAdmin";
     }
 
+    private Integer calcularNivel(String rol) {
+        if (rol == null)
+            return 4;
+        String r = rol.toUpperCase();
+        if (r.contains("OWNER"))
+            return 1;
+        if (r.contains("ADMIN"))
+            return 2;
+        if (r.contains("TRABAJADOR"))
+            return 3;
+        return 4;
+    }
+
     @PostMapping("/sanciones/{id}/resolver")
     public ResponseEntity<?> resolverSancion(@PathVariable Integer id,
             @RequestParam String resolucion,
@@ -167,10 +192,24 @@ public class AdminControlador {
             @RequestParam(required = false) String duracion,
             HttpSession session) {
         UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
-        if (admin == null || (!"ADMIN".equalsIgnoreCase(admin.getRolNombre())
-                && !"OWNER".equalsIgnoreCase(admin.getRolNombre()))) {
-            return org.springframework.http.ResponseEntity.status(403).body("No tienes permisos");
+        if (admin == null)
+            return ResponseEntity.status(401).build();
+
+        // Cargar niveles si no están
+        if (admin.getRolNivel() == null)
+            admin.setRolNivel(calcularNivel(admin.getRolNombre()));
+
+        UsuarioDTO target = apiCliente.buscarUsuarioPorId(id);
+        if (target == null)
+            return ResponseEntity.notFound().build();
+        target.setRolNivel(calcularNivel(target.getRolNombre()));
+
+        // Validar jerarquía: actor nivel debe ser MENOR (mejor) que objetivo
+        if (admin.getRolNivel() >= target.getRolNivel()) {
+            return org.springframework.http.ResponseEntity.status(403)
+                    .body("No tienes permisos para vetar a este usuario (Mismo nivel o superior)");
         }
+
         boolean exito = apiCliente.vetarUsuario(id, motivo, duracion);
         return exito ? org.springframework.http.ResponseEntity.ok().build()
                 : org.springframework.http.ResponseEntity.status(500).build();
@@ -180,10 +219,21 @@ public class AdminControlador {
     @ResponseBody
     public org.springframework.http.ResponseEntity<?> desvetarUsuario(@PathVariable Integer id, HttpSession session) {
         UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
-        if (admin == null || (!"ADMIN".equalsIgnoreCase(admin.getRolNombre())
-                && !"OWNER".equalsIgnoreCase(admin.getRolNombre()))) {
-            return org.springframework.http.ResponseEntity.status(403).body("No tienes permisos");
+        if (admin == null)
+            return ResponseEntity.status(401).build();
+
+        if (admin.getRolNivel() == null)
+            admin.setRolNivel(calcularNivel(admin.getRolNombre()));
+
+        UsuarioDTO target = apiCliente.buscarUsuarioPorId(id);
+        if (target == null)
+            return ResponseEntity.notFound().build();
+        target.setRolNivel(calcularNivel(target.getRolNombre()));
+
+        if (admin.getRolNivel() >= target.getRolNivel()) {
+            return org.springframework.http.ResponseEntity.status(403).body("No tienes permisos sobre este usuario");
         }
+
         boolean exito = apiCliente.desvetarUsuario(id);
         return exito ? org.springframework.http.ResponseEntity.ok().build()
                 : org.springframework.http.ResponseEntity.status(500).build();
@@ -207,11 +257,28 @@ public class AdminControlador {
     @ResponseBody
     public ResponseEntity<?> cambiarRol(@PathVariable Integer id, @RequestParam Integer rolId, HttpSession session) {
         UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
-        String rol = admin != null ? admin.getRolNombre() : null;
-        boolean esOwner = "OWNER".equalsIgnoreCase(rol);
+        if (admin == null)
+            return ResponseEntity.status(401).build();
 
-        if (admin == null || !esOwner) {
-            return ResponseEntity.status(403).body("Solo el OWNER puede cambiar roles");
+        if (admin.getRolNivel() == null)
+            admin.setRolNivel(calcularNivel(admin.getRolNombre()));
+
+        UsuarioDTO target = apiCliente.buscarUsuarioPorId(id);
+        if (target == null)
+            return ResponseEntity.notFound().build();
+        target.setRolNivel(calcularNivel(target.getRolNombre()));
+
+        // Solo se puede cambiar rol si actorNivel < targetNivelActual
+        if (admin.getRolNivel() >= target.getRolNivel()) {
+            return ResponseEntity.status(403).body("No tienes permisos para modificar este usuario");
+        }
+
+        // Además, el nuevo rol no puede ser superior o igual al del actor
+        // jerarquía: 1:OWNER, 2:ADMIN, 3:TRABAJADOR, 4:USER
+        // (rolId: 1:Owner, 2:Admin, 3:Trabajador, 4:User) -> Mismo mapeo que nivel
+        // usualmente
+        if (admin.getRolNivel() >= rolId) {
+            return ResponseEntity.status(403).body("No puedes asignar un rol igual o superior al tuyo");
         }
 
         try {
@@ -227,19 +294,65 @@ public class AdminControlador {
     @DeleteMapping("/usuarios/{id}")
     @ResponseBody
     public ResponseEntity<?> eliminarUsuario(@PathVariable Integer id, HttpSession session) {
-        UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
-        String rol = admin != null ? admin.getRolNombre() : null;
-        boolean esOwner = "OWNER".equalsIgnoreCase(rol);
+        return ResponseEntity.status(405).body("Use POST /eliminar-con-justificacion");
+    }
 
-        if (admin == null || !esOwner) {
-            return ResponseEntity.status(403).body("Solo el OWNER puede eliminar usuarios");
+    @PostMapping("/usuarios/{id}/eliminar-con-justificacion")
+    @ResponseBody
+    public ResponseEntity<?> eliminarUsuarioConJustificacion(@PathVariable Integer id,
+            @RequestParam String motivo,
+            @RequestParam String descripcion,
+            HttpSession session) {
+        UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
+        if (admin == null)
+            return ResponseEntity.status(401).build();
+
+        if (admin.getRolNivel() == null)
+            admin.setRolNivel(calcularNivel(admin.getRolNombre()));
+
+        UsuarioDTO target = apiCliente.buscarUsuarioPorId(id);
+        if (target == null)
+            return ResponseEntity.notFound().build();
+        target.setRolNivel(calcularNivel(target.getRolNombre()));
+
+        if (admin.getRolNivel() >= target.getRolNivel()) {
+            return ResponseEntity.status(403).body("No tienes permisos para eliminar a este usuario");
         }
 
         try {
-            apiCliente.eliminarUsuario(id);
-            return ResponseEntity.ok(Map.of("mensaje", "Usuario eliminado"));
+            apiCliente.eliminarUsuarioConJustificacion(id, motivo, descripcion, admin.getId());
+            return ResponseEntity.ok(Map.of("mensaje", "Usuario eliminado con justificación"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/exportar-pdf")
+    public ResponseEntity<byte[]> exportarPdf(HttpSession session) {
+        UsuarioDTO admin = (UsuarioDTO) session.getAttribute("usuario");
+        String rol = admin != null ? admin.getRolNombre() : null;
+        boolean esAdmin = "ADMIN".equalsIgnoreCase(rol) || "OWNER".equalsIgnoreCase(rol);
+
+        if (admin == null || !esAdmin) {
+            return ResponseEntity.status(403).build();
+        }
+
+        try {
+            byte[] pdfBytes = exportacionServicio.generarReporteCompleto();
+
+            if (pdfBytes == null || pdfBytes.length == 0) {
+                System.err.println("Error: PDF generado está vacío");
+                return ResponseEntity.status(500).body(null);
+            }
+
+            return ResponseEntity.ok()
+                    .header("Content-Disposition",
+                            "attachment; filename=reporte_sistema_" + java.time.LocalDate.now() + ".pdf")
+                    .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
         }
     }
 }

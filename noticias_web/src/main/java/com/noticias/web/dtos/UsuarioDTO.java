@@ -16,6 +16,15 @@ public class UsuarioDTO {
     private Boolean vetado;
     private String motivoVeto;
     private String secretKey2FA;
+    private Integer rolNivel; // 1: OWNER, 2: ADMIN, 3: TRABAJADOR, 4: USER
+
+    public Integer getRolNivel() {
+        return rolNivel;
+    }
+
+    public void setRolNivel(Integer rolNivel) {
+        this.rolNivel = rolNivel;
+    }
 
     public String getSecretKey2FA() {
         return secretKey2FA;

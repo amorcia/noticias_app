@@ -253,9 +253,16 @@
 
                     <!-- DASHBOARD TAB -->
                     <div id="dashboard" class="tab-content active">
-                        <div class="content-header">
-                            <h2>Resumen General</h2>
-                            <p class="text-muted">Estadísticas en tiempo real de la plataforma.</p>
+                        <div class="content-header"
+                            style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2>Resumen General</h2>
+                                <p class="text-muted">Estadísticas en tiempo real de la plataforma.</p>
+                            </div>
+                            <a th:href="@{/admin/exportar-pdf}" class="btn btn-primary"
+                                style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                                <i data-lucide="file-down" style="width: 18px;"></i> Exportar Reporte PDF
+                            </a>
                         </div>
 
                         <div class="stats-grid">
@@ -333,42 +340,50 @@
                                         <td th:text="${u.nombreCompleto}">Nombre</td>
                                         <td th:text="${u.email}">email@example.com</td>
                                         <td>
-                                            <!-- Si es OWNER, puede cambiar roles -->
-                                            <select
-                                                th:if="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER')}"
-                                                class="form-input"
+                                            <!-- Si el visor es de nivel SUPERIOR al objetivo (actorNivel < targetNivel), puede cambiar roles -->
+                                            <select th:if="${session.usuario.rolNivel < u.rolNivel}" class="form-input"
                                                 style="padding: 0.2rem; height: auto; font-size: 0.8rem; width: auto;"
                                                 th:onchange="'cambiarRol(' + ${u.id} + ', this.value)'">
-                                                <option value="1" th:selected="${u.rolId == 1}">Owner</option>
-                                                <option value="2" th:selected="${u.rolId == 2}">Admin</option>
-                                                <option value="3" th:selected="${u.rolId == 3}">Trabajador</option>
-                                                <option value="4" th:selected="${u.rolId == 4}">User</option>
+                                                <option value="1" th:selected="${u.rolNivel == 1}"
+                                                    th:if="${session.usuario.rolNivel == 0}">Owner</option>
+                                                <!-- Only system could do this -->
+                                                <option value="2" th:selected="${u.rolNivel == 2}"
+                                                    th:if="${session.usuario.rolNivel == 1}">Admin</option>
+                                                <option value="3" th:selected="${u.rolNivel == 3}">Trabajador</option>
+                                                <option value="4" th:selected="${u.rolNivel == 4}">User</option>
                                             </select>
-                                            <span
-                                                th:unless="${#strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER')}"
-                                                class="badge" th:text="${u.rolNombre}">ROL</span>
+                                            <!-- Mostrar badge si no tiene permiso de cambio (nivel igual o inferior) -->
+                                            <span th:if="${session.usuario.rolNivel >= u.rolNivel}" class="badge"
+                                                th:text="${u.rolNombre}">ROL</span>
                                         </td>
                                         <td>
                                             <span th:if="${u.vetado}" class="badge badge-danger">VETADO</span>
                                             <span th:unless="${u.vetado}" class="badge badge-success">ACTIVO</span>
                                         </td>
                                         <td>
-                                            <div style="display: flex; gap: 0.5rem;">
+                                            <!-- Validar jerarquía: visor debe ser nivel ESTRICTAMENTE inferior (número menor) al objetivo -->
+                                            <div th:if="${session.usuario.rolNivel < u.rolNivel}"
+                                                style="display: flex; gap: 0.5rem;">
                                                 <button th:if="${!u.vetado}" class="btn btn-ghost btn-sm"
                                                     th:onclick="'openVetoModal(' + ${u.id} + ')'"
-                                                    style="color: var(--danger);">
+                                                    style="color: var(--danger);" title="Vetar Usuario">
                                                     <i data-lucide="user-x" style="width: 14px;"></i>
                                                 </button>
                                                 <button th:if="${u.vetado}" class="btn btn-ghost btn-sm"
                                                     th:onclick="'desvetarUsuario(' + ${u.id} + ')'"
-                                                    style="color: var(--success);">
+                                                    style="color: var(--success);" title="Quitar Veto">
                                                     <i data-lucide="user-check" style="width: 14px;"></i>
                                                 </button>
                                                 <button class="btn btn-ghost btn-sm"
                                                     th:onclick="'eliminarUsuario(' + ${u.id} + ')'"
-                                                    style="color: var(--danger);">
+                                                    style="color: var(--danger);" title="Eliminar Usuario">
                                                     <i data-lucide="trash-2" style="width: 14px;"></i>
                                                 </button>
+                                            </div>
+                                            <!-- Mostrar PROTEGIDO si es un par o superior -->
+                                            <div th:if="${session.usuario.rolNivel >= u.rolNivel}">
+                                                <span class="badge badge-accent"
+                                                    style="font-size: 0.7rem;">PROTEGIDO</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -740,6 +755,48 @@
             </div>
         </div>
 
+        <!-- Delete User Modal -->
+        <div id="deleteUserModal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Eliminar Usuario</h3>
+                <p>¿Estás seguro de que quieres eliminar a este usuario permanentemente? Esta acción no se puede
+                    deshacer.</p>
+                <form id="deleteUserForm">
+                    <input type="hidden" name="id" id="deleteUserId">
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                            Motivo de eliminación <span style="color: var(--danger);">*</span>
+                        </label>
+                        <select name="motivo" id="deleteUserMotivoInput" class="form-input" required
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main);">
+                            <option value="">Selecciona un motivo</option>
+                            <option value="SPAM">Spam</option>
+                            <option value="ABUSO">Comportamiento Abusivo</option>
+                            <option value="VIOLACION_TOS">Violación Términos de Servicio</option>
+                            <option value="SOLICITUD_USUARIO">Solicitud del Usuario</option>
+                            <option value="INACTIVIDAD">Inactividad Prolongada</option>
+                            <option value="OTRO">Otro motivo</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                            Descripción detallada <span style="color: var(--danger);">*</span>
+                        </label>
+                        <textarea name="descripcion" class="form-input" rows="3" required
+                            placeholder="Describe en detalle el motivo de la eliminación..."
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); resize: vertical; display: block;"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button type="button" class="btn btn-ghost" onclick="closeDeleteUserModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary"
+                            style="flex: 1; background-color: var(--danger);">Eliminar Usuario</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Modal: Detalle Noticia Eliminada -->
         <div id="detalleEliminadaModal" class="modal-overlay">
             <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
@@ -1005,21 +1062,57 @@
                 } catch (e) { console.error(e); }
             }
 
-            async function eliminarUsuario(id) {
-                if (!confirm('¿Estás seguro de que quieres eliminar este usuario permanentemente?')) return;
+            // User Deletion Logic
+            const deleteUserModal = document.getElementById('deleteUserModal');
+
+            function openDeleteUserModal(id) {
+                document.getElementById('deleteUserId').value = id;
+                deleteUserModal.classList.add('open');
+            }
+
+            function closeDeleteUserModal() {
+                deleteUserModal.classList.remove('open');
+            }
+
+            function eliminarUsuario(id) {
+                openDeleteUserModal(id);
+            }
+
+            async function handleUserDeletion(event) {
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                const id = formData.get('id');
+                const motivo = formData.get('motivo');
+                const descripcion = formData.get('descripcion');
+
                 try {
                     let baseUrl = contextPath;
                     if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
-                    const res = await fetch(`${baseUrl}/admin/usuarios/${id}`, { method: 'DELETE' });
+
+                    const params = new URLSearchParams();
+                    params.append('motivo', motivo);
+                    params.append('descripcion', descripcion);
+
+                    const res = await fetch(`${baseUrl}/admin/usuarios/${id}/eliminar-con-justificacion`, {
+                        method: 'POST',
+                        body: params
+                    });
+
                     if (res.ok) {
-                        showFeedback('Usuario Eliminado', 'El usuario ha sido borrado del sistema.', 'success');
+                        closeDeleteUserModal();
+                        showFeedback('Usuario Eliminado', 'El usuario ha sido eliminado con justificación.', 'success');
                         setTimeout(() => location.reload(), 1500);
                     } else {
                         const error = await res.text();
                         showFeedback('Error', error || 'No se pudo eliminar al usuario.', 'error');
                     }
-                } catch (e) { console.error(e); }
+                } catch (e) {
+                    console.error(e);
+                    showFeedback('Error', 'Error de conexión.', 'error');
+                }
             }
+
+            document.getElementById('deleteUserForm').addEventListener('submit', handleUserDeletion);
 
             // Detalle Noticia Eliminada Modal
             const detalleEliminadaModal = document.getElementById('detalleEliminadaModal');

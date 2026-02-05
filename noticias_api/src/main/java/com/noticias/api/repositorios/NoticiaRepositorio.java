@@ -50,4 +50,6 @@ public interface NoticiaRepositorio extends JpaRepository<NoticiaEntidad, Intege
 
     @Query("SELECT n FROM NoticiaEntidad n WHERE n.categoria.id = :catId ORDER BY (n.likes - n.dislikes) ASC")
     List<NoticiaEntidad> findByCategoriaIdOrdenPorValoracionAsc(Integer catId);
+
+    void deleteByAutorId(Integer autorId);
 }

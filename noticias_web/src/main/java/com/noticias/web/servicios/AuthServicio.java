@@ -66,10 +66,9 @@ public class AuthServicio {
         String sessionToken = UUID.randomUUID().toString();
         usuario.setTokenSession(sessionToken);
 
-        // Actualizar usuario en DB con el nuevo token de sesion
-        UsuarioDTO usuarioActualizar = new UsuarioDTO();
-        usuarioActualizar.setTokenSession(sessionToken);
-        apiCliente.actualizarUsuario(usuario.getId(), usuarioActualizar);
+        // Actualizar usuario en DB con el nuevo token de sesion de forma segura (sin
+        // bloquear OWNER)
+        apiCliente.actualizarTokenSesion(usuario.getId(), sessionToken);
 
         UsuarioRespuestaDTO usuarioResp = new UsuarioRespuestaDTO();
         usuarioResp.setId(usuario.getId());
