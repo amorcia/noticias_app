@@ -11,6 +11,7 @@
         rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/estilos.css}">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script th:src="@{/js/app.js}" defer></script>
 </head>
 
 <body>
@@ -116,9 +117,9 @@
                                     <!-- Delete -->
                                     <button
                                         th:if="${session.usuario != null and (session.usuario.id == noticia.autorId or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'ADMIN') or #strings.equalsIgnoreCase(session.usuario.rolNombre, 'OWNER'))}"
-                                        th:data-titulo="${noticia.titulo}"
+                                        th:data-id="${noticia.id}" th:data-titulo="${noticia.titulo}"
                                         th:data-espropio="${session.usuario.id == noticia.autorId}"
-                                        onclick="openDeleteModal(this.getAttribute('data-titulo'), this.getAttribute('data-espropio') === 'true')"
+                                        onclick="openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-titulo'), this.getAttribute('data-espropio') === 'true')"
                                         style="background:none; border:none; padding:0; cursor:pointer; display:flex; align-items:center; gap:0.3rem; color:var(--danger); margin-left: auto;">
                                         <i data-lucide="trash-2" style="width: 16px;"></i>
                                     </button>
@@ -163,7 +164,7 @@
     <!-- Report Modal -->
     <div id="reportModal" class="modal-overlay">
         <div class="modal-content">
-            <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">Denunciar Noticia</h3>
+            <h3 style="margin-bottom: 1rem; font-size: 1.5rem;" id="reportModalTitle">Denunciar Noticia</h3>
             <form id="reportForm">
                 <input type="hidden" id="reportNoticiaId" name="noticiaId">
                 <div class="form-group">
@@ -200,8 +201,11 @@
             <h3 style="margin-bottom: 1rem; font-size: 1.5rem; color: var(--danger);">Eliminar Noticia</h3>
             <p>¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer.</p>
             <form id="deleteForm">
+                <input type="hidden" id="deleteId">
                 <input type="hidden" name="titulo" id="deleteTitulo">
                 <input type="hidden" id="esPropio">
+
+                <h4 id="tituloConfirmacionDisplay" style="text-align:center; margin: 1rem 0; font-weight:bold;"></h4>
 
                 <!-- Formulario Admin/Owner (si NO es propio) -->
                 <div id="adminDeleteForm" style="display: none;">
@@ -259,77 +263,21 @@
         </div>
     </div>
 
+    <!-- Inline Script for Page Specifics -->
     <script th:inline="javascript">
-        lucide.createIcons();
-        const USUARIO_ID = /*[[${session.usuario != null ? session.usuario.id : 0}]]*/ 0;
+        // Global Constants
+        window.CONTEXT_PATH = /*[[@{/}]]*/ '/';
+        window.USUARIO_ID = /*[[${session.usuario != null ? session.usuario.id : 0}]]*/ 0;
 
-        // Like/Dislike
-        const contextPath = /*[[@{/}]]*/ '';
-
-        async function toggleLike(id) {
-            if (!USUARIO_ID) return location.href = contextPath + 'auth/login';
-            try {
-                const res = await fetch(`${contextPath}interacciones/noticia/${id}/votar?tipo=LIKE`, { method: 'POST' });
-                if (res.ok) location.reload();
-                else showSuccess('Error', 'No se pudo registrar tu voto.', 'error');
-            } catch (e) { console.error(e); }
-        }
-
-        async function toggleDislike(id) {
-            if (!USUARIO_ID) return location.href = contextPath + 'auth/login';
-            try {
-                const res = await fetch(`${contextPath}interacciones/noticia/${id}/votar?tipo=DISLIKE`, { method: 'POST' });
-                if (res.ok) location.reload();
-                else showSuccess('Error', 'No se pudo registrar tu voto.', 'error');
-            } catch (e) { console.error(e); }
-        }
-
-        // Modal Logic
-        const reportModal = document.getElementById('reportModal');
+        // --- Specific Delete Modal Logic for Home Page (Simplified version of DetalleNoticia one) ---
         const deleteModal = document.getElementById('deleteModal');
-        const successModal = document.getElementById('successModal');
 
-        // Report
-        function openReportModal(id) {
-            if (!USUARIO_ID) return location.href = '/noticias/auth/login';
-            document.getElementById('reportNoticiaId').value = id;
-            reportModal.classList.add('open');
-        }
-        function closeReportModal() {
-            reportModal.classList.remove('open');
-        }
-        function checkReason() {
-            const r = document.getElementById('reportReason').value;
-            document.getElementById('customReasonGroup').style.display = (r === 'OTRO' ? 'block' : 'none');
-        }
-        async function submitReport() {
-            const noticiaId = document.getElementById('reportNoticiaId').value;
-            let motivo = document.getElementById('reportReason').value;
-            if (motivo === 'OTRO') motivo = document.getElementById('customReason').value;
-            const descripcion = document.getElementById('reportDescription').value;
-
-            if (!motivo) return; // Validate
-
-            try {
-                const res = await fetch(`/interacciones/denuncias`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ noticiaId: Number(noticiaId), usuarioId: USUARIO_ID, motivo: motivo, descripcion: descripcion })
-                });
-                if (res.ok) {
-                    closeReportModal();
-                    showSuccess('Reporte Enviado', 'El equipo de moderación revisará tu reporte.');
-                } else {
-                    showSuccess('Error', 'No se pudo enviar el reporte.'); // Reusing modal for error too simpler
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        // Delete
-        async function handleDeletion(event) {
+        document.getElementById('deleteForm').addEventListener('submit', async function (event) {
             event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
+            const formData = new FormData(event.target);
+            // Append explicit ID since form might not have it if it was filled by JS
+            const id = document.getElementById('deleteId').value;
+            formData.append('id', id);
 
             // Client side validation for admin
             const esPropio = document.getElementById('esPropio').value === 'true';
@@ -343,7 +291,7 @@
             }
 
             try {
-                const res = await fetch(`${contextPath}trabajador/noticias/borrar`, {
+                const res = await fetch(`${window.CONTEXT_PATH}trabajador/noticias/borrar`, {
                     method: 'POST',
                     body: new URLSearchParams(formData)
                 });
@@ -360,14 +308,13 @@
                 console.error(e);
                 showSuccess('Error', 'Error de conexión.', 'error');
             }
-        }
+        });
 
-        // Attach event listener
-        document.getElementById('deleteForm').addEventListener('submit', handleDeletion);
-
-        function openDeleteModal(titulo, esPropio) {
+        function openDeleteModal(id, titulo, esPropio) {
+            document.getElementById('deleteId').value = id;
             document.getElementById('deleteTitulo').value = titulo;
             document.getElementById('esPropio').value = esPropio;
+            document.getElementById('tituloConfirmacionDisplay').innerText = titulo;
 
             const adminForm = document.getElementById('adminDeleteForm');
             const motivoSelect = document.getElementById('deleteMotivoSelect');
@@ -387,34 +334,10 @@
 
             deleteModal.classList.add('open');
         }
+
         function closeDeleteModal() {
             deleteModal.classList.remove('open');
         }
-
-        // Success/Error Modal
-        function showSuccess(title, msg, type = 'success') {
-            const titleEl = document.getElementById('successTitle');
-            const msgEl = document.getElementById('successMessage');
-            const iconContainer = document.getElementById('modalIconContainer');
-
-            titleEl.innerText = title;
-            msgEl.innerText = msg;
-
-            if (type === 'error') {
-                iconContainer.innerHTML = '<i data-lucide="x-circle" style="width: 64px; height: 64px; color: var(--danger);"></i>';
-                titleEl.style.color = 'var(--danger)';
-            } else {
-                iconContainer.innerHTML = '<i data-lucide="check-circle" style="width: 64px; height: 64px; color: var(--success);"></i>';
-                titleEl.style.color = 'var(--text-main)';
-            }
-
-            successModal.classList.add('open');
-            lucide.createIcons();
-        }
-        function closeSuccessModal() {
-            successModal.classList.remove('open');
-        }
-
     </script>
 </body>
 

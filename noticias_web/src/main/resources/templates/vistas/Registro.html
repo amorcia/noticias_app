@@ -28,8 +28,9 @@
 
                 <div class="form-group">
                     <label for="movil" class="form-label">Móvil <span style="color: var(--danger);">*</span></label>
-                    <input type="tel" id="movil" name="movil" class="form-input" placeholder="600000000"
-                        pattern="[0-9]{9}" title="Debe ser un número de 9 dígitos" required>
+                    <input type="tel" id="movil" name="movil" class="form-input" placeholder="600000000" maxlength="9"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)" pattern="[0-9]{9}"
+                        title="Debe ser un número de 9 dígitos" required>
                     <small style="color: var(--text-muted); font-size: 0.85rem;">Formato: 9 dígitos sin espacios</small>
                 </div>
 

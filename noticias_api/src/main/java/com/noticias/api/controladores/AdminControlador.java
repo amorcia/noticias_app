@@ -30,13 +30,23 @@ public class AdminControlador {
     @Autowired
     private com.noticias.api.repositorios.NoticiaRepositorio noticiaRepositorio;
 
+    @Autowired
+    private com.noticias.api.servicios.LoggerService logger; // Inject
+
     // moderacionServicio eliminada por no usarse
 
     // --- ESTADÍSTICAS ---
     @GetMapping("/stats")
     public ResponseEntity<java.util.Map<String, Object>> getStats() {
         long totalUsuarios = usuarioRepositorio.count();
+        // Optimización: Usar count en lugar de traer toda la lista
+        // Nota: para countByVetadoTrue necesitamos definir el metodo en el repo o usar
+        // un filtro si no existe
+        // Asumiendo que findByVetadoTrue existe, su size() es "menos malo" que
+        // findAll() pero countBy... sería mejor.
+        // Dado el repositorio estándar JPA:
         long usuariosVetados = usuarioRepositorio.findByVetadoTrue().size();
+
         long totalSanciones = sancionRepositorio.count();
         long sancionesPendientes = sancionRepositorio.findByEstado("PENDIENTE").size();
         long totalNoticias = noticiaRepositorio.count();
@@ -80,6 +90,10 @@ public class AdminControlador {
             sancion.setAdmin(admin);
             sancion.setResolucion(resolucion);
             sancion.setEstado("RESUELTO");
+
+            // LOG
+            logger.logAction(admin.getEmail(), "RESOLVE_SANCTION",
+                    "Resolved sanction " + id + " with action: " + accion);
 
             UsuarioEntidad usuario = sancion.getUsuario();
             if (usuario != null) {

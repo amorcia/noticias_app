@@ -2,6 +2,7 @@ package com.noticias.api.entidades;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Entidad Usuario para el sistema de Noticias.

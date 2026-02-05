@@ -31,6 +31,7 @@ com\noticias\web\servicios\ApiNoticiasCliente$16.class
 com\noticias\web\servicios\ApiNoticiasCliente$13.class
 com\noticias\web\servicios\ApiNoticiasCliente$7.class
 com\noticias\web\controladores\InicioControlador.class
+com\noticias\web\servicios\LoggerService.class
 com\noticias\web\dtos\NoticiaDTO.class
 com\noticias\web\seguridad\CustomAuthenticationSuccessHandler.class
 com\noticias\web\servicios\ApiNoticiasCliente$10.class

@@ -27,6 +27,7 @@ services:
       - noticias-db
     volumes:
       - uploads_data:/uploads
+      - ./logs/api:/logs
     networks:
       - noticias-network
 
@@ -42,6 +43,7 @@ services:
       - noticias-api
     volumes:
       - uploads_data:/uploads
+      - ./logs/web:/logs
     networks:
       - noticias-network
 

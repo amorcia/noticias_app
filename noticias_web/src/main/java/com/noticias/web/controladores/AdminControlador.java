@@ -26,6 +26,9 @@ public class AdminControlador {
     @Autowired
     private com.noticias.web.servicios.ExportacionServicio exportacionServicio;
 
+    @Autowired
+    private com.noticias.web.servicios.LoggerService logger; // Inject Logger
+
     /**
      * @author amorcia
      *         METODO - Helper para calcular nivel jerárquico del rol
@@ -179,6 +182,10 @@ public class AdminControlador {
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("❌ Error en AdminControlador: " + e.getMessage());
+            try {
+                logger.logError("PanelAdmin Error", e);
+            } catch (Exception le) {
+            } // Log to file
             model.addAttribute("error", "Error al conectar con el servicio de administración. " + e.getMessage());
         }
 

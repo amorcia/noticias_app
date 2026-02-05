@@ -35,6 +35,7 @@ com\noticias\api\servicios\InteraccionServicio.class
 com\noticias\api\servicios\ModeracionServicio$2.class
 com\noticias\api\entidades\RolEntidad.class
 com\noticias\api\repositorios\ErrorLogRepositorio.class
+com\noticias\api\servicios\LoggerService.class
 com\noticias\api\servicios\DenunciaServicio.class
 com\noticias\api\controladores\NoticiaControlador.class
 com\noticias\api\dtos\NoticiaDTO.class

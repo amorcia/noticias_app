@@ -8,6 +8,7 @@ import com.noticias.api.repositorios.UsuarioRepositorio;
 import com.noticias.api.servicios.NoticiaServicio;
 import com.noticias.api.servicios.ModeracionServicio;
 import com.noticias.api.servicios.AlmacenamientoServicio;
+import com.noticias.api.servicios.LoggerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,15 +28,18 @@ public class NoticiaControlador {
     private final ModeracionServicio moderacionServicio;
     private final AlmacenamientoServicio almacenamientoServicio;
     private final UsuarioRepositorio usuarioRepositorio;
+    private final LoggerService loggerService;
 
     public NoticiaControlador(NoticiaServicio noticiaServicio,
             ModeracionServicio moderacionServicio,
             AlmacenamientoServicio almacenamientoServicio,
-            UsuarioRepositorio usuarioRepositorio) {
+            UsuarioRepositorio usuarioRepositorio,
+            LoggerService loggerService) {
         this.noticiaServicio = noticiaServicio;
         this.moderacionServicio = moderacionServicio;
         this.almacenamientoServicio = almacenamientoServicio;
         this.usuarioRepositorio = usuarioRepositorio;
+        this.loggerService = loggerService;
     }
 
     @GetMapping

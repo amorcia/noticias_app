@@ -26,6 +26,7 @@ public class UsuarioControlador {
     private final UsuarioServicio usuarioServicio;
     private final com.noticias.api.servicios.AlmacenamientoServicio almacenamientoServicio;
     private final com.noticias.api.servicios.PrivilegiosServicio privilegiosServicio;
+    private final com.noticias.api.servicios.LoggerService logger;
 
     /**
      * @author amorcia
@@ -36,10 +37,12 @@ public class UsuarioControlador {
      */
     public UsuarioControlador(UsuarioServicio usuarioServicio,
             com.noticias.api.servicios.AlmacenamientoServicio almacenamientoServicio,
-            com.noticias.api.servicios.PrivilegiosServicio privilegiosServicio) {
+            com.noticias.api.servicios.PrivilegiosServicio privilegiosServicio,
+            com.noticias.api.servicios.LoggerService logger) {
         this.usuarioServicio = usuarioServicio;
         this.almacenamientoServicio = almacenamientoServicio;
         this.privilegiosServicio = privilegiosServicio;
+        this.logger = logger;
     }
 
     /**

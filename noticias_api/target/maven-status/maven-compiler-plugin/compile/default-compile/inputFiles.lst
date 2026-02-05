@@ -26,6 +26,7 @@ C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\ma
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\controladores\AdminControlador.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\VotoComentarioEntidad.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\repositorios\RolRepositorio.java
+C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\servicios\LoggerService.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\CategoriaEntidad.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\NoticiaEliminadaEntidad.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\dtos\NoticiaDTO.java

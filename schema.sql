@@ -186,10 +186,10 @@ ON CONFLICT (rol_id) DO NOTHING;
 
 -- 2. Categorías
 INSERT INTO categorias (cat_nombre, cat_descripcion, cat_color, cat_parent_id) VALUES 
-('Tecnología', 'Novedades del mundo tech', '#3B82F6', NULL),   -- id 1
+('Tecnologia', 'Novedades del mundo tech', '#3B82F6', NULL),   -- id 1
 ('Deportes', 'Todo sobre deportes', '#EF4444', NULL),        -- id 2
-('Politica', 'Actualidad política', '#F59E0B', NULL),        -- id 3
-('Cultura', 'Arte, cine y música', '#8B5CF6', NULL);         -- id 4
+('Politica', 'Actualidad politica', '#F59E0B', NULL),        -- id 3
+('Cultura', 'Arte, cine y musica', '#8B5CF6', NULL);         -- id 4
 
 -- Subcategorías de Tecnología (ID 1)
 INSERT INTO categorias (cat_nombre, cat_descripcion, cat_color, cat_parent_id) VALUES 

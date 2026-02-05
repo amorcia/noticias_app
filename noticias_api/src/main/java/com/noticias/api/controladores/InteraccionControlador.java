@@ -2,7 +2,9 @@ package com.noticias.api.controladores;
 
 import com.noticias.api.entidades.ComentarioEntidad;
 import com.noticias.api.servicios.ComentarioServicio;
+import com.noticias.api.servicios.ComentarioServicio;
 import com.noticias.api.servicios.DenunciaServicio;
+import com.noticias.api.servicios.LoggerService; // Import
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,9 @@ public class InteraccionControlador {
     private ComentarioServicio comentarioServicio;
     @Autowired
     private DenunciaServicio denunciaServicio;
+
+    @Autowired
+    private LoggerService logger; // Inject
 
     /**
      * @author amorcia
@@ -58,7 +63,21 @@ public class InteraccionControlador {
             Integer padreId = payload.get("padreId") != null ? Integer.valueOf(payload.get("padreId").toString())
                     : null;
 
-            return ResponseEntity.ok(comentarioServicio.crearComentario(noticiaId, usuarioId, contenido, padreId));
+            var result = comentarioServicio.crearComentario(noticiaId, usuarioId, contenido, padreId);
+
+            // LOG
+            try {
+                // We don't have email here directly, but we have usuarioId.
+                // Ideally ComentarioServicio should return the created comment with author
+                // info.
+                // Or we fetch user name. Simplified logging for now (just ID).
+                if (usuarioId != null) {
+                    logger.logAction("user_id_" + usuarioId, "COMMENT", "Commented on news " + noticiaId);
+                }
+            } catch (Exception e) {
+            }
+
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

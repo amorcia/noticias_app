@@ -13,6 +13,7 @@ C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_web\src\ma
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\seguridad\CustomUserDetailsService.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\seguridad\CorsConfig.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\seguridad\JwtFiltro.java
+C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\servicios\LoggerService.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\LoginRespuestaDTO.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\dtos\UsuarioDTO.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_web\src\main\java\com\noticias\web\seguridad\SeguridadConfig.java
