@@ -16,7 +16,7 @@
     <!-- Header -->
     <header th:replace="~{vistas/Fragmentos :: header}"></header>
 
-    <main style="max-width: 900px; margin: 3rem auto; padding: 0 1.5rem;">
+    <main style="max-width: 800px; margin: 3rem auto; padding: 0 1.5rem;">
 
         <!-- Back Link -->
         <a th:href="@{/}"
@@ -40,13 +40,13 @@
             </div>
 
             <!-- Title -->
-            <h1 style="font-size: 3.5rem; font-weight: 950; line-height: 1.1; margin-bottom: 1.5rem; color: var(--text-main); letter-spacing: -1.5px;"
+            <h1 style="font-size: 2.5rem; font-weight: 900; line-height: 1.2; margin-bottom: 1rem; color: var(--text-main); letter-spacing: -1px;"
                 th:text="${noticia.titulo}">
                 Título de la Noticia
             </h1>
 
             <!-- Subtitle -->
-            <p style="font-size: 1.5rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 3rem; font-weight: 400;"
+            <p style="font-size: 1.25rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 2.5rem; font-weight: 400;"
                 th:text="${noticia.subtitulo}">
                 Subtítulo o descripción breve de la noticia para captar atención.
             </p>
@@ -149,87 +149,9 @@
             </div>
         </div>
 
-        <!-- Delete Modal (Role-based: GitHub Style for Owner, Standard for Admin) -->
-        <div id="deleteModal" class="modal-overlay">
-            <div id="deleteModalContent" class="modal-content">
-                <h3 id="deleteModalTitle" style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Eliminar
-                    Noticia
-                </h3>
-                <p id="deleteModalMessage" style="margin-bottom: 1.5rem;">¿Estás seguro de que quieres eliminar esta
-                    noticia?</p>
 
-                <form id="deleteForm">
-                    <input type="hidden" id="deleteId">
-                    <input type="hidden" name="titulo" id="deleteTitulo">
-                    <input type="hidden" id="esPropio">
-
-                    <!-- Formulario para Propietario (GitHub Style) -->
-                    <div id="ownerDeleteForm" style="display: none;">
-                        <div
-                            style="background-color: #161b22; padding: 16px; border: 1px solid #30363d; border-radius: 6px; margin-bottom: 16px;">
-                            <p style="margin-bottom: 8px; font-size: 14px; color: #8b949e;">
-                                Esta acción <strong>no se puede</strong> deshacer. Esto eliminará permanentemente la
-                                noticia:
-                            </p>
-                            <p style="font-weight: 600; color: #c9d1d9; font-family: monospace;">
-                                <span id="tituloConfirmacionDisplay"></span>
-                            </p>
-                        </div>
-
-                        <label id="confirmTituloLabel"
-                            style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: #c9d1d9;">
-                            Para confirmar, escribe el título de la noticia:
-                        </label>
-                        <div class="form-group">
-                            <input type="text" id="confirmTituloInput" class="github-input" autocomplete="off"
-                                placeholder="Escribe el título exacto aquí">
-                        </div>
-
-                        <button type="submit" id="deleteSubmitBtnOwner" class="btn github-btn-danger"
-                            style="width: 100%; padding: 5px 16px; font-size: 14px; font-weight: 500; line-height: 20px; border-radius: 6px; margin-top: 16px;">
-                            Eliminar esta noticia
-                        </button>
-                    </div>
-
-                    <!-- Formulario para Admin/Staff (Standard Style) -->
-                    <div id="adminDeleteForm" style="display: none;">
-                        <div class="form-group" style="margin-top: 1.5rem;">
-                            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                                Motivo de eliminación <span style="color: var(--danger);">*</span>
-                            </label>
-                            <select id="deleteMotivoSelect" class="form-input"
-                                style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main);">
-                                <option value="">Selecciona un motivo</option>
-                                <option value="SPAM">Spam o contenido comercial</option>
-                                <option value="DESINFORMACION">Desinformación</option>
-                                <option value="ODIO">Lenguaje de odio o acoso</option>
-                                <option value="INAPROPIADO">Contenido inapropiado</option>
-                                <option value="DUPLICADO">Contenido duplicado</option>
-                                <option value="VIOLACION_NORMAS">Violación de normas</option>
-                                <option value="OTRO">Otro motivo</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="margin-top: 1rem; display: block;">
-                            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                                Descripción detallada <span style="color: var(--danger);">*</span>
-                            </label>
-                            <textarea id="deleteDescripcion" class="form-input" rows="4"
-                                placeholder="Describe en detalle el motivo de la eliminación..."
-                                style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); resize: vertical; display: block;"></textarea>
-                        </div>
-
-                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                            <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()">Cancelar</button>
-                            <button type="submit" id="deleteSubmitBtnAdmin" class="btn btn-primary"
-                                style="flex: 1; background-color: var(--danger);">
-                                Eliminar Definitivamente
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <!-- Delete Modal (Unified Fragment) -->
+        <div th:replace="~{vistas/Fragmentos :: deleteModal}"></div>
 
 
         <!-- Comment Deletion Modal (Improved Styling) -->
@@ -355,80 +277,12 @@
         </div>
     </div>
 
-    <!-- Page Specific Script -->
     <script th:inline="javascript">
-        // Global variables for external JS files
+        // Page-specific variables
         window.CONTEXT_PATH = /*[[@{/}]]*/ '/';
         window.NOTICIA_ID = /*[[${noticia.id}]]*/ 0;
         window.USUARIO_ID = /*[[${session.usuario != null ? session.usuario.id : 0}]]*/ 0;
         window.USUARIO_ROL = /*[[${session.usuario != null ? session.usuario.rolNombre : ''}]]*/ '';
-
-        // Modal Logic for News Deletion (Specific to this page ID references)
-        const deleteModal = document.getElementById('deleteModal');
-
-        // This specific page logic remains here because it binds directly to the specific DOM of this page
-        // or could be moved to a news-detail.js if strict separation is desired.
-        // For now, keeping the deletion modal logic here as it interacts heavily with hidden inputs on this specific form
-
-        document.getElementById('deleteForm').addEventListener('submit', async function (event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-
-            // Client side validation for admin
-            const esPropio = document.getElementById('esPropio').value === 'true';
-            if (!esPropio) {
-                const motivo = document.getElementById('deleteMotivoSelect').value;
-                const descripcion = document.getElementById('deleteDescripcion').value;
-                if (!motivo || !descripcion) {
-                    showSuccess('Error', 'Debes completar motivo y descripción.', 'error');
-                    return;
-                }
-            }
-
-            try {
-                const res = await fetch(`${window.CONTEXT_PATH}trabajador/noticias/borrar`, {
-                    method: 'POST',
-                    body: new URLSearchParams(formData)
-                });
-                if (res.ok) {
-                    closeDeleteModal();
-                    showSuccess('Eliminado', 'La noticia ha sido eliminada correctamente.');
-                    setTimeout(() => location.href = window.CONTEXT_PATH, 1500); // Redirect to home
-                } else {
-                    const txt = await res.text();
-                    showSuccess('Error', txt || 'No se pudo eliminar.', 'error');
-                }
-            } catch (e) { console.error(e); }
-        });
-
-        function openDeleteModal(id, titulo, esPropio) {
-            document.getElementById('deleteId').value = id;
-            document.getElementById('deleteTitulo').value = titulo;
-            document.getElementById('esPropio').value = esPropio;
-            document.getElementById('tituloConfirmacionDisplay').innerText = titulo;
-
-            const adminForm = document.getElementById('adminDeleteForm');
-            const ownerForm = document.getElementById('ownerDeleteForm');
-
-            if (esPropio) {
-                adminForm.style.display = 'none';
-                ownerForm.style.display = 'block';
-                document.getElementById('deleteMotivoSelect').required = false;
-                document.getElementById('deleteDescripcion').required = false;
-                document.getElementById('confirmTituloInput').required = true;
-            } else {
-                ownerForm.style.display = 'none';
-                adminForm.style.display = 'block';
-                document.getElementById('deleteMotivoSelect').required = true;
-                document.getElementById('deleteDescripcion').required = true;
-                document.getElementById('confirmTituloInput').required = false;
-            }
-            deleteModal.classList.add('open');
-        }
-
-        function closeDeleteModal() {
-            deleteModal.classList.remove('open');
-        }
     </script>
 </body>
 

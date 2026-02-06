@@ -1,6 +1,7 @@
 package com.noticias.web.controladores;
 
 import com.noticias.web.dtos.DenunciaDTO;
+import com.noticias.web.dtos.SancionDTO;
 import com.noticias.web.dtos.UsuarioDTO;
 import com.noticias.web.servicios.ApiNoticiasCliente;
 import jakarta.servlet.http.HttpSession;
@@ -11,7 +12,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.MediaType;
@@ -121,72 +121,107 @@ public class AdminControlador {
      */
     @GetMapping("/panel")
     public String panel(Model model, HttpSession session) {
+        System.out.println("[ADMIN DEBUG] Requesting /admin/panel");
         UsuarioDTO usuario = (UsuarioDTO) session.getAttribute("usuario");
-        if (usuario == null)
+
+        if (usuario == null) {
+            System.out.println("[ADMIN DEBUG] No user in session. Redirecting to login.");
             return "redirect:/auth/login";
+        }
+
+        System.out.println("[ADMIN DEBUG] User found: " + usuario.getEmail() + " | Role: " + usuario.getRolNombre());
 
         String rol = usuario.getRolNombre();
+        // Check ALL acceptable variants manually
         boolean esAdmin = "ADMIN".equalsIgnoreCase(rol) || "OWNER".equalsIgnoreCase(rol)
                 || "Admin".equalsIgnoreCase(rol) || "Owner".equalsIgnoreCase(rol);
 
-        if (!esAdmin)
+        if (!esAdmin) {
+            System.out.println("[ADMIN DEBUG] Access Denied. Role not sufficient.");
             return "redirect:/error/403";
+        }
 
-        // Defaults
-        model.addAttribute("usuarios", List.of());
-        model.addAttribute("sanciones", List.of());
-        model.addAttribute("vetados", List.of());
-        model.addAttribute("noticiasEliminadas", List.of());
-        model.addAttribute("denuncias", List.of());
+        // Initialize defaults
+        model.addAttribute("usuarios", java.util.Collections.emptyList());
+        model.addAttribute("sanciones", java.util.Collections.emptyList());
+        model.addAttribute("vetados", java.util.Collections.emptyList());
+        model.addAttribute("noticiasEliminadas", java.util.Collections.emptyList());
+        model.addAttribute("denuncias", java.util.Collections.emptyList());
 
-        Map<String, Object> defaultStats = new HashMap<>();
-        defaultStats.put("totalUsuarios", 0);
-        defaultStats.put("usuariosVetados", 0);
-        defaultStats.put("porcentajeVetados", 0);
-        defaultStats.put("totalNoticias", 0);
-        defaultStats.put("totalSanciones", 0);
-        defaultStats.put("sancionesPendientes", 0);
-        model.addAttribute("stats", defaultStats);
+        // stats using DTO
+        com.noticias.web.dtos.AdminStatsDTO safeStats = new com.noticias.web.dtos.AdminStatsDTO();
+        model.addAttribute("stats", safeStats);
 
         try {
-            if (usuario.getRolNivel() == null)
-                usuario.setRolNivel(calcularNivel(usuario.getRolNombre()));
+            System.out.println("[ADMIN DEBUG] Starting data fetch...");
+            long startTotal = System.currentTimeMillis();
 
+            // Fix: Calculate level if missing
+            if (usuario.getRolNivel() == null) {
+                usuario.setRolNivel(calcularNivel(usuario.getRolNombre()));
+                System.out.println("[ADMIN DEBUG] Calculated Role Level: " + usuario.getRolNivel());
+            }
+
+            System.out.println("[ADMIN DEBUG] Fetching Users...");
+            long subStart = System.currentTimeMillis();
             List<UsuarioDTO> todosUsuarios = apiCliente.listarUsuarios();
+            System.out.println("[ADMIN DEBUG] Users Fetched in " + (System.currentTimeMillis() - subStart)
+                    + "ms. Count: " + (todosUsuarios != null ? todosUsuarios.size() : "null"));
+
             sanitizarUsuarios(todosUsuarios);
 
-            List<Map<String, Object>> sanciones = apiCliente.listarSanciones();
-            List<UsuarioDTO> vetados = apiCliente.listarVetados(); // Vetados son usuarios, ya sanitizados si vienen de
-                                                                   // listarUsuarios? No, distinct list.
-            if (vetados != null)
-                sanitizarUsuarios(vetados); // Ensure vetados are sanitized too
+            System.out.println("[ADMIN DEBUG] Fetching Sanctions...");
+            subStart = System.currentTimeMillis();
+            List<SancionDTO> sanciones = apiCliente.listarSanciones();
+            System.out.println("[ADMIN DEBUG] Sanctions Fetched in " + (System.currentTimeMillis() - subStart) + "ms.");
 
+            System.out.println("[ADMIN DEBUG] Fetching Banned Users...");
+            subStart = System.currentTimeMillis();
+            List<UsuarioDTO> vetados = apiCliente.listarVetados(); // Vetados should be UsuarioDTO
+            if (vetados != null)
+                sanitizarUsuarios(vetados);
+            System.out.println(
+                    "[ADMIN DEBUG] Banned Users Fetched in " + (System.currentTimeMillis() - subStart) + "ms.");
+
+            System.out.println("[ADMIN DEBUG] Fetching Deleted News...");
+            subStart = System.currentTimeMillis();
             List<com.noticias.web.dtos.NoticiaEliminadaDTO> noticiasEliminadas = apiCliente.listarNoticiasEliminadas();
             sanitizarNoticiasEliminadas(noticiasEliminadas);
+            System.out.println(
+                    "[ADMIN DEBUG] Deleted News Fetched in " + (System.currentTimeMillis() - subStart) + "ms.");
 
+            System.out.println("[ADMIN DEBUG] Fetching Reports...");
+            subStart = System.currentTimeMillis();
             List<DenunciaDTO> denuncias = apiCliente.listarDenuncias();
-            Map<String, Object> stats = apiCliente.getAdminStats();
+            System.out.println("[ADMIN DEBUG] Reports Fetched in " + (System.currentTimeMillis() - subStart) + "ms.");
 
-            model.addAttribute("usuarios", todosUsuarios != null ? todosUsuarios : List.of());
-            model.addAttribute("sanciones", sanciones != null ? sanciones : List.of());
-            model.addAttribute("vetados", vetados != null ? vetados : List.of());
-            model.addAttribute("noticiasEliminadas", noticiasEliminadas != null ? noticiasEliminadas : List.of());
-            model.addAttribute("denuncias", denuncias != null ? denuncias : List.of());
-
-            if (stats != null) {
-                Map<String, Object> safeStats = new HashMap<>(defaultStats);
-                safeStats.putAll(stats);
-                model.addAttribute("stats", safeStats);
+            System.out.println("[ADMIN DEBUG] Fetching Stats...");
+            subStart = System.currentTimeMillis();
+            Map<String, Object> rawStats = apiCliente.getAdminStats();
+            if (rawStats != null) {
+                model.addAttribute("stats", new com.noticias.web.dtos.AdminStatsDTO(rawStats));
             }
+            System.out.println("[ADMIN DEBUG] Stats Fetched in " + (System.currentTimeMillis() - subStart) + "ms.");
+
+            if (todosUsuarios != null)
+                model.addAttribute("usuarios", todosUsuarios);
+            if (sanciones != null)
+                model.addAttribute("sanciones", sanciones);
+            if (vetados != null)
+                model.addAttribute("vetados", vetados);
+            if (noticiasEliminadas != null)
+                model.addAttribute("noticiasEliminadas", noticiasEliminadas);
+            if (denuncias != null)
+                model.addAttribute("denuncias", denuncias);
+
+            System.out.println("[ADMIN DEBUG] Data fetch complete in " + (System.currentTimeMillis() - startTotal)
+                    + "ms. Rendering view.");
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("❌ Error en AdminControlador: " + e.getMessage());
-            try {
-                logger.logError("PanelAdmin Error", e);
-            } catch (Exception le) {
-            } // Log to file
-            model.addAttribute("error", "Error al conectar con el servicio de administración. " + e.getMessage());
+            System.err.println("❌ CRITICAL ERROR in AdminControlador: " + e.getMessage());
+            model.addAttribute("error", "Error crítico en panel: " + e.getMessage());
+            // Do NOT rethrow, allow page to load with empty tables so we can see the UI
         }
 
         return "vistas/admin/PanelAdmin";

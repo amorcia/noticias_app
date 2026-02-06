@@ -1,5 +1,6 @@
 package com.noticias.web.dtos;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 
 public class NoticiaEliminadaDTO {
@@ -11,7 +12,11 @@ public class NoticiaEliminadaDTO {
     private String autorOriginalNombre;
     private String categoriaNombre;
     private String categoriaColor;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaEliminacion;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaPublicacion;
     private String motivo;
     private String descripcion;

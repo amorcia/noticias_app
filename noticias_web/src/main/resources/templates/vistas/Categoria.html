@@ -38,10 +38,8 @@
             </div>
 
             <!-- News Grid -->
-            <div class="news-grid"
-                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 2.5rem;">
-                <article class="news-card-premium" th:each="noticia : ${noticias}"
-                    style="background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); transition: all 0.3s; display: flex; flex-direction: column;">
+            <div class="news-grid">
+                <article class="news-card-premium" th:each="noticia : ${noticias}">
 
                     <!-- Card Image -->
                     <div class="card-image" th:if="${noticia.imagenUrl != null and !noticia.imagenUrl.isEmpty()}"

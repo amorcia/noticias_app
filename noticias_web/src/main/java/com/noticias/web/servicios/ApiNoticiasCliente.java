@@ -21,7 +21,14 @@ public class ApiNoticiasCliente {
     @Value("${api.noticias.url}")
     private String apiUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    public ApiNoticiasCliente() {
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000); // 5 segundos
+        factory.setReadTimeout(5000); // 5 segundos
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     // ==================== USUARIOS ====================
 
@@ -602,10 +609,10 @@ public class ApiNoticiasCliente {
 
     // ==================== ADMIN & INTERACCIONES ====================
 
-    public List<Map<String, Object>> listarSanciones() {
+    public List<SancionDTO> listarSanciones() {
         String url = apiUrl + "/admin/sanciones";
-        ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Map<String, Object>>>() {
+        ResponseEntity<List<SancionDTO>> response = restTemplate.exchange(
+                url, HttpMethod.GET, null, new ParameterizedTypeReference<List<SancionDTO>>() {
                 });
         return response.getBody();
     }

@@ -1,6 +1,7 @@
 package com.noticias.web.dtos;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public class UsuarioDTO {
     private Integer id;
@@ -17,38 +18,12 @@ public class UsuarioDTO {
     private String motivoVeto;
     private String secretKey2FA;
     private Integer rolNivel; // 1: OWNER, 2: ADMIN, 3: TRABAJADOR, 4: USER
-
-    public Integer getRolNivel() {
-        return rolNivel;
-    }
-
-    public void setRolNivel(Integer rolNivel) {
-        this.rolNivel = rolNivel;
-    }
-
-    public String getSecretKey2FA() {
-        return secretKey2FA;
-    }
-
-    public void setSecretKey2FA(String secretKey2FA) {
-        this.secretKey2FA = secretKey2FA;
-    }
-
     private LocalDateTime fechaVeto;
     private LocalDateTime vetadoHasta;
     private String imagenUrl;
     private String emailPendiente;
 
-    // Constructors
     public UsuarioDTO() {
-    }
-
-    public String getEmailPendiente() {
-        return emailPendiente;
-    }
-
-    public void setEmailPendiente(String emailPendiente) {
-        this.emailPendiente = emailPendiente;
     }
 
     // Getters and Setters
@@ -148,20 +123,28 @@ public class UsuarioDTO {
         this.motivoVeto = motivoVeto;
     }
 
+    public String getSecretKey2FA() {
+        return secretKey2FA;
+    }
+
+    public void setSecretKey2FA(String secretKey2FA) {
+        this.secretKey2FA = secretKey2FA;
+    }
+
+    public Integer getRolNivel() {
+        return rolNivel;
+    }
+
+    public void setRolNivel(Integer rolNivel) {
+        this.rolNivel = rolNivel;
+    }
+
     public LocalDateTime getFechaVeto() {
         return fechaVeto;
     }
 
     public void setFechaVeto(LocalDateTime fechaVeto) {
         this.fechaVeto = fechaVeto;
-    }
-
-    public String getImagenUrl() {
-        return imagenUrl;
-    }
-
-    public void setImagenUrl(String imagenUrl) {
-        this.imagenUrl = imagenUrl;
     }
 
     public LocalDateTime getVetadoHasta() {
@@ -172,8 +155,25 @@ public class UsuarioDTO {
         this.vetadoHasta = vetadoHasta;
     }
 
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+
+    public void setImagenUrl(String imagenUrl) {
+        this.imagenUrl = imagenUrl;
+    }
+
+    public String getEmailPendiente() {
+        return emailPendiente;
+    }
+
+    public void setEmailPendiente(String emailPendiente) {
+        this.emailPendiente = emailPendiente;
+    }
+
+    // Helper methods for UI
     public String getRol() {
-        return rolNombre;
+        return rolNombre != null ? rolNombre : "USUARIO";
     }
 
     public String getNombre() {
@@ -181,36 +181,32 @@ public class UsuarioDTO {
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("rol")
-    public java.util.Map<String, Object> getRolObject() {
+    public Map<String, Object> getRolObject() {
         if (rolId != null) {
-            return java.util.Map.of("id", rolId);
+            return Map.of("id", rolId, "nombre", rolNombre != null ? rolNombre : "USUARIO");
         }
         return null;
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("rol")
-    private void unpackRol(java.util.Map<String, Object> rol) {
+    private void unpackRol(Map<String, Object> rol) {
         if (rol != null) {
-            // Try standard 'nombre' first
-            if (rol.containsKey("nombre")) {
-                this.rolNombre = (String) rol.get("nombre");
-            }
-            // Try DB column style 'rol_nombre'
-            else if (rol.containsKey("rol_nombre")) {
-                this.rolNombre = (String) rol.get("rol_nombre");
-            }
-            // Try CamelCase 'rolNombre'
-            else if (rol.containsKey("rolNombre")) {
-                this.rolNombre = (String) rol.get("rolNombre");
-            }
-
-            // Unpack ID
             Object idObj = rol.get("id");
             if (idObj == null)
-                idObj = rol.get("rol_id"); // Try DB column style
-
-            if (idObj instanceof Integer) {
+                idObj = rol.get("rol_id");
+            if (idObj instanceof Integer)
                 this.rolId = (Integer) idObj;
+
+            String name = (String) rol.get("nombre");
+            if (name == null)
+                name = (String) rol.get("rol_nombre");
+            if (name == null)
+                name = (String) rol.get("rolNombre");
+
+            if (name != null) {
+                this.rolNombre = name.toUpperCase();
+            } else {
+                this.rolNombre = "USUARIO";
             }
         }
     }

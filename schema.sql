@@ -70,7 +70,8 @@ CREATE TABLE IF NOT EXISTS noticias (
     not_dislikes INTEGER NOT NULL DEFAULT 0,
     not_comentarios_count INTEGER NOT NULL DEFAULT 0,
     not_visitas INTEGER NOT NULL DEFAULT 0,
-    not_destacada BOOLEAN NOT NULL DEFAULT FALSE
+    not_destacada BOOLEAN NOT NULL DEFAULT FALSE,
+    not_activa BOOLEAN NOT NULL DEFAULT TRUE -- Soft Delete
 );
 
 -- 7. Noticias Eliminadas
@@ -108,7 +109,8 @@ CREATE TABLE IF NOT EXISTS comentarios (
     com_likes INTEGER NOT NULL DEFAULT 0,
     com_dislikes INTEGER NOT NULL DEFAULT 0,
     com_padre_id INTEGER REFERENCES comentarios(com_id),
-    com_fecha TIMESTAMP
+    com_fecha TIMESTAMP,
+    com_activo BOOLEAN NOT NULL DEFAULT TRUE -- Soft Delete
 );
 
 -- 9. Votos

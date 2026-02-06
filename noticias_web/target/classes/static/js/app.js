@@ -114,6 +114,110 @@ async function submitReport() {
     } catch (e) { console.error(e); }
 }
 
+// --- Modal de Borrado (Unified) ---
+const deleteModal = document.getElementById('deleteModal');
+
+function openDeleteModal(id, titulo, esPropio) {
+    if (!deleteModal) return;
+
+    // Set hidden fields
+    document.getElementById('deleteId').value = id;
+    document.getElementById('deleteTitulo').value = titulo;
+    document.getElementById('esPropio').value = esPropio;
+    document.getElementById('tituloConfirmacionDisplay').innerText = titulo;
+
+    // Update modal title for admins to include article title
+    const modalTitle = document.getElementById('deleteModalTitle');
+    if (!esPropio && modalTitle) {
+        modalTitle.innerHTML = `Eliminar Noticia: <span style="color: var(--text-muted); font-weight: 500;">${titulo}</span>`;
+    } else if (modalTitle) {
+        modalTitle.textContent = 'Eliminar Noticia';
+    }
+
+    const adminForm = document.getElementById('adminDeleteForm');
+    const ownerForm = document.getElementById('ownerDeleteForm');
+    const motivoSelect = document.getElementById('deleteMotivoSelect');
+    const descripcionTxt = document.getElementById('deleteDescripcion');
+    const confirmInput = document.getElementById('confirmTituloInput');
+
+    if (esPropio) {
+        // Owner flow: title confirmation
+        adminForm.style.display = 'none';
+        ownerForm.style.display = 'block';
+        motivoSelect.required = false;
+        descripcionTxt.required = false;
+        confirmInput.required = true;
+        confirmInput.value = '';
+    } else {
+        // Admin flow: reason + description
+        ownerForm.style.display = 'none';
+        adminForm.style.display = 'block';
+        motivoSelect.required = true;
+        descripcionTxt.required = true;
+        confirmInput.required = false;
+        motivoSelect.value = '';
+        descripcionTxt.value = '';
+    }
+
+    deleteModal.classList.add('open');
+}
+
+function closeDeleteModal() {
+    if (deleteModal) deleteModal.classList.remove('open');
+}
+
+// Handle delete form submission (attach once on load)
+document.addEventListener('DOMContentLoaded', () => {
+    const deleteForm = document.getElementById('deleteForm');
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const id = document.getElementById('deleteId').value;
+            formData.append('id', id);
+
+            const esPropio = document.getElementById('esPropio').value === 'true';
+            const titulo = document.getElementById('deleteTitulo').value;
+
+            // Validation for owner: title confirmation
+            if (esPropio) {
+                const confirmInput = document.getElementById('confirmTituloInput').value;
+                if (confirmInput !== titulo) {
+                    showSuccess('Error', 'El título no coincide. Por favor, escríbelo exactamente.', 'error');
+                    return;
+                }
+            } else {
+                // Validation for admin: reason + description
+                const motivo = document.getElementById('deleteMotivoSelect').value;
+                const descripcion = document.getElementById('deleteDescripcion').value;
+                if (!motivo || !descripcion) {
+                    showSuccess('Error', 'Debes completar motivo y descripción.', 'error');
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch(`${getContextPath()}trabajador/noticias/borrar`, {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+
+                if (res.ok) {
+                    closeDeleteModal();
+                    showSuccess('Eliminado', 'La noticia ha sido eliminada correctamente.');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    const txt = await res.text();
+                    showSuccess('Error', txt || 'No se pudo eliminar.', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showSuccess('Error', 'Error de conexión.', 'error');
+            }
+        });
+    }
+});
+
 // --- Modal de Éxito/Error ---
 const successModal = document.getElementById('successModal');
 
@@ -156,7 +260,8 @@ function getUserId() {
 }
 
 function verifyLogin() {
-    if (!getUserId()) {
+    const userId = getUserId();
+    if (!userId || userId === 0) {
         location.href = `${getContextPath()}auth/login`;
         return false;
     }

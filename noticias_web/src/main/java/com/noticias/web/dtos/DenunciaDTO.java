@@ -1,5 +1,6 @@
 package com.noticias.web.dtos;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 
 public class DenunciaDTO {
@@ -9,6 +10,8 @@ public class DenunciaDTO {
     private String motivo;
     private String descripcion;
     private String estado;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fecha;
 
     public Integer getId() {

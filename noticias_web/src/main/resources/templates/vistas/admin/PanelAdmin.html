@@ -9,8 +9,93 @@
     <section>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <!-- Link to Admin Scripts (Defer to ensure DOM is ready) -->
-        <script th:src="@{/js/admin.js}" defer></script>
+        <script th:src="@{/js/admin.js?v=2}" defer></script>
         <!-- Styles are loaded via estilos.css in the main layout -->
+
+        <!-- GLOBAL ERROR HANDLER & MODAL STYLES -->
+        <style>
+            .error-modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(4px);
+                z-index: 10000;
+                justify-content: center;
+                align-items: center;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .error-modal.visible {
+                display: flex;
+                opacity: 1;
+            }
+
+            .error-modal-content {
+                background: white;
+                padding: 2rem;
+                border-radius: 1rem;
+                width: 90%;
+                max-width: 500px;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                text-align: center;
+                border-top: 5px solid #ef4444;
+                animation: slideIn 0.3s ease-out;
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateY(-20px);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            .error-details {
+                margin-top: 1rem;
+                padding: 1rem;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.5rem;
+                text-align: left;
+                font-family: monospace;
+                font-size: 0.85rem;
+                color: #64748b;
+                display: none;
+                overflow-x: auto;
+            }
+        </style>
+
+        <script>
+            // Global Error Handler
+            window.onerror = function (msg, url, lineNo, columnNo, error) {
+                const modal = document.getElementById('globalErrorModal');
+                const msgEl = document.getElementById('globalErrorMsg');
+                const detailsEl = document.getElementById('globalErrorDetails');
+
+                if (modal) {
+                    let niceMsg = "Ha ocurrido un error inesperado en la página.";
+                    if (String(msg).includes("Script error")) niceMsg = "Error de script externo o bloqueo de seguridad.";
+                    if (String(msg).includes("Chart is not defined")) niceMsg = "No se pudieron cargar las gráficas. (Error de conexión/CDN)";
+
+                    msgEl.textContent = niceMsg;
+                    detailsEl.textContent = `Error: ${msg}\nLine: ${lineNo}\nFile: ${url}`;
+                    modal.classList.add('visible');
+
+                    // console also
+                    console.error("Global Catch:", msg, error);
+                }
+                return false;
+            };
+        </script>
 
         <div class="admin-dashboard-container fade-in">
             <div th:if="${mensaje}" class="alert alert-success" th:text="${mensaje}"></div>
@@ -43,7 +128,7 @@
                             <i data-lucide="trash"></i> Noticias Borradas
                         </button>
                         <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.5rem 0;">
-                        <button class="nav-btn" onclick="window.location.href='/'">
+                        <button class="nav-btn" th:onclick="|window.location.href='@{/}'|">
                             <i data-lucide="home"></i> Volver Inicio
                         </button>
                     </nav>
@@ -68,22 +153,22 @@
                         <div class="stats-grid">
                             <div class="stat-box">
                                 <div class="stat-label">Total Usuarios</div>
-                                <div class="stat-number" th:text="${stats.totalUsuarios}">0</div>
+                                <div class="stat-number" th:text="${stats?.totalUsuarios ?: 0}">0</div>
                                 <div class="stat-desc">
                                     <i data-lucide="trending-up" style="width: 16px;"></i> Registrados
                                 </div>
                             </div>
                             <div class="stat-box">
                                 <div class="stat-label">Usuarios Vetados</div>
-                                <div class="stat-number" th:text="${stats.usuariosVetados}"
+                                <div class="stat-number" th:text="${stats?.usuariosVetados ?: 0}"
                                     style="color: var(--danger);">0</div>
                                 <div class="stat-desc" style="color: var(--text-muted);">
-                                    <span th:text="${stats.porcentajeVetados}">0.0</span>% del total
+                                    <span th:text="${stats?.porcentajeVetados ?: 0.0}">0.0</span>% del total
                                 </div>
                             </div>
                             <div class="stat-box">
                                 <div class="stat-label">Sanciones Pendientes</div>
-                                <div class="stat-number" th:text="${stats.sancionesPendientes}"
+                                <div class="stat-number" th:text="${stats?.sancionesPendientes ?: 0}"
                                     style="color: var(--accent);">0</div>
                                 <div class="stat-desc">Requieren acción</div>
                             </div>
@@ -141,19 +226,19 @@
                                         <td th:text="${u.email}">email@example.com</td>
                                         <td>
                                             <!-- Si el visor es de nivel SUPERIOR al objetivo (actorNivel < targetNivel), puede cambiar roles -->
-                                            <select th:if="${session.usuario.rolNivel < u.rolNivel}" class="form-input"
+                                            <select th:if="${session.usuario?.rolNivel < u.rolNivel}" class="form-input"
                                                 style="padding: 0.2rem; height: auto; font-size: 0.8rem; width: auto;"
                                                 th:onchange="'cambiarRol(' + ${u.id} + ', this.value)'">
                                                 <option value="1" th:selected="${u.rolNivel == 1}"
-                                                    th:if="${session.usuario.rolNivel == 0}">Owner</option>
+                                                    th:if="${session.usuario?.rolNivel == 0}">Owner</option>
                                                 <!-- Only system could do this -->
                                                 <option value="2" th:selected="${u.rolNivel == 2}"
-                                                    th:if="${session.usuario.rolNivel == 1}">Admin</option>
+                                                    th:if="${session.usuario?.rolNivel == 1}">Admin</option>
                                                 <option value="3" th:selected="${u.rolNivel == 3}">Trabajador</option>
                                                 <option value="4" th:selected="${u.rolNivel == 4}">User</option>
                                             </select>
                                             <!-- Mostrar badge si no tiene permiso de cambio (nivel igual o inferior) -->
-                                            <span th:if="${session.usuario.rolNivel >= u.rolNivel}" class="badge"
+                                            <span th:if="${session.usuario?.rolNivel >= u.rolNivel}" class="badge"
                                                 th:text="${u.rolNombre}">ROL</span>
                                         </td>
                                         <td>
@@ -162,28 +247,27 @@
                                         </td>
                                         <td>
                                             <!-- Validar jerarquía -->
-                                            <div th:if="${session.usuario.rolNivel < u.rolNivel}"
+                                            <div th:if="${session.usuario?.rolNivel < u.rolNivel}"
                                                 style="display: flex; gap: 0.5rem;">
-                                                <button th:if="${!u.vetado}" class="btn btn-ghost btn-sm"
-                                                    th:onclick="'openVetoModal(' + ${u.id} + ')'"
-                                                    style="color: var(--danger);" title="Vetar Usuario">
-                                                    <i data-lucide="user-x" style="width: 14px;"></i>
+                                                <button th:if="${!u.vetado}" class="btn-action-danger"
+                                                    th:onclick="'openVetoModal(' + ${u.id} + ')'" title="Vetar Usuario">
+                                                    <i data-lucide="user-x"></i>
                                                 </button>
-                                                <button th:if="${u.vetado}" class="btn btn-ghost btn-sm"
-                                                    th:onclick="'desvetarUsuario(' + ${u.id} + ')'"
-                                                    style="color: var(--success);" title="Quitar Veto">
-                                                    <i data-lucide="user-check" style="width: 14px;"></i>
+                                                <button th:if="${u.vetado}" class="btn-action-success"
+                                                    th:onclick="'desvetarUsuario(' + ${u.id} + ')'" title="Quitar Veto">
+                                                    <i data-lucide="user-check"></i>
                                                 </button>
-                                                <button class="btn btn-ghost btn-sm"
+                                                <button class="btn-action-danger"
                                                     th:onclick="'eliminarUsuario(' + ${u.id} + ', \'' + ${u.email} + '\')'"
-                                                    style="color: var(--danger);" title="Eliminar Usuario">
-                                                    <i data-lucide="trash-2" style="width: 14px;"></i>
+                                                    title="Eliminar Usuario">
+                                                    <i data-lucide="trash-2"></i>
                                                 </button>
                                             </div>
                                             <!-- Mostrar PROTEGIDO si es un par o superior -->
-                                            <div th:if="${session.usuario.rolNivel >= u.rolNivel}">
-                                                <span class="badge badge-accent"
-                                                    style="font-size: 0.7rem;">PROTEGIDO</span>
+                                            <div th:if="${session.usuario?.rolNivel >= u.rolNivel}">
+                                                <div class="badge-protected" title="Usuario Protegido">
+                                                    <i data-lucide="shield"></i>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
@@ -210,8 +294,8 @@
                                 </thead>
                                 <tbody>
                                     <tr th:each="sancion : ${sanciones}">
-                                        <td th:text="${sancion.usuario.email}">email@example.com</td>
-                                        <td th:text="${sancion.motivo}">Spam</td>
+                                        <td th:text="${sancion?.usuario?.email ?: 'Anónimo'}">email@example.com</td>
+                                        <td th:text="${sancion?.motivo ?: 'Sin motivo'}">Spam</td>
                                         <td>
                                             <span class="badge"
                                                 th:classappend="${sancion.estado == 'PENDIENTE' ? 'badge-accent' : 'badge-success'}"
@@ -310,9 +394,12 @@
                                 <tbody>
                                     <tr th:each="d : ${denuncias}">
                                         <td>
-                                            <a th:href="@{'/noticia/' + ${d.noticia.id}}" target="_blank"
+                                            <a th:if="${d.noticia != null}" th:href="@{'/noticia/' + ${d.noticia.id}}"
+                                                target="_blank"
                                                 style="font-weight: 600; text-decoration: none; color: var(--primary);"
                                                 th:text="${d.noticia.titulo}">Título</a>
+                                            <span th:unless="${d.noticia != null}" class="text-muted">Noticia no
+                                                encontrada</span>
                                         </td>
                                         <td>
                                             <div
@@ -320,13 +407,14 @@
                                                 Usuario</div>
                                         </td>
                                         <td>
-                                            <div class="badge badge-accent" th:text="${d.motivo}">MOTIVO</div>
+                                            <div class="badge badge-accent" th:text="${d.motivo ?: 'Denuncia'}">MOTIVO
+                                            </div>
                                             <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;"
-                                                th:text="${d.descripcion}">Desc...</div>
+                                                th:text="${d.descripcion ?: ''}">Desc...</div>
                                         </td>
                                         <td th:text="${#temporals.format(d.fecha, 'dd/MM/yyyy HH:mm')}">Fecha</td>
                                         <td>
-                                            <div style="display: flex; gap: 0.5rem;">
+                                            <div th:if="${d.noticia != null}" style="display: flex; gap: 0.5rem;">
                                                 <button class="btn btn-danger btn-sm" th:data-id="${d.noticia.id}"
                                                     th:data-titulo="${d.noticia.titulo}" th:data-denuncia="${d.id}"
                                                     onclick="openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-titulo'), this.getAttribute('data-denuncia'))"
@@ -338,6 +426,13 @@
                                                     th:onclick="'resolverDenuncia(' + ${d.id} + ', \'DESESTIMADA\')'"
                                                     style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border: 1px solid var(--border);">
                                                     Ignorar
+                                                </button>
+                                            </div>
+                                            <div th:unless="${d.noticia != null}">
+                                                <button class="btn btn-ghost btn-sm"
+                                                    th:onclick="'resolverDenuncia(' + ${d.id} + ', \'ARCHIVADA\')'"
+                                                    style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border: 1px solid var(--border);">
+                                                    Archivar
                                                 </button>
                                             </div>
                                         </td>
@@ -377,33 +472,37 @@
                                         onmouseover="this.style.background='#f8fafc'"
                                         onmouseout="this.style.background='white'">
                                         <td
-                                            th:text="${#temporals.format(borrada.fechaEliminacion, 'dd/MM/yyyy HH:mm')}">
+                                            th:text="${#temporals.format(borrada?.fechaEliminacion, 'dd/MM/yyyy HH:mm')}">
                                             Fecha</td>
                                         <td>
-                                            <div style="font-weight: 600;" th:text="${borrada.titulo}">Título</div>
+                                            <div style="font-weight: 600;" th:text="${borrada?.titulo ?: 'Sin título'}">
+                                                Título</div>
                                             <div style="font-size: 0.8em; color: var(--text-muted);">
                                                 <span class="badge"
-                                                    th:style="'background:' + ${borrada.categoriaColor} + '; color: white; font-size: 0.7em;'"
-                                                    th:text="${borrada.categoriaNombre}">Categoría</span>
+                                                    th:style="'background:' + ${borrada?.categoriaColor ?: '#888'} + '; color: white; font-size: 0.7em;'"
+                                                    th:text="${borrada?.categoriaNombre ?: 'General'}">Categoría</span>
                                             </div>
                                         </td>
-                                        <td th:text="${borrada.autorOriginalNombre}">Autor</td>
+                                        <td th:text="${borrada?.autorOriginalNombre ?: 'Antiguo Autor'}">Autor</td>
                                         <td>
-                                            <span class="badge badge-danger" th:text="${borrada.motivo}">Motivo</span>
+                                            <span class="badge badge-danger"
+                                                th:text="${borrada?.motivo ?: 'Sin motivo'}">Motivo</span>
                                         </td>
                                         <td>
                                             <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; color: var(--text-muted);"
-                                                th:text="${borrada.descripcion}">Descripción...</div>
+                                                th:text="${borrada?.descripcion ?: 'No disponible'}">Descripción...
+                                            </div>
                                         </td>
                                         <td>
-                                            <div style="font-weight: 600;" th:text="${borrada.eliminadoPorNombre}">Admin
+                                            <div style="font-weight: 600;"
+                                                th:text="${borrada?.eliminadoPorNombre ?: 'Sistema'}">Admin
                                             </div>
                                             <div class="badge badge-accent" style="font-size: 0.7em;"
-                                                th:text="${borrada.rolEliminador}">ROL</div>
+                                                th:text="${borrada?.rolEliminador ?: 'ADMIN'}">ROL</div>
                                         </td>
                                         <td>
                                             <button class="btn btn-ghost btn-sm"
-                                                th:onclick="'verDetalleEliminada(' + ${borrada.id} + ')'"
+                                                th:onclick="'verDetalleEliminada(' + ${borrada?.id} + ')'"
                                                 style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
                                                 <i data-lucide="eye" style="width: 14px;"></i> Ver Detalle
                                             </button>
@@ -634,6 +733,7 @@
                     style="width: 100%; padding: 1rem;">Aceptar</button>
             </div>
         </div>
+
 
         <!-- Inline Script to Inject Variables for External JS -->
         <script th:inline="javascript">

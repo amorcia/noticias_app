@@ -16,6 +16,7 @@ com\noticias\web\controladores\InteraccionWebControlador.class
 com\noticias\web\servicios\ApiNoticiasCliente$19.class
 com\noticias\web\NoticiasWebApplication.class
 com\noticias\web\servicios\ApiNoticiasCliente$1.class
+com\noticias\web\dtos\AdminStatsDTO.class
 com\noticias\web\servicios\ApiNoticiasCliente.class
 com\noticias\web\controladores\AuthControlador.class
 com\noticias\web\dtos\UsuarioActualizarDTO.class
@@ -30,6 +31,7 @@ com\noticias\web\servicios\LoggingServicio.class
 com\noticias\web\servicios\ApiNoticiasCliente$16.class
 com\noticias\web\servicios\ApiNoticiasCliente$13.class
 com\noticias\web\servicios\ApiNoticiasCliente$7.class
+com\noticias\web\dtos\SancionDTO.class
 com\noticias\web\controladores\InicioControlador.class
 com\noticias\web\servicios\LoggerService.class
 com\noticias\web\dtos\NoticiaDTO.class
