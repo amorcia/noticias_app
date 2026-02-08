@@ -248,6 +248,75 @@ function closeSuccessModal() {
 }
 
 /* =========================================
+   Lógica de Live Search
+   ========================================= */
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('globalSearchInput');
+    const dropdown = document.getElementById('searchResultsDropdown');
+
+    if (!searchInput || !dropdown) return;
+
+    let debounceTimer;
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const query = e.target.value.trim();
+
+        if (query.length < 2) {
+            dropdown.style.display = 'none';
+            dropdown.innerHTML = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(async () => {
+            try {
+                const url = `${getContextPath()}noticias/buscar/live?q=${encodeURIComponent(query)}`;
+                const response = await fetch(url);
+                const results = await response.json();
+
+                renderSearchResults(results);
+            } catch (error) {
+                console.error('Error in live search:', error);
+            }
+        }, 300);
+    });
+
+    function renderSearchResults(noticias) {
+        if (!noticias || noticias.length === 0) {
+            dropdown.innerHTML = '<div class="dropdown-item" style="color: var(--text-muted); cursor: default;">No se encontraron resultados</div>';
+        } else {
+            dropdown.innerHTML = noticias.map(n => `
+                <a href="${getContextPath()}noticia/${n.id}" class="dropdown-item" style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem;">
+                    <div style="width: 40px; height: 40px; border-radius: 0.5rem; overflow: hidden; flex-shrink: 0;">
+                        <img src="${n.imagenUrl || 'https://placehold.co/40/f1f5f9/64748b?text=N'}" 
+                             style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div style="flex: 1; overflow: hidden;">
+                        <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${n.titulo}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${n.categoriaNombre} | ${new Date(n.fechaPublicacion).toLocaleDateString()}</div>
+                    </div>
+                </a>
+            `).join('');
+        }
+        dropdown.style.display = 'block';
+    }
+
+    // Close search results when clicking outside
+    window.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Re-open if query is present on focus
+    searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim().length >= 2 && dropdown.innerHTML !== '') {
+            dropdown.style.display = 'block';
+        }
+    });
+});
+
+/* =========================================
    Utilidades
    ========================================= */
 function getContextPath() {

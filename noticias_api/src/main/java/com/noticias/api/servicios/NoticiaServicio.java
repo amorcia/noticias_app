@@ -84,6 +84,19 @@ public class NoticiaServicio {
         return noticiaRepositorio.findByAutorId(autorId).stream().map(this::convertirADTO).toList();
     }
 
+    public List<NoticiaDTO> listarTendenciasPorCategoria(Integer categoriaId) {
+        return noticiaRepositorio.findTop5ByCategoriaIdOrderByLikesDesc(categoriaId).stream()
+                .map(this::convertirADTO).toList();
+    }
+
+    public List<NoticiaDTO> buscarNoticiasLive(String titulo) {
+        if (titulo == null || titulo.trim().isEmpty()) {
+            return List.of();
+        }
+        return noticiaRepositorio.findTop10ByTituloContainingIgnoreCaseOrderByFechaPublicacionDesc(titulo).stream()
+                .map(this::convertirADTO).toList();
+    }
+
     public Optional<NoticiaDTO> buscarPorId(Integer id) {
         if (id == null)
             return Optional.empty();

@@ -133,21 +133,7 @@
         </article>
 
         <!-- Success/Error Modal -->
-        <div id="successModal" class="modal-overlay">
-            <div class="modal-content" style="text-align: center;">
-                <div id="modalIconContainer" style="margin-bottom: 2rem; display: flex; justify-content: center;">
-                    <i data-lucide="check-circle" id="modalIcon"
-                        style="width: 64px; height: 64px; color: var(--success);"></i>
-                </div>
-                <h3 id="successTitle"
-                    style="margin-bottom: 0.75rem; font-size: 1.75rem; font-weight: 800; color: var(--text-main);">
-                    ¡Éxito!</h3>
-                <p id="successMessage"
-                    style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; font-size: 1.1rem;"></p>
-                <button onclick="closeSuccessModal()" class="btn btn-primary"
-                    style="width: 100%; padding: 1rem;">Aceptar</button>
-            </div>
-        </div>
+        <div th:replace="~{vistas/Fragmentos :: successModal}"></div>
 
 
         <!-- Delete Modal (Unified Fragment) -->
@@ -225,57 +211,7 @@
     </main>
 
     <!-- Report Modal -->
-    <div id="reportModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 500px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 id="reportModalTitle" style="font-size: 1.5rem; font-weight: 700;">Denunciar</h3>
-                <button onclick="closeReportModal()"
-                    style="background:none; border:none; cursor:pointer; color:var(--text-muted);">
-                    <i data-lucide="x"></i>
-                </button>
-            </div>
-            <form id="reportForm">
-                <input type="hidden" id="reportNoticiaId" name="noticiaId">
-                <input type="hidden" id="reportComentarioId" name="comentarioId">
-
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Motivo de
-                        la denuncia</label>
-                    <select id="reportReason" class="form-input" onchange="checkReason()" required
-                        style="width:100%; padding: 0.75rem; border-radius: 0.5rem; border:1px solid var(--border); background: var(--surface); color: var(--text-main);">
-                        <option value="">Selecciona un motivo</option>
-                        <option value="SPAM">Spam o contenido comercial</option>
-                        <option value="ODIO">Lenguaje de odio o acoso</option>
-                        <option value="FALSO">Desinformación</option>
-                        <option value="INAPROPIADO">Contenido inapropiado</option>
-                        <option value="OTRO">Otro motivo...</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="customReasonGroup" style="display: none; margin-bottom: 1.5rem;">
-                    <label class="form-label"
-                        style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Especificar Motivo</label>
-                    <input type="text" id="customReason" class="form-input" placeholder="Breve descripción del motivo"
-                        style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface);">
-                </div>
-
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Detalles
-                        adicionales (opcional)</label>
-                    <textarea id="reportDescription" class="form-input" rows="3"
-                        placeholder="Proporciona más contexto si es necesario..."
-                        style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--surface); resize: vertical;"></textarea>
-                </div>
-
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button type="button" class="btn btn-ghost" onclick="closeReportModal()"
-                        style="flex: 1;">Cancelar</button>
-                    <button type="button" onclick="submitReport()" class="btn btn-primary" style="flex: 2;">Enviar
-                        Reporte</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div th:replace="~{vistas/Fragmentos :: reportModal}"></div>
 
     <script th:inline="javascript">
         // Page-specific variables

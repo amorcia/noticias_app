@@ -99,9 +99,43 @@ public class NoticiaControlador {
      * @param nombre Nombre de la categoría
      * @return ResponseEntity con lista de noticias del foro
      */
+    @GetMapping("/categoria/{categoriaId}")
+    public ResponseEntity<List<NoticiaDTO>> listarPorCategoria(@PathVariable Integer categoriaId) {
+        return ResponseEntity.ok(noticiaServicio.listarPorCategoria(categoriaId));
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Lista noticias tipo foro (aportaciones de usuarios) de una
+     *         categoría
+     * @param nombre Nombre de la categoría
+     * @return ResponseEntity con lista de noticias del foro
+     */
     @GetMapping("/categoria/nombre/{nombre}/foro")
     public ResponseEntity<List<NoticiaDTO>> listarPorCategoriaForo(@PathVariable String nombre) {
         return ResponseEntity.ok(noticiaServicio.listarPorCategoriaNombreYTipo(nombre, true));
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Lista las 5 noticias mejor reaccionadas de una categoría
+     * @param categoriaId ID de la categoría
+     * @return ResponseEntity con lista de tendencias
+     */
+    @GetMapping("/categoria/{categoriaId}/tendencias")
+    public ResponseEntity<List<NoticiaDTO>> listarTendenciasPorCategoria(@PathVariable Integer categoriaId) {
+        return ResponseEntity.ok(noticiaServicio.listarTendenciasPorCategoria(categoriaId));
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Búsqueda de noticias en tiempo real (Live Search)
+     * @param titulo Texto a buscar en el título
+     * @return ResponseEntity con lista de noticias coincidentes
+     */
+    @GetMapping("/buscar/live")
+    public ResponseEntity<List<NoticiaDTO>> buscarLive(@RequestParam String titulo) {
+        return ResponseEntity.ok(noticiaServicio.buscarNoticiasLive(titulo));
     }
 
     /**

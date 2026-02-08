@@ -42,6 +42,10 @@ public interface NoticiaRepositorio extends JpaRepository<NoticiaEntidad, Intege
     // Filtros
     List<NoticiaEntidad> findByCategoriaIdOrderByFechaPublicacionDesc(Integer categoriaId);
 
+    List<NoticiaEntidad> findTop5ByCategoriaIdOrderByLikesDesc(Integer categoriaId);
+
+    List<NoticiaEntidad> findTop10ByTituloContainingIgnoreCaseOrderByFechaPublicacionDesc(String titulo);
+
     @Query("SELECT n FROM NoticiaEntidad n WHERE n.categoria.id = :catId AND MONTH(n.fechaPublicacion) = :mes AND YEAR(n.fechaPublicacion) = :anio")
     List<NoticiaEntidad> findByCategoriaIdAndMesAndAnio(Integer catId, int mes, int anio);
 

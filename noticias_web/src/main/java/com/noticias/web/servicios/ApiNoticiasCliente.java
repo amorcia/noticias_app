@@ -305,6 +305,35 @@ public class ApiNoticiasCliente {
         }
     }
 
+    public List<NoticiaDTO> listarTendenciasPorCategoria(Integer categoriaId) {
+        String url = apiUrl + "/noticias/categoria/" + categoriaId + "/tendencias";
+        try {
+            ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                    });
+            return response.getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    public List<NoticiaDTO> buscarNoticiasLive(String titulo) {
+        try {
+            String encodedTitulo = java.net.URLEncoder.encode(titulo, java.nio.charset.StandardCharsets.UTF_8);
+            String url = apiUrl + "/noticias/buscar/live?titulo=" + encodedTitulo;
+            ResponseEntity<List<NoticiaDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<NoticiaDTO>>() {
+                    });
+            return response.getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
     public List<NoticiaDTO> listarNoticiasPorCategoriaNombre(String nombre) {
         String url = apiUrl + "/noticias/categoria/nombre/" + nombre;
         try {

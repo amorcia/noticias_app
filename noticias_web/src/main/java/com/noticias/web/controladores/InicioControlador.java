@@ -53,20 +53,26 @@ public class InicioControlador {
             }
 
             model.addAttribute("categoriaNombre", nombre);
-            model.addAttribute("categoria", cat); // Pass full object if needed
+            model.addAttribute("categoria", cat);
             model.addAttribute("esForo", false);
 
-            // Pass params back to view
+            // Tendencias: Top 5 mejor reaccionadas
+            List<NoticiaDTO> tendencias = apiCliente.listarTendenciasPorCategoria(cat.getId());
+            model.addAttribute("tendencias", tendencias);
+
+            // Novedades: Todas las noticias de la categoría (con filtros si aplican)
+            List<NoticiaDTO> noticias;
+            if (filtro != null || mes != null) {
+                Integer year = (anio != null) ? anio : java.time.Year.now().getValue();
+                noticias = apiCliente.listarNoticiasPorCategoriaFiltrado(cat.getId(), filtro, mes, year);
+            } else {
+                noticias = apiCliente.listarNoticiasPorCategoria(cat.getId());
+            }
+            model.addAttribute("noticias", noticias);
+
             model.addAttribute("filtroActual", filtro);
             model.addAttribute("mesActual", mes);
 
-            if (filtro != null || mes != null) {
-                Integer year = (anio != null) ? anio : java.time.Year.now().getValue();
-                model.addAttribute("noticias",
-                        apiCliente.listarNoticiasPorCategoriaFiltrado(cat.getId(), filtro, mes, year));
-            } else {
-                model.addAttribute("noticias", apiCliente.listarNoticiasPorCategoria(cat.getId()));
-            }
         } catch (Exception e) {
             e.printStackTrace();
             return "redirect:/";
@@ -109,6 +115,19 @@ public class InicioControlador {
             return "redirect:/";
         }
         return "vistas/DetalleNoticia";
+    }
+
+    /**
+     * @author amorcia
+     *         METODO - Búsqueda de noticias en vivo (AJAX) para el live search
+     */
+    @GetMapping("/noticias/buscar/live")
+    @ResponseBody
+    public List<NoticiaDTO> buscarLive(@RequestParam String q) {
+        if (q == null || q.trim().length() < 2) {
+            return List.of();
+        }
+        return apiCliente.buscarNoticiasLive(q);
     }
 
     /**

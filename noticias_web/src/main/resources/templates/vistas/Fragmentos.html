@@ -66,6 +66,24 @@
                         <a th:href="@{/foro/Cultura}" class="dropdown-item">Cultura</a>
                     </div>
                 </div>
+
+                <!-- Buscador Profesional -->
+                <div class="search-container" style="position: relative; margin-left: 1rem;">
+                    <div class="search-input-group" style="position: relative; display: flex; align-items: center;">
+                        <i data-lucide="search"
+                            style="position: absolute; left: 12px; width: 18px; color: var(--text-muted); pointer-events: none;"></i>
+                        <input type="text" id="globalSearchInput" placeholder="Buscar noticias..."
+                            style="padding: 0.6rem 1rem 0.6rem 2.5rem; border-radius: 2rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); width: 250px; font-size: 0.9rem; transition: all 0.3s;"
+                            onfocus="this.style.width='320px'; this.style.borderColor='var(--primary)';"
+                            onblur="if(this.value==='') this.style.width='250px'; this.style.borderColor='var(--border)';"
+                            autocomplete="off">
+                    </div>
+                    <!-- Dropdown de Resultados (Live Search) -->
+                    <div id="searchResultsDropdown" class="dropdown-menu"
+                        style="display: none; width: 100%; min-width: 320px; max-height: 400px; overflow-y: auto; position: absolute; top: calc(100% + 10px); left: 0; box-shadow: var(--shadow-lg);">
+                        <!-- Los resultados se cargarán aquí -->
+                    </div>
+                </div>
             </div>
 
             <div class="nav-actions">
@@ -169,6 +187,123 @@
         <!-- Global Settings Script - Applies to ALL views -->
         <script th:src="@{/js/settings.js}"></script>
     </header>
+
+    <!-- Report Modal Fragment -->
+    <div th:fragment="reportModal" id="reportModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1rem; font-size: 1.5rem;" id="reportModalTitle">Denunciar Contenido</h3>
+            <form id="reportForm">
+                <input type="hidden" id="reportNoticiaId" name="noticiaId">
+                <input type="hidden" id="reportComentarioId" name="comentarioId">
+                <div class="form-group">
+                    <label class="form-label">Motivo</label>
+                    <select id="reportReason" class="form-control" onchange="checkReason()" required
+                        style="width:100%; padding: 0.75rem; border-radius: 0.5rem; border:1px solid var(--border);">
+                        <option value="">Selecciona un motivo</option>
+                        <option value="SPAM">Spam o publicidad</option>
+                        <option value="ODIO">Discurso de odio</option>
+                        <option value="FALSO">Información falsa</option>
+                        <option value="OTRO">Otro...</option>
+                    </select>
+                </div>
+                <div class="form-group" id="customReasonGroup" style="display: none;">
+                    <label class="form-label">Especificar Motivo</label>
+                    <input type="text" id="customReason" class="form-input" placeholder="Escribe la razón">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción (Opcional)</label>
+                    <textarea id="reportDescription" class="form-input" rows="3"></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeReportModal()">Cancelar</button>
+                    <button type="button" onclick="submitReport()" class="btn btn-primary" style="flex: 1;">Enviar
+                        Reporte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success/Error Modal Fragment -->
+    <div th:fragment="successModal" id="successModal" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <div id="modalIconContainer" style="margin-bottom: 2rem; display: flex; justify-content: center;">
+                <i data-lucide="check-circle" id="modalIcon"
+                    style="width: 64px; height: 64px; color: var(--success);"></i>
+            </div>
+            <h3 id="successTitle"
+                style="margin-bottom: 0.75rem; font-size: 1.75rem; font-weight: 800; color: var(--text-main);">¡Éxito!
+            </h3>
+            <p id="successMessage"
+                style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; font-size: 1.1rem;"></p>
+            <button onclick="closeSuccessModal()" class="btn btn-primary"
+                style="width: 100%; padding: 1rem;">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- Delete Modal Fragment (Unified & Multi-flow) -->
+    <div th:fragment="deleteModal" id="deleteModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="deleteModalTitle"
+                style="margin-bottom: 1rem; font-size: 1.75rem; font-weight: 800; color: var(--danger);">Eliminar
+                Contenido</h3>
+            <p id="tituloConfirmacionDisplay"
+                style="color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem;"></p>
+
+            <form id="deleteForm">
+                <!-- Hidden inputs for ID, Title and Ownership -->
+                <input type="hidden" name="id" id="deleteId">
+                <input type="hidden" name="titulo" id="deleteTitulo">
+                <input type="hidden" id="esPropio">
+
+                <!-- Admin Flow: Motif and Description -->
+                <div id="adminDeleteForm" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Motivo de eliminación <span
+                                style="color: var(--danger);">*</span></label>
+                        <select name="motivo" id="deleteMotivoSelect" class="form-input"
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+                            <option value="">Selecciona un motivo...</option>
+                            <option value="SPAM">Spam o contenido comercial</option>
+                            <option value="DESINFORMACION">Desinformación</option>
+                            <option value="ODIO">Lenguaje de odio o acoso</option>
+                            <option value="INAPROPIADO">Contenido inapropiado</option>
+                            <option value="DUPLICADO">Contenido duplicado</option>
+                            <option value="VIOLACION_NORMAS">Violación de normas</option>
+                            <option value="OTRO">Otro motivo</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label" style="font-weight: 600;">Descripción detallada <span
+                                style="color: var(--danger);">*</span></label>
+                        <textarea name="descripcion" id="deleteDescripcion" class="form-input" rows="3"
+                            placeholder="Describe por qué eliminas este contenido..."
+                            style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); resize: vertical;"></textarea>
+                    </div>
+                </div>
+
+                <!-- Owner Flow: Title Confirmation -->
+                <div id="ownerDeleteForm" style="display: none;">
+                    <p style="margin-bottom: 1rem; color: var(--text-muted);">Por seguridad, escribe exactamente el
+                        título para confirmar la eliminación:</p>
+                    <input type="text" id="confirmTituloInput" class="form-input"
+                        placeholder="Escribe el título aquí..."
+                        style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+                </div>
+
+                <!-- Legacy/Simplified Field (Backward compatibility) -->
+                <div id="deleteMotivoGroup" style="display: none;">
+                    <input type="text" id="deleteMotivoInput" class="form-input">
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeDeleteModal()" style="flex: 1;">No,
+                        cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; background-color: var(--danger);">Sí,
+                        eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 </body>
 

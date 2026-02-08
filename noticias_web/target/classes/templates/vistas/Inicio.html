@@ -162,38 +162,7 @@
     </div>
 
     <!-- Report Modal -->
-    <div id="reportModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="margin-bottom: 1rem; font-size: 1.5rem;" id="reportModalTitle">Denunciar Noticia</h3>
-            <form id="reportForm">
-                <input type="hidden" id="reportNoticiaId" name="noticiaId">
-                <div class="form-group">
-                    <label class="form-label">Motivo</label>
-                    <select id="reportReason" class="form-control" onchange="checkReason()" required
-                        style="width:100%; padding: 0.75rem; border-radius: 0.5rem; border:1px solid var(--border);">
-                        <option value="">Selecciona un motivo</option>
-                        <option value="SPAM">Spam o publicidad</option>
-                        <option value="ODIO">Discurso de odio</option>
-                        <option value="FALSO">Información falsa</option>
-                        <option value="OTRO">Otro...</option>
-                    </select>
-                </div>
-                <div class="form-group" id="customReasonGroup" style="display: none;">
-                    <label class="form-label">Especificar Motivo</label>
-                    <input type="text" id="customReason" class="form-input" placeholder="Escribe el título">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Descripción (Opcional)</label>
-                    <textarea id="reportDescription" class="form-input" rows="3"></textarea>
-                </div>
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button type="button" class="btn btn-ghost" onclick="closeReportModal()">Cancelar</button>
-                    <button type="button" onclick="submitReport()" class="btn btn-primary" style="flex: 1;">Enviar
-                        Reporte</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div th:replace="~{vistas/Fragmentos :: reportModal}"></div>
 
 
     <!-- Delete Modal (Unified Fragment) -->
@@ -201,21 +170,7 @@
 
 
     <!-- Success/Error Modal -->
-    <div id="successModal" class="modal-overlay">
-        <div class="modal-content" style="text-align: center;">
-            <div id="modalIconContainer" style="margin-bottom: 2rem; display: flex; justify-content: center;">
-                <i data-lucide="check-circle" id="modalIcon"
-                    style="width: 64px; height: 64px; color: var(--success);"></i>
-            </div>
-            <h3 id="successTitle"
-                style="margin-bottom: 0.75rem; font-size: 1.75rem; font-weight: 800; color: var(--text-main);">¡Éxito!
-            </h3>
-            <p id="successMessage"
-                style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; font-size: 1.1rem;"></p>
-            <button onclick="closeSuccessModal()" class="btn btn-primary"
-                style="width: 100%; padding: 1rem;">Aceptar</button>
-        </div>
-    </div>
+    <div th:replace="~{vistas/Fragmentos :: successModal}"></div>
 
     <script th:inline="javascript">
         // Global Constants
