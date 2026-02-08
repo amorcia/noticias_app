@@ -27,18 +27,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
     usu_email_pendiente VARCHAR(255)
 );
 
--- 3. Usuarios Eliminados
-CREATE TABLE IF NOT EXISTS usuarios_eliminados (
-    uel_id BIGSERIAL PRIMARY KEY,
-    uel_nombre_completo VARCHAR(255),
-    uel_email VARCHAR(255),
-    uel_rol_nombre VARCHAR(255),
-    uel_motivo VARCHAR(255) NOT NULL,
-    uel_descripcion TEXT,
-    uel_eliminado_por_id INTEGER,
-    uel_eliminado_por_nombre VARCHAR(255),
-    uel_fecha_eliminacion TIMESTAMP
-);
 
 -- 4. Categorias
 CREATE TABLE IF NOT EXISTS categorias (

@@ -1,9 +1,7 @@
 package com.noticias.api.servicios;
 
 import com.noticias.api.entidades.UsuarioEntidad;
-import com.noticias.api.entidades.UsuarioEliminadoEntidad;
 import com.noticias.api.repositorios.UsuarioRepositorio;
-import com.noticias.api.repositorios.UsuarioEliminadoRepositorio;
 import com.noticias.api.repositorios.NoticiaRepositorio;
 import com.noticias.api.repositorios.ComentarioRepositorio;
 import org.springframework.stereotype.Service;
@@ -24,16 +22,13 @@ import java.util.Optional;
 public class UsuarioServicio {
 
     private final UsuarioRepositorio usuarioRepositorio;
-    private final UsuarioEliminadoRepositorio usuarioEliminadoRepositorio;
     private final NoticiaRepositorio noticiaRepositorio;
     private final ComentarioRepositorio comentarioRepositorio;
 
     public UsuarioServicio(UsuarioRepositorio usuarioRepositorio,
-            UsuarioEliminadoRepositorio usuarioEliminadoRepositorio,
             NoticiaRepositorio noticiaRepositorio,
             ComentarioRepositorio comentarioRepositorio) {
         this.usuarioRepositorio = usuarioRepositorio;
-        this.usuarioEliminadoRepositorio = usuarioEliminadoRepositorio;
         this.noticiaRepositorio = noticiaRepositorio;
         this.comentarioRepositorio = comentarioRepositorio;
     }
@@ -254,19 +249,9 @@ public class UsuarioServicio {
         }
 
         return usuarioRepositorio.findById(usuarioId).map(usuario -> {
-            // Guardar en histórico antes de eliminar
-            UsuarioEliminadoEntidad eliminado = new UsuarioEliminadoEntidad(
-                    usuario, motivo.trim(), descripcion != null ? descripcion.trim() : "", eliminador);
-            usuarioEliminadoRepositorio.save(eliminado);
-
             // Eliminar en cascada: primero comentarios, luego noticias, finalmente usuario
-            // Los comentarios del usuario
             comentarioRepositorio.deleteByAutorId(usuarioId);
-
-            // Las noticias del usuario (sin archivar, es eliminación en cascada)
             noticiaRepositorio.deleteByAutorId(usuarioId);
-
-            // Finalmente el usuario
             usuarioRepositorio.deleteById(usuarioId);
 
             return true;

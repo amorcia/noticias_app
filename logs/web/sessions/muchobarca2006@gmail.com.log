@@ -1,5 +1,4 @@
-[2026-02-06 13:12:10] [SESSION START] New server session started for: muchobarca2006@gmail.com
+[2026-02-08 19:07:26] [SESSION START] New server session started for: muchobarca2006@gmail.com
 --------------------------------------------------
-[2026-02-06 13:12:10] [LOGIN] Login successful. Role: USER
-[2026-02-06 13:15:04] [LOGIN] User re-logged in (Server not restarted)
-[2026-02-06 13:15:04] [LOGIN] Login successful. Role: USER
+[2026-02-08 19:07:26] [LOGIN] Login successful. Role: ADMIN
+[2026-02-08 19:08:18] [ACCESS_ADMIN_PANEL] Has accedido al panel de administración
