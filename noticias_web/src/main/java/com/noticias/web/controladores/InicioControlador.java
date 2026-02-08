@@ -12,9 +12,11 @@ import java.util.List;
 public class InicioControlador {
 
     private final ApiNoticiasCliente apiCliente;
+    private final com.noticias.web.servicios.LoggerService logger;
 
-    public InicioControlador(ApiNoticiasCliente apiCliente) {
+    public InicioControlador(ApiNoticiasCliente apiCliente, com.noticias.web.servicios.LoggerService logger) {
         this.apiCliente = apiCliente;
+        this.logger = logger;
     }
 
     /**
@@ -43,9 +45,15 @@ public class InicioControlador {
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) Integer mes,
             @RequestParam(required = false) Integer anio,
+            HttpSession session,
             Model model) {
 
         try {
+            // Log access if user is logged in
+            UsuarioDTO usuarioLogueado = (UsuarioDTO) session.getAttribute("usuario");
+            if (usuarioLogueado != null) {
+                logger.logAction(usuarioLogueado.getEmail(), "VIEW_CATEGORY", "Has visitado la categoría: " + nombre);
+            }
             // Buscar categoria por nombre para obtener ID
             CategoriaDTO cat = apiCliente.buscarCategoriaPorNombre(nombre);
             if (cat == null) {
@@ -187,6 +195,7 @@ public class InicioControlador {
         if (usuario == null) {
             return "redirect:/auth/login";
         }
+        logger.logAction(usuario.getEmail(), "VIEW_PROFILE", "Has accedido a tu perfil personal");
         model.addAttribute("usuario", usuario);
         // Cargar noticias del usuario
         model.addAttribute("misNoticias", apiCliente.listarNoticiasPorAutor(usuario.getId()));

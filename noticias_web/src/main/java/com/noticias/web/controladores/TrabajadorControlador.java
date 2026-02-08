@@ -22,6 +22,9 @@ public class TrabajadorControlador {
     @Autowired
     private ApiNoticiasCliente apiCliente;
 
+    @Autowired
+    private com.noticias.web.servicios.LoggerService logger;
+
     /**
      * @author amorcia
      *         METODO - Muestra el formulario para subir una nueva noticia
@@ -75,6 +78,10 @@ public class TrabajadorControlador {
             }
             return "redirect:/trabajador/subir-noticia";
         }
+
+        // Log publication success
+        logger.logAction(sesionServicio.obtenerUsuarioLogueado(session).getEmail(), "PUBLISH_NEWS",
+                "Has publicado una noticia: " + titulo);
 
         redirectAttributes.addFlashAttribute("mensaje", "Noticia publicada correctamente");
         return "redirect:/";

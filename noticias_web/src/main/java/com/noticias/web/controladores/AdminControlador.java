@@ -141,6 +141,8 @@ public class AdminControlador {
             return "redirect:/error/403";
         }
 
+        logger.logAction(usuario.getEmail(), "ACCESS_ADMIN_PANEL", "Has accedido al panel de administración");
+
         // Initialize defaults
         model.addAttribute("usuarios", java.util.Collections.emptyList());
         model.addAttribute("sanciones", java.util.Collections.emptyList());
