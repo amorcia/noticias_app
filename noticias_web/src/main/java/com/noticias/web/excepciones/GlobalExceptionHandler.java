@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
         AppLogger.logError("Acceso prohibido en: " + request.getRequestURL(), e);
         model.addAttribute("error", "No tienes permisos para acceder a este recurso.");
         model.addAttribute("url", request.getRequestURL());
-        return "error/403";
+        return "vistas/error/403";
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
@@ -28,22 +28,22 @@ public class GlobalExceptionHandler {
         AppLogger.logActivity("Página no encontrada: " + request.getRequestURL());
         model.addAttribute("error", "La página que buscas no existe.");
         model.addAttribute("url", request.getRequestURL());
-        return "error/404";
+        return "vistas/error/404";
     }
 
     @ExceptionHandler(Exception.class)
-    public String handleException(Exception ex, Model model, HttpServletRequest request) {
-        AppLogger.logError("Error inesperado en la interfaz Web", ex);
-        model.addAttribute("error", "Ha ocurrido un error inesperado: " + ex.getMessage());
+    public String handleGeneralException(Exception e, Model model, HttpServletRequest request) {
+        AppLogger.logError("Error crítico en la interfaz Web: " + request.getRequestURL(), e);
+        model.addAttribute("error", "Ha ocurrido un error inesperado: " + e.getMessage());
         model.addAttribute("url", request.getRequestURL());
-        return "error/500";
+        return "vistas/error/500";
     }
 
     @ExceptionHandler(RuntimeException.class)
     public String handleRuntimeException(RuntimeException ex, Model model, HttpServletRequest request) {
-        AppLogger.logError("Error de lógica o conexión en la Web", ex);
+        AppLogger.logError("Error de lógica o conexión en la Web: " + request.getRequestURL(), ex);
         model.addAttribute("error", ex.getMessage());
         model.addAttribute("url", request.getRequestURL());
-        return "error/500";
+        return "vistas/error/500";
     }
 }

@@ -470,4 +470,35 @@
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
+    /* =========================================
+       Tab Navigation Function
+       ========================================= */
+    function showTab(tabName, buttonElement) {
+        // Hide all tabs
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => {
+            tab.style.display = 'none';
+            tab.classList.remove('active');
+        });
+
+        // Remove active class from all nav buttons
+        const navButtons = document.querySelectorAll('.nav-btn');
+        navButtons.forEach(btn => btn.classList.remove('active'));
+
+        // Show selected tab
+        const selectedTab = document.getElementById(tabName);
+        if (selectedTab) {
+            selectedTab.style.display = 'block';
+            selectedTab.classList.add('active');
+        }
+
+        // Add active class to clicked button
+        if (buttonElement) {
+            buttonElement.classList.add('active');
+        }
+    }
+
+    // Expose showTab globally for HTML onclick handlers
+    window.showTab = showTab;
+
 })();

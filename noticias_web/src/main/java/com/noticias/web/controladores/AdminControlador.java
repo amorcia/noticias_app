@@ -168,7 +168,15 @@ public class AdminControlador {
             System.out.println("[ADMIN DEBUG] Users Fetched in " + (System.currentTimeMillis() - subStart)
                     + "ms. Count: " + (todosUsuarios != null ? todosUsuarios.size() : "null"));
 
+            if (todosUsuarios == null) {
+                System.out.println("[ADMIN DEBUG] WARNING: Users list is NULL from API");
+            } else if (todosUsuarios.isEmpty()) {
+                System.out.println("[ADMIN DEBUG] WARNING: Users list is EMPTY from API");
+            }
+
+            System.out.println("[ADMIN DEBUG] Sanitizing Users...");
             sanitizarUsuarios(todosUsuarios);
+            System.out.println("[ADMIN DEBUG] Sanitization complete.");
 
             System.out.println("[ADMIN DEBUG] Fetching Sanctions...");
             subStart = System.currentTimeMillis();
@@ -198,10 +206,14 @@ public class AdminControlador {
             System.out.println("[ADMIN DEBUG] Fetching Stats...");
             subStart = System.currentTimeMillis();
             Map<String, Object> rawStats = apiCliente.getAdminStats();
+            System.out.println("[ADMIN DEBUG] Stats Raw Response: " + rawStats);
             if (rawStats != null) {
                 model.addAttribute("stats", new com.noticias.web.dtos.AdminStatsDTO(rawStats));
+            } else {
+                System.out.println("[ADMIN DEBUG] WARNING: Stats are NULL from API");
             }
-            System.out.println("[ADMIN DEBUG] Stats Fetched in " + (System.currentTimeMillis() - subStart) + "ms.");
+            System.out.println(
+                    "[ADMIN DEBUG] Stats Fetched and Processed in " + (System.currentTimeMillis() - subStart) + "ms.");
 
             if (todosUsuarios != null)
                 model.addAttribute("usuarios", todosUsuarios);

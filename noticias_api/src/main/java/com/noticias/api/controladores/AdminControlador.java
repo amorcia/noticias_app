@@ -38,13 +38,9 @@ public class AdminControlador {
     // --- ESTADÍSTICAS ---
     @GetMapping("/stats")
     public ResponseEntity<java.util.Map<String, Object>> getStats() {
+        System.out.println("[API ADMIN] GET /stats called");
+        long start = System.currentTimeMillis();
         long totalUsuarios = usuarioRepositorio.count();
-        // Optimización: Usar count en lugar de traer toda la lista
-        // Nota: para countByVetadoTrue necesitamos definir el metodo en el repo o usar
-        // un filtro si no existe
-        // Asumiendo que findByVetadoTrue existe, su size() es "menos malo" que
-        // findAll() pero countBy... sería mejor.
-        // Dado el repositorio estándar JPA:
         long usuariosVetados = usuarioRepositorio.findByVetadoTrue().size();
 
         long totalSanciones = sancionRepositorio.count();
@@ -61,6 +57,8 @@ public class AdminControlador {
         double porcentajeVetados = totalUsuarios > 0 ? ((double) usuariosVetados / totalUsuarios) * 100 : 0;
         stats.put("porcentajeVetados", Math.round(porcentajeVetados * 100.0) / 100.0);
 
+        System.out.println(
+                "[API ADMIN] GET /stats finished in " + (System.currentTimeMillis() - start) + "ms. Stats: " + stats);
         return ResponseEntity.ok(stats);
     }
 
@@ -68,7 +66,11 @@ public class AdminControlador {
 
     @GetMapping("/sanciones")
     public ResponseEntity<List<SancionEntidad>> listarSanciones() {
-        return ResponseEntity.ok(sancionRepositorio.findAll());
+        System.out.println("[API ADMIN] GET /sanciones called");
+        List<SancionEntidad> sanciones = sancionRepositorio.findAll();
+        System.out.println(
+                "[API ADMIN] GET /sanciones returning " + (sanciones != null ? sanciones.size() : 0) + " items");
+        return ResponseEntity.ok(sanciones);
     }
 
     @PostMapping("/sanciones/{id}/resolver")
@@ -129,14 +131,21 @@ public class AdminControlador {
 
     @GetMapping("/vetados")
     public ResponseEntity<List<UsuarioEntidad>> listarVetados() {
-        return ResponseEntity.ok(usuarioRepositorio.findByVetadoTrue());
+        System.out.println("[API ADMIN] GET /vetados called");
+        List<UsuarioEntidad> vetados = usuarioRepositorio.findByVetadoTrue();
+        System.out.println("[API ADMIN] GET /vetados returning " + (vetados != null ? vetados.size() : 0) + " items");
+        return ResponseEntity.ok(vetados);
     }
 
     // --- DENUNCIAS ---
 
     @GetMapping("/denuncias")
     public ResponseEntity<List<DenunciaEntidad>> listarDenuncias() {
-        return ResponseEntity.ok(denunciaRepositorio.findAll());
+        System.out.println("[API ADMIN] GET /denuncias called");
+        List<DenunciaEntidad> denuncias = denunciaRepositorio.findAll();
+        System.out.println(
+                "[API ADMIN] GET /denuncias returning " + (denuncias != null ? denuncias.size() : 0) + " items");
+        return ResponseEntity.ok(denuncias);
     }
 
     @PostMapping("/denuncias/{id}/resolver")

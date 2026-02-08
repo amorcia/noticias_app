@@ -226,20 +226,24 @@
                                         <td th:text="${u.email}">email@example.com</td>
                                         <td>
                                             <!-- Si el visor es de nivel SUPERIOR al objetivo (actorNivel < targetNivel), puede cambiar roles -->
-                                            <select th:if="${session.usuario?.rolNivel < u.rolNivel}" class="form-input"
+                                            <select
+                                                th:if="${session.usuario != null and u.rolNivel != null and session.usuario.rolNivel < u.rolNivel}"
+                                                class="form-input"
                                                 style="padding: 0.2rem; height: auto; font-size: 0.8rem; width: auto;"
-                                                th:onchange="'cambiarRol(' + ${u.id} + ', this.value)'">
+                                                th:data-id="${u.id}"
+                                                onchange="cambiarRol(this.getAttribute('data-id'), this.value)">
                                                 <option value="1" th:selected="${u.rolNivel == 1}"
-                                                    th:if="${session.usuario?.rolNivel == 0}">Owner</option>
+                                                    th:if="${session.usuario.rolNivel == 0}">Owner</option>
                                                 <!-- Only system could do this -->
                                                 <option value="2" th:selected="${u.rolNivel == 2}"
-                                                    th:if="${session.usuario?.rolNivel == 1}">Admin</option>
+                                                    th:if="${session.usuario.rolNivel == 1}">Admin</option>
                                                 <option value="3" th:selected="${u.rolNivel == 3}">Trabajador</option>
                                                 <option value="4" th:selected="${u.rolNivel == 4}">User</option>
                                             </select>
                                             <!-- Mostrar badge si no tiene permiso de cambio (nivel igual o inferior) -->
-                                            <span th:if="${session.usuario?.rolNivel >= u.rolNivel}" class="badge"
-                                                th:text="${u.rolNombre}">ROL</span>
+                                            <span
+                                                th:if="${session.usuario != null and (u.rolNivel == null or session.usuario.rolNivel >= u.rolNivel)}"
+                                                class="badge" th:text="${u.rolNombre}">ROL</span>
                                         </td>
                                         <td>
                                             <span th:if="${u.vetado}" class="badge badge-danger">VETADO</span>
@@ -247,24 +251,30 @@
                                         </td>
                                         <td>
                                             <!-- Validar jerarquía -->
-                                            <div th:if="${session.usuario?.rolNivel < u.rolNivel}"
+                                            <div th:if="${session.usuario != null and u.rolNivel != null and session.usuario.rolNivel < u.rolNivel}"
                                                 style="display: flex; gap: 0.5rem;">
                                                 <button th:if="${!u.vetado}" class="btn-action-danger"
-                                                    th:onclick="'openVetoModal(' + ${u.id} + ')'" title="Vetar Usuario">
+                                                    th:data-id="${u.id}"
+                                                    onclick="openVetoModal(this.getAttribute('data-id'))"
+                                                    title="Vetar Usuario">
                                                     <i data-lucide="user-x"></i>
                                                 </button>
                                                 <button th:if="${u.vetado}" class="btn-action-success"
-                                                    th:onclick="'desvetarUsuario(' + ${u.id} + ')'" title="Quitar Veto">
+                                                    th:data-id="${u.id}"
+                                                    onclick="desvetarUsuario(this.getAttribute('data-id'))"
+                                                    title="Quitar Veto">
                                                     <i data-lucide="user-check"></i>
                                                 </button>
-                                                <button class="btn-action-danger"
-                                                    th:onclick="'eliminarUsuario(' + ${u.id} + ', \'' + ${u.email} + '\')'"
+                                                <button class="btn-action-danger" th:data-id="${u.id}"
+                                                    th:data-email="${u.email}"
+                                                    onclick="eliminarUsuario(this.getAttribute('data-id'), this.getAttribute('data-email'))"
                                                     title="Eliminar Usuario">
                                                     <i data-lucide="trash-2"></i>
                                                 </button>
                                             </div>
                                             <!-- Mostrar PROTEGIDO si es un par o superior -->
-                                            <div th:if="${session.usuario?.rolNivel >= u.rolNivel}">
+                                            <div
+                                                th:if="${session.usuario != null and u.rolNivel != null and session.usuario.rolNivel >= u.rolNivel}">
                                                 <div class="badge-protected" title="Usuario Protegido">
                                                     <i data-lucide="shield"></i>
                                                 </div>
@@ -304,8 +314,8 @@
                                         <td th:text="${#temporals.format(sancion.fechaInicio, 'dd/MM/yyyy')}">01/01/2025
                                         </td>
                                         <td>
-                                            <form th:if="${sancion.estado == 'PENDIENTE'}"
-                                                th:onsubmit="'handleResolverSancion(event, ' + ${sancion.id} + ')'"
+                                            <form th:if="${sancion.estado == 'PENDIENTE'}" th:data-id="${sancion.id}"
+                                                onsubmit="handleResolverSancion(event, this.getAttribute('data-id'))"
                                                 method="post" style="display: flex; gap: 0.5rem;">
                                                 <select name="accion" class="form-input"
                                                     style="padding: 0.3rem; height: auto;">
@@ -422,15 +432,15 @@
                                                     <i data-lucide="trash-2" style="width: 14px; display: inline;"></i>
                                                     Borrar Noticia
                                                 </button>
-                                                <button class="btn btn-ghost btn-sm"
-                                                    th:onclick="'resolverDenuncia(' + ${d.id} + ', \'DESESTIMADA\')'"
+                                                <button class="btn btn-ghost btn-sm" th:data-id="${d.id}"
+                                                    onclick="resolverDenuncia(this.getAttribute('data-id'), 'DESESTIMADA')"
                                                     style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border: 1px solid var(--border);">
                                                     Ignorar
                                                 </button>
                                             </div>
                                             <div th:unless="${d.noticia != null}">
-                                                <button class="btn btn-ghost btn-sm"
-                                                    th:onclick="'resolverDenuncia(' + ${d.id} + ', \'ARCHIVADA\')'"
+                                                <button class="btn btn-ghost btn-sm" th:data-id="${d.id}"
+                                                    onclick="resolverDenuncia(this.getAttribute('data-id'), 'ARCHIVADA')"
                                                     style="padding: 0.25rem 0.5rem; font-size: 0.8rem; border: 1px solid var(--border);">
                                                     Archivar
                                                 </button>
@@ -501,8 +511,8 @@
                                                 th:text="${borrada?.rolEliminador ?: 'ADMIN'}">ROL</div>
                                         </td>
                                         <td>
-                                            <button class="btn btn-ghost btn-sm"
-                                                th:onclick="'verDetalleEliminada(' + ${borrada?.id} + ')'"
+                                            <button class="btn btn-ghost btn-sm" th:data-id="${borrada?.id}"
+                                                onclick="verDetalleEliminada(this.getAttribute('data-id'))"
                                                 style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
                                                 <i data-lucide="eye" style="width: 14px;"></i> Ver Detalle
                                             </button>

@@ -78,6 +78,9 @@ public class GlobalDataAdvice {
                                     isLoggedIn = false;
                                 }
                             }
+                            // Asegurar que el modelo tenga el usuario de la sesión para evitar
+                            // inconsistencias
+                            model.addAttribute("usuario", currentUser);
                         } else {
                             System.out.println("⚠️ Token inválido o expirado");
                         }

@@ -34,11 +34,20 @@ public class ApiNoticiasCliente {
 
     public List<UsuarioDTO> listarUsuarios() {
         String url = apiUrl + "/usuarios";
-        ResponseEntity<List<UsuarioDTO>> response = restTemplate.exchange(
-                url, HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<UsuarioDTO>>() {
-                });
-        return response.getBody();
+        System.out.println("[API CLIENT] Calling GET " + url);
+        try {
+            ResponseEntity<List<UsuarioDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<UsuarioDTO>>() {
+                    });
+            System.out.println("[API CLIENT] Status: " + response.getStatusCode() + " | Body size: "
+                    + (response.getBody() != null ? response.getBody().size() : 0));
+            return response.getBody();
+        } catch (Exception e) {
+            System.err.println("[API CLIENT] ERROR in listarUsuarios: " + e.getMessage());
+            e.printStackTrace();
+            return List.of();
+        }
     }
 
     public UsuarioDTO buscarUsuarioPorEmail(String email) {
@@ -633,9 +642,13 @@ public class ApiNoticiasCliente {
 
     public Map<String, Object> getAdminStats() {
         String url = apiUrl + "/admin/stats";
+        System.out.println("[API CLIENT] Calling GET " + url);
         try {
-            return restTemplate.getForObject(url, Map.class);
+            Map<String, Object> stats = restTemplate.getForObject(url, Map.class);
+            System.out.println("[API CLIENT] Stats response: " + stats);
+            return stats;
         } catch (Exception e) {
+            System.err.println("[API CLIENT] ERROR in getAdminStats: " + e.getMessage());
             e.printStackTrace();
             return Map.of("totalUsuarios", 0, "usuariosVetados", 0, "porcentajeVetados", 0, "totalNoticias", 0);
         }

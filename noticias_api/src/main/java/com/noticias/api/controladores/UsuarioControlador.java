@@ -67,7 +67,10 @@ public class UsuarioControlador {
      */
     @GetMapping
     public ResponseEntity<List<UsuarioEntidad>> listarTodos() {
-        return ResponseEntity.ok(usuarioServicio.listarTodos());
+        System.out.println("[API USER] GET /usuarios called");
+        List<UsuarioEntidad> usuarios = usuarioServicio.listarTodos();
+        System.out.println("[API USER] GET /usuarios returning " + (usuarios != null ? usuarios.size() : 0) + " items");
+        return ResponseEntity.ok(usuarios);
     }
 
     /**
