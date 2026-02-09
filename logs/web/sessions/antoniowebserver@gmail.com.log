@@ -1,10 +1,10 @@
-[2026-02-08 18:29:59] [SESSION START] New server session started for: antoniowebserver@gmail.com
+[2026-02-09 12:56:31] [SESSION START] New server session started for: antoniowebserver@gmail.com
 --------------------------------------------------
-[2026-02-08 18:29:59] [LOGIN] Login successful. Role: OWNER
-[2026-02-08 18:30:02] [VIEW_PROFILE] Has accedido a tu perfil personal
-[2026-02-08 18:30:29] [ACCESS_ADMIN_PANEL] Has accedido al panel de administración
-[2026-02-08 18:56:06] [VIEW_CATEGORY] Has visitado la categoría: IA
-[2026-02-08 19:18:04] [LOGIN] User re-logged in (Server not restarted)
-[2026-02-08 19:18:04] [LOGIN] Login successful. Role: OWNER
-[2026-02-08 19:18:06] [ACCESS_ADMIN_PANEL] Has accedido al panel de administración
-[2026-02-08 19:21:16] [VIEW_PROFILE] Has accedido a tu perfil personal
+[2026-02-09 12:56:31] [LOGIN] Login successful. Role: OWNER
+[2026-02-09 12:56:33] [ACCESS_ADMIN_PANEL] Has accedido al panel de administración
+[2026-02-09 12:56:39] [ACCESS_ADMIN_PANEL] Has accedido al panel de administración
+[2026-02-09 12:57:04] [PUBLISH_NEWS] Has publicado una noticia: pru
+[2026-02-09 12:57:41] [PUBLISH_NEWS] Has publicado una noticia: Prueba
+[2026-02-09 12:58:02] [VIEW_CATEGORY] Has visitado la categoría: IA
+[2026-02-09 12:58:13] [ACCESS_ADMIN_PANEL] Has accedido al panel de administración
+[2026-02-09 12:58:24] [ACCESS_ADMIN_PANEL] Has accedido al panel de administración

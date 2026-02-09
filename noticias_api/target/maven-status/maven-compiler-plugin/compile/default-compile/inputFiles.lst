@@ -5,7 +5,6 @@ C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\ma
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\DenunciaEntidad.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\repositorios\DenunciaRepositorio.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\servicios\CategoriaServicio.java
-C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\repositorios\UsuarioEliminadoRepositorio.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\repositorios\ErrorLogRepositorio.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\util\AppLogger.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\UsuarioEntidad.java
@@ -17,7 +16,6 @@ C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\ma
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\servicios\NsfwServicio.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\repositorios\CategoriaRepositorio.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\excepciones\GlobalExceptionHandler.java
-C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\UsuarioEliminadoEntidad.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\entidades\EtiquetaEntidad.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\servicios\ModeracionServicio.java
 C:\Users\mucho\OneDrive\Documenten\Contenedores\noticias_app\noticias_api\src\main\java\com\noticias\api\repositorios\VotoRepositorio.java

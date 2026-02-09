@@ -9,8 +9,13 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - noticias_db_data:/var/lib/postgresql/data
+      - ./datos_postgres:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin-noticias -d noticias_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - noticias-network
 
@@ -24,7 +29,8 @@ services:
       SPRING_DATASOURCE_USERNAME: admin-noticias
       SPRING_DATASOURCE_PASSWORD: noticias006
     depends_on:
-      - noticias-db
+      noticias-db:
+        condition: service_healthy
     volumes:
       - uploads_data:/uploads
       - ./logs/api:/logs

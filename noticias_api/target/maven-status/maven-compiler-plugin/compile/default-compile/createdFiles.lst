@@ -20,14 +20,12 @@ com\noticias\api\controladores\UsuarioControlador.class
 com\noticias\api\servicios\PrivilegiosServicio.class
 com\noticias\api\excepciones\GlobalExceptionHandler.class
 com\noticias\api\servicios\NsfwServicio$1.class
-com\noticias\api\repositorios\UsuarioEliminadoRepositorio.class
 com\noticias\api\entidades\NoticiaEliminadaEntidad.class
 com\noticias\api\servicios\AlmacenamientoServicio.class
 com\noticias\api\servicios\ComentarioServicio.class
 com\noticias\api\repositorios\ComentarioRepositorio.class
 com\noticias\api\servicios\ModeracionServicio.class
 com\noticias\api\util\AppLogger.class
-com\noticias\api\entidades\UsuarioEliminadoEntidad.class
 com\noticias\api\repositorios\UsuarioRepositorio.class
 com\noticias\api\servicios\CategoriaServicio.class
 com\noticias\api\repositorios\CategoriaRepositorio.class
